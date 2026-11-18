@@ -11,8 +11,18 @@ async function main() {
         process.exit(1);
     }
     const hash = await argon2.hash(clave, { type: argon2.argon2id });
-    await db.insert(administradora).values({ usuario, contrasenaCifrada: hash });
-    console.log('Administradora creada');
+    await db
+        .insert(administradora)
+        .values({ usuario, contrasenaCifrada: hash })
+        .onConflictDoUpdate({
+            target: administradora.usuario,
+            set: {
+                contrasenaCifrada: hash,
+                intentosFallidos: 0,
+                bloqueadaHasta: null,
+            },
+        });
+    console.log(`Administradora '${usuario}' configurada exitosamente`);
 }
 
 void main();
