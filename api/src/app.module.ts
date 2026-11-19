@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
+import { CategoriasModule } from './categorias/categorias.module';
+import { ProveedoresModule } from './proveedores/proveedores.module';
+import { ProductosModule } from './productos/productos.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 
 @Module({
-    imports: [AuthModule],
+    imports: [AuthModule, CategoriasModule, ProveedoresModule, ProductosModule],
     providers: [
         {
             provide: APP_GUARD,
