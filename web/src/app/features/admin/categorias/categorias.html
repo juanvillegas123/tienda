@@ -1,0 +1,224 @@
+<div class="p-6 max-w-6xl mx-auto">
+  <!-- Cabecera -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Categorías</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Administra las categorías de merchandising de la tienda</p>
+    </div>
+    <button
+      (click)="abrirModalCrear()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
+    >
+      <span>+</span> Nueva categoría
+    </button>
+  </div>
+
+  <!-- Buscador y filtro -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-xs">
+    <div class="max-w-md">
+      <label for="buscarCat" class="sr-only">Buscar categorías</label>
+      <input
+        id="buscarCat"
+        type="text"
+        [value]="terminoBusqueda()"
+        (input)="actualizarBusqueda($event)"
+        placeholder="Buscar por nombre o slug..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+    </div>
+  </div>
+
+  <!-- Mensajes de alerta -->
+  @if (mensajeExito()) {
+    <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeExito() }}</span>
+      <button (click)="mensajeExito.set(null)" class="text-green-600 hover:text-green-800 font-bold ml-2">✕</button>
+    </div>
+  }
+  @if (mensajeError()) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeError() }}</span>
+      <button (click)="mensajeError.set(null)" class="text-red-600 hover:text-red-800 font-bold ml-2">✕</button>
+    </div>
+  }
+
+  <!-- Tabla de categorías -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+    @if (cargando()) {
+      <div class="py-12 text-center text-gray-400 text-sm">
+        <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Cargando categorías...
+      </div>
+    } @else if (categoriasFiltradas().length === 0) {
+      <div class="py-12 text-center text-gray-400 text-sm">
+        @if (terminoBusqueda().trim().length > 0) {
+          No se encontraron categorías que coincidan con "{{ terminoBusqueda() }}".
+        } @else {
+          Aún no hay categorías registradas. ¡Crea la primera!
+        }
+      </div>
+    } @else {
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <th class="py-3 px-4">ID</th>
+            <th class="py-3 px-4">Nombre</th>
+            <th class="py-3 px-4">Slug</th>
+            <th class="py-3 px-4 text-center">Estado</th>
+            <th class="py-3 px-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+          @for (cat of categoriasFiltradas(); track cat.id) {
+            <tr class="hover:bg-gray-50/80 transition-colors">
+              <td class="py-3 px-4 text-gray-400 font-mono text-xs">#{{ cat.id }}</td>
+              <td class="py-3 px-4 font-medium text-gray-900">{{ cat.nombre }}</td>
+              <td class="py-3 px-4 text-gray-500 font-mono text-xs">{{ cat.slug }}</td>
+              <td class="py-3 px-4 text-center">
+                @if (cat.activa) {
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Activa
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                    Inactiva
+                  </span>
+                }
+              </td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button
+                  (click)="abrirModalEditar(cat)"
+                  class="text-indigo-600 hover:text-indigo-800 font-medium text-xs py-1 px-2 rounded hover:bg-indigo-50 transition-colors cursor-pointer"
+                >
+                  Editar
+                </button>
+                @if (cat.activa) {
+                  <button
+                    (click)="confirmarDarDeBaja(cat)"
+                    class="text-amber-600 hover:text-amber-800 font-medium text-xs py-1 px-2 rounded hover:bg-amber-50 transition-colors cursor-pointer"
+                  >
+                    Desactivar
+                  </button>
+                } @else {
+                  <button
+                    (click)="reactivarCategoria(cat)"
+                    class="text-emerald-600 hover:text-emerald-800 font-medium text-xs py-1 px-2 rounded hover:bg-emerald-50 transition-colors cursor-pointer"
+                  >
+                    Reactivar
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+<!-- Modal Formulario (Crear / Editar) -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100 animate-in fade-in duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+        <h2 class="text-lg font-bold text-gray-900">
+          {{ categoriaEnEdicion() ? 'Editar categoría' : 'Nueva categoría' }}
+        </h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-4">
+        <div>
+          <label for="catNombre" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Nombre de la categoría *
+          </label>
+          <input
+            id="catNombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej: Figuras, Poleras, Accesorios"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.border-red-400]="campoInvalido('nombre')"
+          />
+          @if (campoInvalido('nombre')) {
+            <p class="text-xs text-red-600 mt-1">El nombre es requerido (mín. 1 carácter).</p>
+          }
+        </div>
+
+        <div>
+          <label for="catSlug" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Slug (opcional)
+          </label>
+          <input
+            id="catSlug"
+            type="text"
+            formControlName="slug"
+            placeholder="Dejar vacío para generar automáticamente"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <p class="text-xs text-gray-400 mt-1">Identificador único en URL (ej: figuras-anime).</p>
+        </div>
+
+        @if (categoriaEnEdicion()) {
+          <div class="flex items-center gap-2 pt-1">
+            <input
+              id="catActiva"
+              type="checkbox"
+              formControlName="activa"
+              class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label for="catActiva" class="text-sm font-medium text-gray-700 cursor-pointer">
+              Categoría activa (visible en catálogo)
+            </label>
+          </div>
+        }
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="guardando()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg cursor-pointer"
+          >
+            {{ guardando() ? 'Guardando...' : (categoriaEnEdicion() ? 'Actualizar' : 'Crear') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmación Baja -->
+@if (categoriaParaBaja()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100">
+      <h3 class="text-base font-bold text-gray-900 mb-2">¿Desactivar categoría?</h3>
+      <p class="text-sm text-gray-600 mb-5">
+        La categoría <strong>"{{ categoriaParaBaja()!.nombre }}"</strong> no aparecerá en el catálogo público ni en el selector para nuevos productos.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="categoriaParaBaja.set(null)"
+          class="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="ejecutarBaja()"
+          class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg cursor-pointer"
+        >
+          Sí, desactivar
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,471 @@
+<div class="p-6 max-w-7xl mx-auto">
+  <!-- Cabecera -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Productos</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Gestión de catálogo, stock, costos y precios de venta</p>
+    </div>
+    <button
+      (click)="abrirModalCrear()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
+    >
+      <span>+</span> Nuevo producto
+    </button>
+  </div>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-xs flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+    <div class="flex-1 max-w-md">
+      <label for="buscarProd" class="sr-only">Buscar productos</label>
+      <input
+        id="buscarProd"
+        type="text"
+        [value]="filtroTexto()"
+        (input)="actualizarTextoBusqueda($event)"
+        placeholder="Buscar por nombre o descripción..."
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Filtro Categoría -->
+      <div>
+        <label for="filtroCat" class="sr-only">Filtrar por categoría</label>
+        <select
+          id="filtroCat"
+          [value]="filtroCategoriaId() ?? ''"
+          (change)="cambiarCategoriaFiltro($event)"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Todas las categorías</option>
+          @for (cat of categorias(); track cat.id) {
+            <option [value]="cat.id">{{ cat.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Filtro Estado -->
+      <div>
+        <label for="filtroEst" class="sr-only">Filtrar por estado</label>
+        <select
+          id="filtroEst"
+          [value]="filtroEstado()"
+          (change)="cambiarEstadoFiltro($event)"
+          class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="todos">Todos los estados</option>
+          <option value="true">Activos</option>
+          <option value="false">Dados de baja</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas de éxito y error -->
+  @if (mensajeExito()) {
+    <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeExito() }}</span>
+      <button (click)="mensajeExito.set(null)" class="text-green-600 hover:text-green-800 font-bold ml-2">✕</button>
+    </div>
+  }
+  @if (mensajeError()) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeError() }}</span>
+      <button (click)="mensajeError.set(null)" class="text-red-600 hover:text-red-800 font-bold ml-2">✕</button>
+    </div>
+  }
+
+  <!-- Tabla de Productos -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+    @if (cargando()) {
+      <div class="py-16 text-center text-gray-400 text-sm">
+        <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Cargando catálogo de productos...
+      </div>
+    } @else if (productos().length === 0) {
+      <div class="py-16 text-center text-gray-400 text-sm">
+        No se encontraron productos con los filtros seleccionados.
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[750px]">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th class="py-3 px-4 w-14">Img</th>
+              <th class="py-3 px-4">Producto</th>
+              <th class="py-3 px-4">Categoría</th>
+              <th class="py-3 px-4 text-right">Precio venta</th>
+              <th class="py-3 px-4 text-right">Costo</th>
+              <th class="py-3 px-4 text-center">Stock</th>
+              <th class="py-3 px-4 text-center">Estado</th>
+              <th class="py-3 px-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+            @for (prod of productos(); track prod.id) {
+              <tr class="hover:bg-gray-50/80 transition-colors" [class.opacity-60]="!prod.activo">
+                <!-- Imagen -->
+                <td class="py-3 px-4">
+                  <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                    @if (prod.imagenPrincipal) {
+                      <img [src]="prod.imagenPrincipal" [alt]="prod.nombre" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-gray-300 text-xs">📷</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Nombre + detalles -->
+                <td class="py-3 px-4">
+                  <div class="font-medium text-gray-900 leading-snug">{{ prod.nombre }}</div>
+                  <div class="text-xs text-gray-400 flex items-center gap-2 mt-0.5">
+                    @if (prod.escala) {
+                      <span>Escala: {{ prod.escala }}</span>
+                    }
+                    @if (prod.notaTalla) {
+                      <span>• Talla: {{ prod.notaTalla }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Categoría -->
+                <td class="py-3 px-4">
+                  <span class="inline-block text-xs font-medium px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md">
+                    {{ prod.categoriaNombre }}
+                  </span>
+                  @if (prod.proveedorNombre) {
+                    <div class="text-xs text-gray-400 mt-0.5">Prov: {{ prod.proveedorNombre }}</div>
+                  }
+                </td>
+
+                <!-- Precio -->
+                <td class="py-3 px-4 text-right font-semibold text-gray-900">
+                  {{ prod.precioCentavos | bs }}
+                </td>
+
+                <!-- Costo -->
+                <td class="py-3 px-4 text-right text-gray-500 font-mono text-xs">
+                  {{ prod.costoCentavos | bs }}
+                </td>
+
+                <!-- Stock con badge (RN-02) -->
+                <td class="py-3 px-4 text-center">
+                  @if (prod.stock <= 0) {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                      Agotado (0)
+                    </span>
+                  } @else if (prod.stock <= 3) {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                      {{ prod.stock }} un.
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                      {{ prod.stock }} un.
+                    </span>
+                  }
+                </td>
+
+                <!-- Estado -->
+                <td class="py-3 px-4 text-center">
+                  @if (prod.activo) {
+                    <span class="inline-block text-xs font-medium text-emerald-700">Activo</span>
+                  } @else {
+                    <span class="inline-block text-xs font-medium text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Dado de baja</span>
+                  }
+                </td>
+
+                <!-- Acciones -->
+                <td class="py-3 px-4 text-right space-x-2">
+                  <button
+                    (click)="abrirModalEditar(prod)"
+                    class="text-indigo-600 hover:text-indigo-800 font-medium text-xs py-1 px-2 rounded hover:bg-indigo-50 transition-colors cursor-pointer"
+                  >
+                    Editar
+                  </button>
+                  @if (prod.activo) {
+                    <button
+                      (click)="confirmarDarDeBaja(prod)"
+                      class="text-red-600 hover:text-red-800 font-medium text-xs py-1 px-2 rounded hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      Dar de baja
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal Formulario (Alta / Edición) -->
+@if (modalAbierto()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-gray-100 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-5">
+        <h2 class="text-lg font-bold text-gray-900">
+          {{ productoEnEdicion() ? 'Editar producto' : 'Nuevo producto' }}
+        </h2>
+        <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-4">
+        <!-- Fila 1: Categoría y Proveedor -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="prodCat" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Categoría *
+            </label>
+            <select
+              id="prodCat"
+              formControlName="categoriaId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              [class.border-red-400]="campoInvalido('categoriaId')"
+            >
+              <option value="">Selecciona una categoría</option>
+              @for (cat of categoriasActivas(); track cat.id) {
+                <option [value]="cat.id">{{ cat.nombre }}</option>
+              }
+            </select>
+            @if (campoInvalido('categoriaId')) {
+              <p class="text-xs text-red-600 mt-1">La categoría es requerida.</p>
+            }
+          </div>
+
+          <div>
+            <label for="prodProv" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Proveedor (opcional)
+            </label>
+            <select
+              id="prodProv"
+              formControlName="proveedorId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option [ngValue]="null">Sin proveedor asignado</option>
+              @for (prov of proveedores(); track prov.id) {
+                <option [value]="prov.id">{{ prov.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Fila 2: Nombre -->
+        <div>
+          <label for="prodNombre" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Nombre del producto *
+          </label>
+          <input
+            id="prodNombre"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej: Polera Demon Slayer Nezuko Talla M"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            [class.border-red-400]="campoInvalido('nombre')"
+          />
+          @if (campoInvalido('nombre')) {
+            <p class="text-xs text-red-600 mt-1">El nombre es requerido.</p>
+          }
+        </div>
+
+        <!-- Fila 3: Descripción -->
+        <div>
+          <label for="prodDesc" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Descripción
+          </label>
+          <textarea
+            id="prodDesc"
+            formControlName="descripcion"
+            rows="2"
+            placeholder="Detalles sobre el material, presentación, origen..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          ></textarea>
+        </div>
+
+        <!-- Fila 4: Precios y Stock (RN-04: el usuario escribe en Bs., se guarda en centavos) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+          <div>
+            <label for="prodPrecio" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
+              Precio venta (Bs.) *
+            </label>
+            <input
+              id="prodPrecio"
+              type="number"
+              step="0.50"
+              min="0"
+              formControlName="precioBs"
+              placeholder="Ej: 45.50"
+              class="w-full px-3 py-2 border border-gray-300 bg-white rounded-lg text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              [class.border-red-400]="campoInvalido('precioBs')"
+            />
+            @if (campoInvalido('precioBs')) {
+              <p class="text-xs text-red-600 mt-1">Precio válido requerido.</p>
+            }
+          </div>
+
+          <div>
+            <label for="prodCosto" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Costo de compra (Bs.)
+            </label>
+            <input
+              id="prodCosto"
+              type="number"
+              step="0.50"
+              min="0"
+              formControlName="costoBs"
+              placeholder="Ej: 25.00"
+              class="w-full px-3 py-2 border border-gray-300 bg-white rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label for="prodStock" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              {{ productoEnEdicion() ? 'Stock actual' : 'Stock inicial *' }}
+            </label>
+            <input
+              id="prodStock"
+              type="number"
+              step="1"
+              min="0"
+              formControlName="stock"
+              placeholder="0"
+              class="w-full px-3 py-2 border border-gray-300 bg-white rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              [class.border-red-400]="campoInvalido('stock')"
+            />
+            @if (campoInvalido('stock')) {
+              <p class="text-xs text-red-600 mt-1">El stock debe ser ≥ 0.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Fila 5: Escala y Nota de Talla (RN-05) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="prodEscala" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Escala (opcional)
+            </label>
+            <input
+              id="prodEscala"
+              type="text"
+              formControlName="escala"
+              placeholder="Ej: 1/7, 1/12, Nendoroid, 15cm"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label for="prodTalla" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Nota de talla (informativa, RN-05)
+            </label>
+            <input
+              id="prodTalla"
+              type="text"
+              formControlName="notaTalla"
+              placeholder="Ej: Tallas S, M, L disponibles a coordinar"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <!-- Fila 6: Imagen Principal (URL) -->
+        <div>
+          <label for="prodImgPrin" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            URL de imagen principal
+          </label>
+          <input
+            id="prodImgPrin"
+            type="url"
+            formControlName="imagenPrincipal"
+            placeholder="https://ejemplo.com/imagen.jpg"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <!-- Fila 7: Imágenes Adicionales (URLs) -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+              Imágenes adicionales por URL (máx. 10)
+            </span>
+            <button
+              type="button"
+              (click)="agregarImagenAdicional()"
+              class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer"
+            >
+              + Agregar otra URL
+            </button>
+          </div>
+
+          <div formArrayName="imagenesAdicionales" class="space-y-2">
+            @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
+              <div class="flex items-center gap-2">
+                <input
+                  type="url"
+                  [formControlName]="$index"
+                  placeholder="https://ejemplo.com/foto-adicional.jpg"
+                  class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  (click)="quitarImagenAdicional($index)"
+                  class="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                  title="Eliminar URL"
+                >
+                  ✕
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="guardando()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg cursor-pointer"
+          >
+            {{ guardando() ? 'Guardando...' : (productoEnEdicion() ? 'Actualizar producto' : 'Guardar producto') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Confirmación Baja Lógica (RN-07) -->
+@if (productoParaBaja()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-gray-100">
+      <h3 class="text-base font-bold text-gray-900 mb-2">¿Dar de baja producto?</h3>
+      <p class="text-sm text-gray-600 mb-5">
+        El producto <strong>"{{ productoParaBaja()!.nombre }}"</strong> no se borrará (RN-07), pero dejará de ser visible en el catálogo público y no se podrá vender.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          (click)="productoParaBaja.set(null)"
+          class="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="ejecutarBaja()"
+          class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg cursor-pointer"
+        >
+          Sí, dar de baja
+        </button>
+      </div>
+    </div>
+  </div>
+}

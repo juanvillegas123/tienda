@@ -50,13 +50,13 @@ export const routes: Routes = [
             {
                 path: 'productos',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/productos/productos').then((m) => m.ProductosAdminComponent),
                 title: 'Productos',
             },
             {
                 path: 'categorias',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/categorias/categorias').then((m) => m.CategoriasAdminComponent),
                 title: 'Categorías',
             },
             {
