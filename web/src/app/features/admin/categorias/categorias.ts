@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoriasService } from '../../../core/categorias.service';
 import { Categoria } from '../../../core/modelos';
 import { HttpErrorResponse } from '@angular/common/http';
+import { generarSlug } from '../../../shared/slug';
 
 @Component({
     selector: 'app-categorias-admin',
@@ -18,8 +19,10 @@ export class CategoriasAdminComponent implements OnInit {
     readonly cargando = signal(true);
     readonly guardando = signal(false);
     readonly terminoBusqueda = signal('');
+    readonly filtroEstado = signal<'todos' | 'activas' | 'inactivas'>('todos');
 
     readonly modalAbierto = signal(false);
+    readonly autoGenerarSlug = signal(true);
     readonly categoriaEnEdicion = signal<Categoria | null>(null);
     readonly categoriaParaBaja = signal<Categoria | null>(null);
 
@@ -34,7 +37,15 @@ export class CategoriasAdminComponent implements OnInit {
 
     readonly categoriasFiltradas = computed(() => {
         const termino = this.terminoBusqueda().trim().toLowerCase();
-        const lista = this.categorias();
+        const estado = this.filtroEstado();
+        let lista = this.categorias();
+
+        if (estado === 'activas') {
+            lista = lista.filter((c) => c.activa);
+        } else if (estado === 'inactivas') {
+            lista = lista.filter((c) => !c.activa);
+        }
+
         if (!termino) return lista;
         return lista.filter(
             (c) =>
@@ -42,6 +53,15 @@ export class CategoriasAdminComponent implements OnInit {
                 c.slug.toLowerCase().includes(termino),
         );
     });
+
+    @HostListener('document:keydown.escape')
+    onEscape(): void {
+        if (this.modalAbierto()) {
+            this.cerrarModal();
+        } else if (this.categoriaParaBaja()) {
+            this.categoriaParaBaja.set(null);
+        }
+    }
 
     ngOnInit(): void {
         this.cargarCategorias();
@@ -66,6 +86,23 @@ export class CategoriasAdminComponent implements OnInit {
         this.terminoBusqueda.set(valor);
     }
 
+    onNombreInput(event: Event): void {
+        const nombre = (event.target as HTMLInputElement).value;
+        if (this.autoGenerarSlug()) {
+            this.form.patchValue({ slug: generarSlug(nombre) });
+        }
+    }
+
+    onSlugInput(): void {
+        this.autoGenerarSlug.set(false);
+    }
+
+    forzarGenerarSlug(): void {
+        this.autoGenerarSlug.set(true);
+        const nombre = this.form.get('nombre')?.value || '';
+        this.form.patchValue({ slug: generarSlug(nombre) });
+    }
+
     campoInvalido(campo: 'nombre' | 'slug'): boolean {
         const ctrl = this.form.get(campo);
         return !!(ctrl?.invalid && (ctrl.dirty || ctrl.touched));
@@ -73,12 +110,16 @@ export class CategoriasAdminComponent implements OnInit {
 
     abrirModalCrear(): void {
         this.categoriaEnEdicion.set(null);
+        this.autoGenerarSlug.set(true);
+        this.mensajeError.set(null);
         this.form.reset({ nombre: '', slug: '', activa: true });
         this.modalAbierto.set(true);
     }
 
     abrirModalEditar(cat: Categoria): void {
         this.categoriaEnEdicion.set(cat);
+        this.autoGenerarSlug.set(true);
+        this.mensajeError.set(null);
         this.form.reset({
             nombre: cat.nombre,
             slug: cat.slug,
@@ -90,6 +131,7 @@ export class CategoriasAdminComponent implements OnInit {
     cerrarModal(): void {
         this.modalAbierto.set(false);
         this.categoriaEnEdicion.set(null);
+        this.mensajeError.set(null);
         this.form.reset();
     }
 
@@ -105,12 +147,14 @@ export class CategoriasAdminComponent implements OnInit {
 
         const { nombre, slug, activa } = this.form.getRawValue();
         const enEdicion = this.categoriaEnEdicion();
+        // Si el slug está vacío o autoGenerarSlug está activo, recalculamos desde el nombre
+        const slugFinal = slug.trim().length > 0 ? slug.trim() : generarSlug(nombre);
 
         if (enEdicion) {
             this.categoriasService
                 .editar(enEdicion.id, {
-                    nombre,
-                    slug: slug.trim().length > 0 ? slug.trim() : undefined,
+                    nombre: nombre.trim(),
+                    slug: slugFinal,
                     activa,
                 })
                 .subscribe({
@@ -130,8 +174,8 @@ export class CategoriasAdminComponent implements OnInit {
         } else {
             this.categoriasService
                 .crear({
-                    nombre,
-                    slug: slug.trim().length > 0 ? slug.trim() : undefined,
+                    nombre: nombre.trim(),
+                    slug: slugFinal,
                 })
                 .subscribe({
                     next: (creada) => {

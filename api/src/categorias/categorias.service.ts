@@ -65,8 +65,8 @@ export class CategoriasService {
         await this.obtenerPorId(id);
 
         let slug: string | undefined;
-        if (dto.slug !== undefined) {
-            slug = dto.slug.length > 0 ? generarSlug(dto.slug) : undefined;
+        if (dto.slug !== undefined && dto.slug.trim().length > 0) {
+            slug = generarSlug(dto.slug);
         } else if (dto.nombre !== undefined) {
             slug = generarSlug(dto.nombre);
         }

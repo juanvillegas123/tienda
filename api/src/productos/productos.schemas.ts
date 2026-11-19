@@ -2,24 +2,24 @@ import { z } from 'zod';
 
 export const crearProductoSchema = z
     .object({
-        categoriaId: z.number().int().positive('La categoría debe ser un ID válido'),
-        proveedorId: z.number().int().positive('El proveedor debe ser un ID válido').nullable().optional(),
+        categoriaId: z.coerce.number().int().positive('La categoría debe ser un ID válido'),
+        proveedorId: z.coerce.number().int().positive('El proveedor debe ser un ID válido').nullable().optional(),
         nombre: z
             .string()
             .min(1, 'El nombre es requerido')
             .max(200, 'El nombre no puede exceder 200 caracteres')
             .trim(),
         descripcion: z.string().max(2000).trim().nullable().optional(),
-        precioCentavos: z
+        precioCentavos: z.coerce
             .number()
             .int('El precio debe ser un número entero de centavos')
             .min(0, 'El precio no puede ser negativo'),
-        costoCentavos: z
+        costoCentavos: z.coerce
             .number()
             .int('El costo debe ser un número entero de centavos')
             .min(0, 'El costo no puede ser negativo')
             .default(0),
-        stockInicial: z
+        stockInicial: z.coerce
             .number()
             .int('El stock debe ser un número entero')
             .min(0, 'El stock no puede ser negativo')
@@ -36,8 +36,8 @@ export const crearProductoSchema = z
 
 export const editarProductoSchema = z
     .object({
-        categoriaId: z.number().int().positive().optional(),
-        proveedorId: z.number().int().positive().nullable().optional(),
+        categoriaId: z.coerce.number().int().positive().optional(),
+        proveedorId: z.coerce.number().int().positive().nullable().optional(),
         nombre: z
             .string()
             .min(1, 'El nombre no puede estar vacío')
@@ -45,17 +45,17 @@ export const editarProductoSchema = z
             .trim()
             .optional(),
         descripcion: z.string().max(2000).trim().nullable().optional(),
-        precioCentavos: z
+        precioCentavos: z.coerce
             .number()
             .int('El precio debe ser un número entero de centavos')
             .min(0, 'El precio no puede ser negativo')
             .optional(),
-        costoCentavos: z
+        costoCentavos: z.coerce
             .number()
             .int('El costo debe ser un número entero de centavos')
             .min(0, 'El costo no puede ser negativo')
             .optional(),
-        stock: z
+        stock: z.coerce
             .number()
             .int('El stock debe ser un número entero')
             .min(0, 'El stock no puede ser negativo')

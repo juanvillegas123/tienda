@@ -11,8 +11,9 @@ export class ZodValidationPipe implements PipeTransform {
             // Zod v4 usa .issues; v3 usaba .errors (alias). Soportamos ambas.
             const issues = result.error.issues ?? [];
             const mensajes = issues.map((e) => `${e.path.join('.')}: ${e.message}`);
+            const detalle = mensajes.length > 0 ? `: ${mensajes.join('; ')}` : '';
             throw new BadRequestException({
-                mensaje: 'Datos inválidos',
+                mensaje: `Datos inválidos${detalle}`,
                 errores: mensajes,
             });
         }

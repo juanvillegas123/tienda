@@ -5,7 +5,7 @@ import { AuthService } from '../../../core/auth.service';
 interface NavItem {
     nombre: string;
     ruta: string;
-    icono: string;
+    id: 'pedidos' | 'pos' | 'caja' | 'productos' | 'categorias' | 'inventario' | 'proveedores' | 'reportes';
 }
 
 @Component({
@@ -21,18 +21,17 @@ export class AdminLayoutComponent implements OnInit {
     readonly sesion = this.authService.sesion;
 
     readonly navItems: NavItem[] = [
-        { nombre: 'Pedidos', ruta: '/admin/pedidos', icono: '📦' },
-        { nombre: 'Punto de venta', ruta: '/admin/pos', icono: '🛒' },
-        { nombre: 'Caja', ruta: '/admin/caja', icono: '💰' },
-        { nombre: 'Productos', ruta: '/admin/productos', icono: '🏷️' },
-        { nombre: 'Categorías', ruta: '/admin/categorias', icono: '🗂️' },
-        { nombre: 'Inventario', ruta: '/admin/inventario', icono: '📊' },
-        { nombre: 'Proveedores', ruta: '/admin/proveedores', icono: '🚚' },
-        { nombre: 'Reportes', ruta: '/admin/reportes', icono: '📈' },
+        { nombre: 'Pedidos', ruta: '/admin/pedidos', id: 'pedidos' },
+        { nombre: 'Punto de venta', ruta: '/admin/pos', id: 'pos' },
+        { nombre: 'Caja', ruta: '/admin/caja', id: 'caja' },
+        { nombre: 'Productos', ruta: '/admin/productos', id: 'productos' },
+        { nombre: 'Categorías', ruta: '/admin/categorias', id: 'categorias' },
+        { nombre: 'Inventario', ruta: '/admin/inventario', id: 'inventario' },
+        { nombre: 'Proveedores', ruta: '/admin/proveedores', id: 'proveedores' },
+        { nombre: 'Reportes', ruta: '/admin/reportes', id: 'reportes' },
     ];
 
     ngOnInit(): void {
-        // Cargar sesión si no está en memoria
         if (!this.authService.estaAutenticada()) {
             this.authService.cargarSesion().subscribe({
                 error: () => void this.router.navigate(['/admin/login']),

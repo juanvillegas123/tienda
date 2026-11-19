@@ -1,11 +1,34 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
-import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { FormBuilder, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ProductosService } from '../../../core/productos.service';
 import { CategoriasService } from '../../../core/categorias.service';
 import { ProveedoresService } from '../../../core/proveedores.service';
 import { ProductoAdmin, Categoria, Proveedor } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
+
+function convertirBsACentavos(valor: unknown): number {
+    if (valor === null || valor === undefined || valor === '') return 0;
+    if (typeof valor === 'number') {
+        return isNaN(valor) ? 0 : Math.round(valor * 100);
+    }
+    if (typeof valor === 'string') {
+        const normalizado = valor.trim().replace(',', '.');
+        const num = parseFloat(normalizado);
+        return isNaN(num) ? 0 : Math.round(num * 100);
+    }
+    return 0;
+}
+
+function validadorDinero(control: AbstractControl): ValidationErrors | null {
+    const v = control.value;
+    if (v === null || v === undefined || v === '') return null;
+    const num = typeof v === 'number' ? v : parseFloat(String(v).trim().replace(',', '.'));
+    if (isNaN(num) || num < 0) {
+        return { dineroInvalido: true };
+    }
+    return null;
+}
 
 @Component({
     selector: 'app-productos-admin',
@@ -19,12 +42,13 @@ export class ProductosAdminComponent implements OnInit {
     private readonly proveedoresService = inject(ProveedoresService);
     private readonly fb = inject(FormBuilder);
 
+    // Listas y estados de carga
     readonly productos = signal<ProductoAdmin[]>([]);
     readonly categorias = signal<Categoria[]>([]);
     readonly proveedores = signal<Proveedor[]>([]);
-
     readonly cargando = signal(true);
     readonly guardando = signal(false);
+    readonly dandoDeBaja = signal(false);
 
     // Filtros
     readonly filtroTexto = signal('');
@@ -44,8 +68,8 @@ export class ProductosAdminComponent implements OnInit {
         proveedorId: [null as number | null],
         nombre: ['', [Validators.required, Validators.maxLength(200)]],
         descripcion: [''],
-        precioBs: [null as number | null, [Validators.required, Validators.min(0)]],
-        costoBs: [null as number | null, [Validators.min(0)]],
+        precioBs: [null as number | string | null, [Validators.required, validadorDinero]],
+        costoBs: [null as number | string | null, [validadorDinero]],
         stock: [0, [Validators.required, Validators.min(0)]],
         escala: [''],
         notaTalla: [''],
@@ -60,6 +84,15 @@ export class ProductosAdminComponent implements OnInit {
     readonly categoriasActivas = computed(() => {
         return this.categorias().filter((c) => c.activa);
     });
+
+    @HostListener('document:keydown.escape')
+    onEscape(): void {
+        if (this.modalAbierto()) {
+            this.cerrarModal();
+        } else if (this.productoParaBaja()) {
+            this.cerrarModalBaja();
+        }
+    }
 
     ngOnInit(): void {
         this.cargarDependencias();
@@ -99,19 +132,19 @@ export class ProductosAdminComponent implements OnInit {
             });
     }
 
-    actualizarTextoBusqueda(event: Event): void {
+    actualizarBusqueda(event: Event): void {
         const valor = (event.target as HTMLInputElement).value;
         this.filtroTexto.set(valor);
         this.cargarProductos();
     }
 
-    cambiarCategoriaFiltro(event: Event): void {
+    actualizarCategoria(event: Event): void {
         const valor = (event.target as HTMLSelectElement).value;
-        this.filtroCategoriaId.set(valor ? parseInt(valor, 10) : null);
+        this.filtroCategoriaId.set(valor ? Number(valor) : null);
         this.cargarProductos();
     }
 
-    cambiarEstadoFiltro(event: Event): void {
+    actualizarEstado(event: Event): void {
         const valor = (event.target as HTMLSelectElement).value as 'todos' | 'true' | 'false';
         this.filtroEstado.set(valor);
         this.cargarProductos();
@@ -122,19 +155,20 @@ export class ProductosAdminComponent implements OnInit {
         return !!(ctrl?.invalid && (ctrl.dirty || ctrl.touched));
     }
 
-    agregarImagenAdicional(url = ''): void {
+    agregarImagenAdicional(urlInicial = ''): void {
         if (this.imagenesAdicionalesArray.length >= 10) return;
-        this.imagenesAdicionalesArray.push(this.fb.control(url));
+        this.imagenesAdicionalesArray.push(this.fb.control(urlInicial));
     }
 
-    quitarImagenAdicional(index: number): void {
+    eliminarImagenAdicional(index: number): void {
         this.imagenesAdicionalesArray.removeAt(index);
     }
 
     abrirModalCrear(): void {
         this.productoEnEdicion.set(null);
+        this.mensajeError.set(null);
         this.form.reset({
-            categoriaId: null,
+            categoriaId: this.categoriasActivas().length > 0 ? this.categoriasActivas()[0].id : null,
             proveedorId: null,
             nombre: '',
             descripcion: '',
@@ -151,6 +185,7 @@ export class ProductosAdminComponent implements OnInit {
 
     abrirModalEditar(prod: ProductoAdmin): void {
         this.productoEnEdicion.set(prod);
+        this.mensajeError.set(null);
         this.imagenesAdicionalesArray.clear();
 
         this.form.reset({
@@ -178,6 +213,7 @@ export class ProductosAdminComponent implements OnInit {
     cerrarModal(): void {
         this.modalAbierto.set(false);
         this.productoEnEdicion.set(null);
+        this.mensajeError.set(null);
         this.form.reset();
         this.imagenesAdicionalesArray.clear();
     }
@@ -193,9 +229,11 @@ export class ProductosAdminComponent implements OnInit {
         this.mensajeExito.set(null);
 
         const v = this.form.getRawValue();
-        const precioCentavos = Math.round((v.precioBs ?? 0) * 100);
-        const costoCentavos = Math.round((v.costoBs ?? 0) * 100);
-        const stock = Math.trunc(v.stock ?? 0);
+        const categoriaId = Number(v.categoriaId);
+        const proveedorId = v.proveedorId ? Number(v.proveedorId) : null;
+        const precioCentavos = convertirBsACentavos(v.precioBs);
+        const costoCentavos = convertirBsACentavos(v.costoBs);
+        const stock = Math.trunc(Number(v.stock) || 0);
 
         const imagenesFiltradas = (v.imagenesAdicionales as string[])
             .map((url) => (url ? url.trim() : ''))
@@ -206,8 +244,8 @@ export class ProductosAdminComponent implements OnInit {
         if (prodActual) {
             this.productosService
                 .editar(prodActual.id, {
-                    categoriaId: v.categoriaId ?? undefined,
-                    proveedorId: v.proveedorId ?? null,
+                    categoriaId: categoriaId || undefined,
+                    proveedorId: proveedorId,
                     nombre: v.nombre?.trim(),
                     descripcion: v.descripcion?.trim() || null,
                     precioCentavos,
@@ -235,8 +273,8 @@ export class ProductosAdminComponent implements OnInit {
         } else {
             this.productosService
                 .crear({
-                    categoriaId: v.categoriaId!,
-                    proveedorId: v.proveedorId ?? null,
+                    categoriaId: categoriaId,
+                    proveedorId: proveedorId,
                     nombre: v.nombre!.trim(),
                     descripcion: v.descripcion?.trim() || null,
                     precioCentavos,
@@ -266,20 +304,27 @@ export class ProductosAdminComponent implements OnInit {
         this.productoParaBaja.set(prod);
     }
 
-    ejecutarBaja(): void {
+    cerrarModalBaja(): void {
+        this.productoParaBaja.set(null);
+    }
+
+    confirmarBaja(): void {
         const prod = this.productoParaBaja();
         if (!prod) return;
 
+        this.dandoDeBaja.set(true);
         this.productosService.darDeBaja(prod.id).subscribe({
             next: (actualizado) => {
                 this.productos.update((lista) =>
                     lista.map((p) => (p.id === actualizado.id ? actualizado : p)),
                 );
-                this.productoParaBaja.set(null);
+                this.dandoDeBaja.set(false);
+                this.cerrarModalBaja();
                 this.mensajeExito.set(`Producto "${actualizado.nombre}" dado de baja.`);
             },
             error: () => {
-                this.productoParaBaja.set(null);
+                this.dandoDeBaja.set(false);
+                this.cerrarModalBaja();
                 this.mensajeError.set('No se pudo dar de baja el producto.');
             },
         });
@@ -288,7 +333,7 @@ export class ProductosAdminComponent implements OnInit {
     private manejarError(err: unknown, defaultMsg: string): void {
         if (err instanceof HttpErrorResponse) {
             const body = err.error as Record<string, unknown> | null;
-            const msg = (body?.['mensaje'] as string) ?? defaultMsg;
+            const msg = (body?.['mensaje'] as string) || defaultMsg;
             this.mensajeError.set(msg);
         } else {
             this.mensajeError.set(defaultMsg);
