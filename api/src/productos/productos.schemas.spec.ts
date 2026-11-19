@@ -77,4 +77,48 @@ describe('ProductosSchemas (Zod)', () => {
 
         expect(resultado.success).toBe(false);
     });
+
+    it('debe rechazar URLs de imagen con esquemas inseguros (http, javascript, data, ftp)', () => {
+        const urlsInseguras = [
+            'http://ejemplo.com/imagen.jpg',
+            'javascript:alert(1)',
+            'data:image/png;base64,iVBORw0KGgo=',
+            'ftp://ejemplo.com/imagen.jpg',
+        ];
+
+        for (const url of urlsInseguras) {
+            const crearPrincipal = crearProductoSchema.safeParse({
+                categoriaId: 1,
+                nombre: 'Figura Test',
+                precioCentavos: 15000,
+                imagenPrincipal: url,
+            });
+            expect(crearPrincipal.success).toBe(false);
+
+            const crearGaleria = crearProductoSchema.safeParse({
+                categoriaId: 1,
+                nombre: 'Figura Test',
+                precioCentavos: 15000,
+                imagenesAdicionales: [url],
+            });
+            expect(crearGaleria.success).toBe(false);
+
+            const editarPrincipal = editarProductoSchema.safeParse({
+                imagenPrincipal: url,
+            });
+            expect(editarPrincipal.success).toBe(false);
+        }
+    });
+
+    it('debe rechazar URLs de imagen que superen la longitud máxima', () => {
+        const urlLarga = `https://ejemplo.com/${'a'.repeat(1000)}.jpg`;
+        const resultado = crearProductoSchema.safeParse({
+            categoriaId: 1,
+            nombre: 'Figura Test',
+            precioCentavos: 15000,
+            imagenPrincipal: urlLarga,
+        });
+
+        expect(resultado.success).toBe(false);
+    });
 });

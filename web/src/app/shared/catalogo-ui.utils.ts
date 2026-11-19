@@ -22,3 +22,32 @@ export function etiquetaEscala(
     }
     return { prefijo: 'Escala', valor };
 }
+
+export function slugify(texto: string): string {
+    return texto
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60)
+        .replace(/-+$/g, '');
+}
+
+export function rutaProducto(id: number, nombre: string): string {
+    const slug = slugify(nombre);
+    return slug.length > 0 ? `${slug}-${id}` : `${id}`;
+}
+
+export function extraerIdDeRuta(ruta: string | null): number | null {
+    if (!ruta) return null;
+    const limpia = ruta.trim();
+    const matchSoloNumero = /^(\d+)$/.exec(limpia);
+    const matchConSlug = /-(\d+)$/.exec(limpia);
+    const captura = matchSoloNumero?.[1] ?? matchConSlug?.[1];
+    if (!captura) return null;
+
+    const id = Number(captura);
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
+    return id;
+}

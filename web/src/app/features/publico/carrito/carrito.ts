@@ -4,7 +4,7 @@ import { CarritoService } from '../../../core/carrito.service';
 import { ItemCarrito } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
-import { esNotaTallaVisible } from '../../../shared/catalogo-ui.utils';
+import { esNotaTallaVisible, rutaProducto } from '../../../shared/catalogo-ui.utils';
 
 @Component({
     selector: 'app-carrito-publico',
@@ -15,6 +15,7 @@ import { esNotaTallaVisible } from '../../../shared/catalogo-ui.utils';
 export class CarritoComponent {
     readonly carrito = inject(CarritoService);
     readonly esNotaTallaVisible = esNotaTallaVisible;
+    readonly rutaProducto = rutaProducto;
 
     readonly aviso = signal<string | null>(null);
     readonly confirmandoVaciar = signal(false);

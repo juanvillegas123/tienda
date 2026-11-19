@@ -1,5 +1,5 @@
 <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 py-5 sm:py-8">
-  <div class="flex items-center justify-between gap-4 mb-6">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
     <div>
       <div class="flex items-center gap-2">
         <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -15,7 +15,7 @@
     </div>
     <a
       routerLink="/"
-      class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-carmesi hover:text-carmesi-claro transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+      class="inline-flex items-center gap-1.5 text-sm font-semibold text-carmesi hover:text-carmesi-claro transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
     >
       Seguir comprando
     </a>
@@ -64,7 +64,7 @@
             <div class="flex gap-3.5">
               <!-- Miniatura pequeña -->
               <a
-                [routerLink]="['/producto', item.productoId]"
+                [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
                 class="h-16 w-16 rounded-xl bg-tarjeta border border-[#00000010] overflow-hidden shrink-0 flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
               >
                 @if (item.imagenPrincipal) {
@@ -73,6 +73,7 @@
                     [alt]="item.nombre"
                     loading="lazy"
                     decoding="async"
+                    referrerpolicy="no-referrer"
                     class="w-full h-full object-contain"
                   />
                 } @else {
@@ -88,7 +89,7 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-2">
                   <a
-                    [routerLink]="['/producto', item.productoId]"
+                    [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
                     class="text-sm sm:text-base font-semibold uppercase tracking-tight text-negro hover:text-carmesi leading-snug line-clamp-2 focus-visible:outline-none focus-visible:underline"
                   >
                     {{ item.nombre }}
@@ -176,7 +177,7 @@
         }
       </div>
 
-      <!-- Resumen en panel oscuro (negro con texto perla y botón carmesí) -->
+      <!-- Resumen en panel oscuro (negro con texto perla) -->
       <aside class="bg-negro text-perla rounded-2xl border border-vino p-5 shadow-md space-y-4 lg:sticky lg:top-24">
         <div class="flex items-center gap-2">
           <svg class="w-3.5 h-3.5 text-carmesi-claro shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -199,16 +200,17 @@
         </div>
 
         <div class="p-3 rounded-xl bg-vino-oscuro/80 border border-vino text-xs text-perla/85 leading-relaxed">
-          Tu carrito se guarda automáticamente en este dispositivo. El envío de pedidos por WhatsApp estará disponible en la siguiente actualización.
+          Tu carrito se guarda automáticamente en este dispositivo.
         </div>
 
         <div class="space-y-2 pt-1">
-          <a
-            routerLink="/"
-            class="w-full inline-flex items-center justify-center px-5 py-2.5 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
+          <button
+            type="button"
+            disabled
+            class="w-full inline-flex items-center justify-center px-5 py-2.5 bg-carmesi/45 text-perla/75 text-sm font-semibold rounded-full cursor-not-allowed border border-carmesi/40"
           >
-            Seguir comprando
-          </a>
+            Finalizar pedido (próximamente)
+          </button>
 
           @if (!confirmandoVaciar()) {
             <button

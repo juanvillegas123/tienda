@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
 import { ProductoPublico } from '../../../core/modelos';
@@ -9,6 +10,8 @@ import {
     POCAS_UNIDADES,
     esNotaTallaVisible,
     etiquetaEscala,
+    extraerIdDeRuta,
+    rutaProducto,
 } from '../../../shared/catalogo-ui.utils';
 
 @Component({
@@ -19,6 +22,8 @@ import {
 })
 export class ProductoDetalleComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
+    private readonly destroyRef = inject(DestroyRef);
     private readonly catalogoService = inject(CatalogoService);
     readonly carrito = inject(CarritoService);
 
@@ -28,12 +33,14 @@ export class ProductoDetalleComponent implements OnInit {
 
     readonly producto = signal<ProductoPublico | null>(null);
     readonly cargando = signal(true);
-    readonly errorCarga = signal<string | null>(null);
+    readonly noEncontrado = signal(false);
 
     readonly imagenSeleccionada = signal<string | null>(null);
     readonly cantidad = signal(1);
     readonly notaCliente = signal('');
     readonly mensaje = signal<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
+
+    private ultimoIdCargado: number | null = null;
 
     readonly galeria = computed(() => {
         const prod = this.producto();
@@ -62,31 +69,52 @@ export class ProductoDetalleComponent implements OnInit {
     });
 
     ngOnInit(): void {
-        const idParam = this.route.snapshot.paramMap.get('id');
-        const id = Number(idParam);
-        if (!idParam || !Number.isInteger(id) || id <= 0) {
-            this.errorCarga.set('Producto no encontrado.');
-            this.cargando.set(false);
-            return;
-        }
+        this.route.paramMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((params) => {
+                const ruta = params.get('ruta');
+                const id = extraerIdDeRuta(ruta);
 
-        this.cargarProducto(id);
+                if (!id) {
+                    this.ultimoIdCargado = null;
+                    this.producto.set(null);
+                    this.noEncontrado.set(true);
+                    this.cargando.set(false);
+                    return;
+                }
+
+                // Evitar recarga doble cuando ocurre la redirección canónica al mismo ID
+                if (this.ultimoIdCargado === id && this.producto()?.id === id) {
+                    return;
+                }
+
+                this.cargarProducto(id, ruta ?? '');
+            });
     }
 
-    cargarProducto(id: number): void {
+    cargarProducto(id: number, rutaActual: string): void {
         this.cargando.set(true);
-        this.errorCarga.set(null);
+        this.noEncontrado.set(false);
+        this.mensaje.set(null);
 
         this.catalogoService.obtenerProducto(id).subscribe({
             next: (prod) => {
+                this.ultimoIdCargado = prod.id;
                 this.producto.set(prod);
                 const primera = prod.imagenPrincipal ?? prod.imagenes?.[0]?.url ?? null;
                 this.imagenSeleccionada.set(primera);
                 this.cantidad.set(1);
                 this.cargando.set(false);
+
+                const canonica = rutaProducto(prod.id, prod.nombre);
+                if (rutaActual !== canonica) {
+                    void this.router.navigate(['/producto', canonica], { replaceUrl: true });
+                }
             },
             error: () => {
-                this.errorCarga.set('Este producto no existe o ya no está disponible.');
+                this.ultimoIdCargado = null;
+                this.producto.set(null);
+                this.noEncontrado.set(true);
                 this.cargando.set(false);
             },
         });

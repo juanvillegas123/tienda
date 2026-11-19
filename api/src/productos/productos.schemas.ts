@@ -1,5 +1,24 @@
 import { z } from 'zod';
 
+const MAX_URL_IMAGEN = 1000;
+
+export const urlImagenSeguraSchema = z
+    .string()
+    .trim()
+    .max(MAX_URL_IMAGEN, `La URL de imagen no puede exceder ${MAX_URL_IMAGEN} caracteres`)
+    .url('URL de imagen inválida')
+    .refine(
+        (val) => {
+            try {
+                const parsed = new URL(val);
+                return parsed.protocol === 'https:';
+            } catch {
+                return false;
+            }
+        },
+        { message: 'La URL de imagen debe usar el protocolo seguro https://' },
+    );
+
 export const crearProductoSchema = z
     .object({
         categoriaId: z.coerce.number().int().positive('La categoría debe ser un ID válido'),
@@ -26,9 +45,9 @@ export const crearProductoSchema = z
             .default(0),
         escala: z.string().max(50).trim().nullable().optional(),
         notaTalla: z.string().max(100).trim().nullable().optional(),
-        imagenPrincipal: z.string().url('URL de imagen principal inválida').max(1000).nullable().optional().or(z.literal('')),
+        imagenPrincipal: urlImagenSeguraSchema.nullable().optional().or(z.literal('')),
         imagenesAdicionales: z
-            .array(z.string().url('URL de imagen adicional inválida').max(1000))
+            .array(urlImagenSeguraSchema)
             .max(10, 'Máximo 10 imágenes adicionales')
             .default([]),
     })
@@ -62,9 +81,9 @@ export const editarProductoSchema = z
             .optional(),
         escala: z.string().max(50).trim().nullable().optional(),
         notaTalla: z.string().max(100).trim().nullable().optional(),
-        imagenPrincipal: z.string().url('URL de imagen principal inválida').max(1000).nullable().optional().or(z.literal('')),
+        imagenPrincipal: urlImagenSeguraSchema.nullable().optional().or(z.literal('')),
         imagenesAdicionales: z
-            .array(z.string().url('URL de imagen adicional inválida').max(1000))
+            .array(urlImagenSeguraSchema)
             .max(10, 'Máximo 10 imágenes adicionales')
             .optional(),
         activo: z.boolean().optional(),
