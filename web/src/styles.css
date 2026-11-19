@@ -1,35 +1,32 @@
-@import "@fontsource/dela-gothic-one/latin-400.css";
-@import "@fontsource/dela-gothic-one/japanese-400.css";
-@import "@fontsource/zen-maru-gothic/latin-400.css";
-@import "@fontsource/zen-maru-gothic/latin-500.css";
-@import "@fontsource/zen-maru-gothic/latin-700.css";
-@import "@fontsource/zen-maru-gothic/japanese-400.css";
-@import "@fontsource/zen-maru-gothic/japanese-500.css";
-@import "@fontsource/zen-maru-gothic/japanese-700.css";
+@import "@fontsource/bebas-neue/latin-400.css";
+@import "@fontsource/bebas-neue/latin-ext-400.css";
+@import "@fontsource/dm-sans/latin-400.css";
+@import "@fontsource/dm-sans/latin-500.css";
+@import "@fontsource/dm-sans/latin-700.css";
+@import "@fontsource/dm-sans/latin-ext-400.css";
+@import "@fontsource/dm-sans/latin-ext-500.css";
+@import "@fontsource/dm-sans/latin-ext-700.css";
 @import "tailwindcss";
 
 @theme {
-  --color-noche: #0b1020;
-  --color-tarjeta: #131a33;
-  --color-violeta: #7c5cff;
-  --color-rosa: #ff4fa3;
-  --color-cian: #2fd9ff;
-  --color-sol: #ffd23f;
-  --font-display: "Dela Gothic One", system-ui, sans-serif;
-  --font-sans: "Zen Maru Gothic", system-ui, sans-serif;
+  --color-negro: #0c1014;
+  --color-vino-oscuro: #3c152b;
+  --color-vino: #561530;
+  --color-carmesi: #881830;
+  --color-carmesi-claro: #a8203f;
+  --color-malva: #a76e7a;
+  --color-perla: #f9ebed;
+  --color-fondo: #fbf5f6;
+  --color-tarjeta: #ffffff;
+  --font-display: "Bebas Neue", system-ui, sans-serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
 }
 
-.bg-trama-manga {
-  background-image: radial-gradient(#ffffff14 1px, transparent 1px);
-  background-size: 10px 10px;
-}
-
-.bg-lineas-velocidad {
-  background-image: repeating-conic-gradient(from 0deg, #ffffff0a 0 4deg, transparent 4deg 8deg);
-}
-
-.panel-manga-corte {
-  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+.bg-hero-vitrina {
+  background-color: #0c1014;
+  background-image:
+    repeating-conic-gradient(from 0deg at 75% 50%, #ffffff06 0 4deg, transparent 4deg 10deg),
+    radial-gradient(circle at 75% 50%, #561530 0%, #3c152b 45%, #0c1014 100%);
 }
 
 .scrollbar-oculto {

@@ -1,38 +1,66 @@
-<!-- Banner superior compacto estilo manga -->
-<section class="relative border-b border-violeta/25 bg-gradient-to-r from-violeta/25 via-tarjeta to-rosa/20 bg-lineas-velocidad overflow-hidden">
-  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-      <!-- Lema y accesos rápidos -->
-      <div class="md:col-span-7 space-y-2.5">
-        <p class="font-display text-lg sm:text-2xl text-white leading-snug tracking-wide">
-          Tu colección anime, <span class="text-cian">sin límites</span>
+<!-- Hero compacto "Vitrina de coleccionista" -->
+<section class="bg-hero-vitrina text-perla border-b border-vino">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-5 sm:py-7">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-5">
+      <!-- Izquierda: lema, frase corta y CTA -->
+      <div class="text-center sm:text-left max-w-xl">
+        <div class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-perla/75 mb-1">
+          <svg class="w-3 h-3 text-perla" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+          </svg>
+          <span>OniiChan Store</span>
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl uppercase tracking-wider text-perla leading-none">
+          Calidad en figuras
+        </h1>
+        <p class="text-xs sm:text-sm text-perla/80 mt-2">
+          Piezas seleccionadas de colección, poleras, peluches y accesorios anime para tu vitrina.
         </p>
-        <div class="flex flex-wrap items-center gap-2">
-          @for (cat of categoriasDestacadas(); track cat.id) {
-            <button
-              type="button"
-              (click)="seleccionarCategoria(cat.id)"
-              class="px-3 py-1 rounded-full text-xs font-semibold bg-noche/75 text-slate-100 border border-violeta/50 hover:border-cian hover:text-cian transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
-            >
-              {{ cat.nombre }}
-            </button>
-          }
+        <div class="mt-4">
+          <button
+            type="button"
+            (click)="irACatalogo()"
+            class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-carmesi hover:bg-carmesi-claro text-perla text-xs sm:text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
+          >
+            <span>Ver catálogo</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      <!-- Collage de paneles inclinados estilo manga (con respaldo degradado) -->
-      <div class="hidden md:grid md:col-span-5 grid-cols-4 gap-1.5 h-24" aria-hidden="true">
-        @for (ruta of panelesBanner; track ruta; let i = $index) {
-          <div class="panel-manga-corte relative h-full w-full overflow-hidden bg-gradient-to-br from-violeta/60 via-rosa/50 to-noche border border-white/10">
-            @if (!panelesFallidos()[i]) {
+      <!-- Derecha: círculo blanco con producto destacado (o logo de respaldo) -->
+      <div class="shrink-0">
+        @if (productoHero(); as hero) {
+          <a
+            [routerLink]="['/producto', hero.id]"
+            class="group relative block w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white p-3 shadow-lg ring-2 ring-perla/20 hover:ring-carmesi-claro transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+            [attr.aria-label]="'Ver producto destacado: ' + hero.nombre"
+          >
+            <img
+              [src]="hero.imagenPrincipal!"
+              [alt]="hero.nombre"
+              loading="lazy"
+              decoding="async"
+              class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            />
+          </a>
+        } @else {
+          <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-white p-2 shadow-lg ring-2 ring-perla/20 flex items-center justify-center">
+            @if (!logoHeroFallido()) {
               <img
-                [src]="ruta"
-                alt=""
+                src="img/logo.png"
+                alt="OniiChan Store"
                 loading="lazy"
                 decoding="async"
-                (error)="onErrorPanelBanner(i)"
-                class="w-full h-full object-cover"
+                (error)="onErrorLogoHero()"
+                class="w-full h-full rounded-full object-cover"
               />
+            } @else {
+              <div class="w-full h-full rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-4xl tracking-wider">
+                OS
+              </div>
             }
           </div>
         }
@@ -41,21 +69,63 @@
   </div>
 </section>
 
-<!-- Barra sticky de búsqueda y chips de categoría -->
-<div class="sticky top-[66px] z-30 bg-noche/92 backdrop-blur-md border-b border-violeta/20">
-  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-2.5 space-y-2.5">
+<!-- Franja Destacados (solo si hay al menos 3 productos con imagen) -->
+@if (destacados().length >= 3) {
+  <section class="border-b border-black/8 bg-tarjeta/60">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4">
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+        </svg>
+        <h2 class="font-display text-xl uppercase tracking-wider text-negro leading-none">
+          Destacados
+        </h2>
+      </div>
+
+      <div class="flex items-start gap-4 overflow-x-auto scrollbar-oculto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+        @for (item of destacados(); track item.id) {
+          <a
+            [routerLink]="['/producto', item.id]"
+            class="group flex flex-col items-center w-20 sm:w-24 shrink-0 text-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          >
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-tarjeta border border-[#00000014] p-2 shadow-2xs group-hover:border-carmesi transition-colors overflow-hidden flex items-center justify-center">
+              <img
+                [src]="item.imagenPrincipal!"
+                [alt]="item.nombre"
+                loading="lazy"
+                decoding="async"
+                class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              />
+            </div>
+            <span class="mt-1.5 text-[11px] font-medium text-negro/85 group-hover:text-carmesi line-clamp-1 w-full">
+              {{ item.nombre }}
+            </span>
+          </a>
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<!-- Barra sticky de búsqueda y chips -->
+<div id="catalogo-grilla" class="sticky top-[66px] z-30 bg-fondo/95 backdrop-blur-sm border-b border-black/8">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 space-y-2.5">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-      <!-- Título compacto y descripción en una línea -->
-      <div class="min-w-0">
-        <h1 class="font-display text-base sm:text-lg text-white leading-tight">Catálogo</h1>
-        <p class="text-xs text-slate-400 truncate">
-          Figuras, poleras, peluches, pines y accesorios disponibles en tienda.
-        </p>
+      <div class="flex items-center gap-2 min-w-0">
+        <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+        </svg>
+        <h2 class="font-display text-2xl uppercase tracking-wider text-negro leading-none">
+          Catálogo
+        </h2>
+        <span class="hidden md:inline text-xs text-negro/60 truncate">
+          — Explora nuestra vitrina disponible
+        </span>
       </div>
 
       <!-- Buscador -->
       <div class="relative w-full sm:w-72 md:w-80 shrink-0">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/45">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
@@ -65,15 +135,15 @@
           type="text"
           [value]="filtroTexto()"
           (input)="actualizarBusqueda($event)"
-          placeholder="Buscar producto..."
+          placeholder="Buscar por nombre..."
           aria-label="Buscar productos por nombre"
-          class="w-full pl-9 pr-9 py-2 bg-tarjeta border border-violeta/35 rounded-xl text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cian focus:border-cian"
+          class="w-full pl-9 pr-9 py-2 bg-tarjeta border border-black/15 rounded-full text-sm text-negro placeholder:text-negro/45 focus:outline-none focus:ring-2 focus:ring-carmesi focus:border-carmesi"
         />
         @if (filtroTexto().length > 0) {
           <button
             type="button"
             (click)="limpiarBusqueda()"
-            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:text-cian"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-negro/45 hover:text-carmesi cursor-pointer focus-visible:outline-none focus-visible:text-carmesi"
             aria-label="Limpiar búsqueda"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -84,20 +154,17 @@
       </div>
     </div>
 
-    <!-- Chips de categoría -->
+    <!-- Chips de categoría en cápsula (sin texto en japonés) -->
     @if (categorias().length > 0) {
       <div class="flex items-center gap-2 overflow-x-auto scrollbar-oculto pb-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           (click)="seleccionarCategoria(null)"
           [class]="filtroCategoriaId() === null
-            ? 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-violeta text-white border-cian/70 shadow-[0_0_14px_rgba(124,92,255,0.55)] cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'
-            : 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-tarjeta text-slate-200 border-violeta/30 hover:border-violeta/70 hover:text-white cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'"
+            ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
+            : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
         >
-          <span class="block text-xs font-semibold leading-tight">Todas</span>
-          <span class="block text-[10px] leading-tight mt-0.5" [class]="filtroCategoriaId() === null ? 'text-white/80' : 'text-slate-400'">
-            すべて
-          </span>
+          Todas
         </button>
 
         @for (cat of categorias(); track cat.id) {
@@ -105,19 +172,10 @@
             type="button"
             (click)="seleccionarCategoria(cat.id)"
             [class]="filtroCategoriaId() === cat.id
-              ? 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-violeta text-white border-cian/70 shadow-[0_0_14px_rgba(124,92,255,0.55)] cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'
-              : 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-tarjeta text-slate-200 border-violeta/30 hover:border-violeta/70 hover:text-white cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'"
+              ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
+              : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
           >
-            <span class="block text-xs font-semibold leading-tight">{{ cat.nombre }}</span>
-            @if (textoJaponesCategoria(cat.nombre); as jp) {
-              <span
-                class="block text-[10px] leading-tight mt-0.5"
-                [class]="filtroCategoriaId() === cat.id ? 'text-white/80' : 'text-slate-400'"
-                aria-hidden="true"
-              >
-                {{ jp }}
-              </span>
-            }
+            {{ cat.nombre }}
           </button>
         }
       </div>
@@ -125,21 +183,21 @@
   </div>
 </div>
 
-<!-- Contenido del catálogo -->
-<div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5">
-  <!-- Aviso flotante al agregar -->
+<!-- Grilla de productos -->
+<div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-5 sm:py-6">
+  <!-- Aviso flotante -->
   @if (aviso()) {
     <div
-      class="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-sm z-50 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium flex items-center justify-between gap-3 backdrop-blur-md"
+      class="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-sm z-50 px-4 py-3 rounded-2xl shadow-lg border text-sm font-medium flex items-center justify-between gap-3"
       [class]="aviso()!.tipo === 'ok'
-        ? 'bg-tarjeta/95 border-cian/60 text-white shadow-[0_0_20px_rgba(47,217,255,0.25)]'
-        : 'bg-tarjeta/95 border-rosa/70 text-white shadow-[0_0_20px_rgba(255,79,163,0.25)]'"
+        ? 'bg-negro text-perla border-carmesi'
+        : 'bg-vino-oscuro text-perla border-carmesi-claro'"
       role="status"
     >
       <span>{{ aviso()!.texto }}</span>
       <a
         routerLink="/carrito"
-        class="shrink-0 text-xs font-bold text-sol underline hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian rounded"
+        class="shrink-0 text-xs font-bold text-perla underline hover:text-perla/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi rounded"
       >
         Ver carrito
       </a>
@@ -147,15 +205,14 @@
   }
 
   @if (cargando()) {
-    <!-- Esqueleto de carga -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
       @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track item) {
-        <div class="bg-tarjeta rounded-2xl border border-violeta/25 overflow-hidden animate-pulse">
-          <div class="aspect-[4/5] bg-white/5"></div>
+        <div class="bg-tarjeta rounded-2xl border border-[#00000014] overflow-hidden animate-pulse">
+          <div class="aspect-[4/5] bg-perla/70"></div>
           <div class="p-3 space-y-2">
-            <div class="h-2.5 w-1/3 bg-white/10 rounded"></div>
-            <div class="h-3.5 w-5/6 bg-white/10 rounded"></div>
-            <div class="h-4 w-1/2 bg-white/10 rounded mt-2"></div>
+            <div class="h-2.5 w-1/3 bg-black/8 rounded"></div>
+            <div class="h-3.5 w-5/6 bg-black/8 rounded"></div>
+            <div class="h-4 w-1/2 bg-black/8 rounded mt-2"></div>
           </div>
         </div>
       }
@@ -170,7 +227,7 @@
         <button
           type="button"
           (click)="reintentar()"
-          class="px-4 py-2 bg-violeta hover:bg-violeta/90 text-white text-sm font-semibold rounded-xl cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+          class="px-5 py-2 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
         >
           Reintentar
         </button>
@@ -187,7 +244,7 @@
           <button
             type="button"
             (click)="limpiarFiltros()"
-            class="px-4 py-2 bg-violeta hover:bg-violeta/90 text-white text-sm font-semibold rounded-xl cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+            class="px-5 py-2 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
           >
             Ver todo el catálogo
           </button>
@@ -195,16 +252,15 @@
       </app-estado-vacio>
     </div>
   } @else {
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
       @for (prod of productos(); track prod.id) {
         <article
-          class="group bg-tarjeta rounded-2xl border overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-          [class]="claseBordeCategoria(prod.categoriaNombre)"
+          class="group relative bg-tarjeta rounded-2xl border border-[#00000014] shadow-xs hover:shadow-md overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         >
-          <!-- Imagen vertical 4:5 tipo carta coleccionable -->
+          <!-- Imagen 4:5 sobre fondo blanco puro -->
           <a
             [routerLink]="['/producto', prod.id]"
-            class="relative block aspect-[4/5] w-full bg-gradient-to-b from-violeta/20 via-noche/70 to-tarjeta overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cian"
+            class="relative block aspect-[4/5] w-full bg-tarjeta overflow-hidden p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carmesi"
           >
             @if (prod.imagenPrincipal) {
               <img
@@ -217,7 +273,7 @@
                 [class.grayscale]="prod.stock === 0"
               />
             } @else {
-              <div class="w-full h-full flex items-center justify-center text-slate-600">
+              <div class="w-full h-full flex items-center justify-center text-negro/20">
                 <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
                   <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                   <circle cx="9" cy="9" r="2" />
@@ -226,46 +282,56 @@
               </div>
             }
 
-            <!-- Etiquetas de disponibilidad (esquina superior izquierda) -->
+            <!-- Etiquetas en esquina superior izquierda -->
             @if (prod.stock === 0) {
-              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-orange-500 text-white shadow-sm">
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-negro text-perla">
                 Agotado
               </span>
             } @else if (prod.stock <= pocasUnidades) {
-              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-sol text-noche shadow-sm">
+              <span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-carmesi text-perla">
                 Pocas unidades
               </span>
             }
 
-            <!-- Sello de escala (esquina superior derecha, solo si existe) -->
-            @if (esEscalaVisible(prod.escala)) {
-              <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-noche/85 text-cian border border-cian/45 backdrop-blur-xs">
-                {{ prod.escala }}
+            <!-- Cápsula de escala/tamaño arriba a la derecha -->
+            @if (etiquetaEscala(prod.escala); as esc) {
+              <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-fondo text-negro/80 border border-black/10">
+                {{ esc.valor }}
               </span>
             }
+
+            <!-- Destello ✦ sutil al pasar el mouse -->
+            <svg
+              class="w-3.5 h-3.5 text-carmesi absolute bottom-2 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 motion-reduce:transition-none pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+            </svg>
           </a>
 
-          <!-- Cuerpo compacto de la tarjeta -->
-          <div class="p-2.5 sm:p-3 flex flex-col flex-1">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-cian/90 truncate">
+          <!-- Cuerpo de la tarjeta -->
+          <div class="px-3 pb-3 pt-1 flex flex-col flex-1 border-t border-black/5">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-malva truncate">
               {{ prod.categoriaNombre }}
             </span>
 
             <a
               [routerLink]="['/producto', prod.id]"
-              class="mt-0.5 text-xs sm:text-sm font-semibold text-slate-100 hover:text-cian line-clamp-2 leading-snug focus-visible:outline-none focus-visible:underline"
+              class="mt-0.5 text-xs sm:text-sm font-semibold uppercase tracking-tight text-negro hover:text-carmesi line-clamp-2 leading-snug focus-visible:outline-none focus-visible:underline"
             >
               {{ prod.nombre }}
             </a>
 
             @if (esNotaTallaVisible(prod.notaTalla)) {
-              <p class="mt-0.5 text-[11px] text-slate-400 truncate" [title]="prod.notaTalla!">
+              <p class="mt-0.5 text-[11px] text-negro/60 truncate" [title]="prod.notaTalla!">
                 {{ prod.notaTalla }}
               </p>
             }
 
             <div class="mt-auto pt-2.5 flex items-center justify-between gap-2">
-              <p class="text-sm sm:text-base font-bold text-sol tabular-nums leading-none">
+              <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
                 {{ prod.precioCentavos | bs }}
               </p>
 
@@ -274,7 +340,7 @@
                   type="button"
                   (click)="agregarRapido(prod, $event)"
                   [disabled]="alcanzoLimiteStock(prod)"
-                  class="w-8 h-8 rounded-xl inline-flex items-center justify-center bg-violeta hover:bg-rosa text-white shadow-xs transition-colors cursor-pointer disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+                  class="w-8 h-8 rounded-full inline-flex items-center justify-center bg-negro hover:bg-carmesi-claro text-perla transition-colors cursor-pointer disabled:bg-black/15 disabled:text-negro/40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1"
                   [attr.aria-label]="alcanzoLimiteStock(prod) ? 'Máximo disponible en el carrito' : 'Agregar ' + prod.nombre + ' al carrito'"
                   [title]="alcanzoLimiteStock(prod) ? 'Máximo disponible en tu carrito' : 'Agregar al carrito'"
                 >

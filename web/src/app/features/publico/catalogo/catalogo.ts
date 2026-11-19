@@ -11,9 +11,7 @@ import { EstadoVacioComponent } from '../../../shared/estado-vacio';
 import {
     POCAS_UNIDADES,
     esNotaTallaVisible,
-    esEscalaVisible,
-    textoJaponesCategoria,
-    claseBordeCategoria,
+    etiquetaEscala,
 } from '../../../shared/catalogo-ui.utils';
 
 @Component({
@@ -32,27 +30,27 @@ export class CatalogoComponent implements OnInit {
 
     readonly pocasUnidades = POCAS_UNIDADES;
     readonly esNotaTallaVisible = esNotaTallaVisible;
-    readonly esEscalaVisible = esEscalaVisible;
-    readonly textoJaponesCategoria = textoJaponesCategoria;
-    readonly claseBordeCategoria = claseBordeCategoria;
+    readonly etiquetaEscala = etiquetaEscala;
 
     readonly categorias = signal<Categoria[]>([]);
     readonly productos = signal<ProductoPublico[]>([]);
+    readonly productosBase = signal<ProductoPublico[]>([]);
     readonly cargando = signal(true);
     readonly errorCarga = signal<string | null>(null);
 
     readonly filtroTexto = signal('');
     readonly filtroCategoriaId = signal<number | null>(null);
+    readonly logoHeroFallido = signal(false);
 
-    readonly panelesBanner = [
-        'img/banner/panel-1.webp',
-        'img/banner/panel-2.webp',
-        'img/banner/panel-3.webp',
-        'img/banner/panel-4.webp',
-    ];
-    readonly panelesFallidos = signal<Record<number, boolean>>({});
+    readonly productoHero = computed(() => {
+        const lista = this.productosBase().length > 0 ? this.productosBase() : this.productos();
+        return lista.find((p) => !!p.imagenPrincipal) ?? null;
+    });
 
-    readonly categoriasDestacadas = computed(() => this.categorias().slice(0, 3));
+    readonly destacados = computed(() => {
+        const lista = this.productosBase().length > 0 ? this.productosBase() : this.productos();
+        return lista.filter((p) => !!p.imagenPrincipal).slice(0, 8);
+    });
 
     readonly aviso = signal<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
     private avisoTimer: ReturnType<typeof setTimeout> | null = null;
@@ -93,14 +91,29 @@ export class CatalogoComponent implements OnInit {
             )
             .subscribe((prods) => {
                 this.productos.set(prods);
+                if (
+                    this.productosBase().length === 0 &&
+                    !this.filtroTexto().trim() &&
+                    this.filtroCategoriaId() === null &&
+                    prods.length > 0
+                ) {
+                    this.productosBase.set(prods);
+                }
                 this.cargando.set(false);
             });
 
         this.recargar$.next();
     }
 
-    onErrorPanelBanner(indice: number): void {
-        this.panelesFallidos.update((actual) => ({ ...actual, [indice]: true }));
+    onErrorLogoHero(): void {
+        this.logoHeroFallido.set(true);
+    }
+
+    irACatalogo(): void {
+        const el = document.getElementById('catalogo-grilla');
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     actualizarBusqueda(event: Event): void {

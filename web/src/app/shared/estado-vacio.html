@@ -1,33 +1,33 @@
-<div class="bg-tarjeta/90 border border-violeta/30 rounded-2xl py-12 px-6 text-center max-w-md mx-auto shadow-lg">
-  <div class="w-28 h-28 mx-auto mb-4 flex items-center justify-center">
-    @if (!imagenFallida()) {
+<div class="bg-tarjeta border border-black/8 rounded-2xl py-12 px-6 text-center max-w-md mx-auto shadow-xs">
+  <div class="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+    @if (!siluetaFallida()) {
       <img
-        [src]="rutaMascota()"
-        [alt]="altMascota()"
+        src="img/mascota/silueta.svg"
+        alt=""
         loading="lazy"
         decoding="async"
-        (error)="onErrorImagen()"
-        class="w-28 h-28 object-contain"
+        (error)="onErrorSilueta()"
+        class="w-24 h-24 object-contain opacity-20 select-none"
       />
     } @else {
       <div
-        class="w-20 h-20 rounded-2xl flex items-center justify-center border"
+        class="w-16 h-16 rounded-full flex items-center justify-center border"
         [class]="tipo() === 'error'
-          ? 'bg-rosa/10 border-rosa/35 text-rosa'
-          : 'bg-violeta/15 border-violeta/35 text-cian'"
+          ? 'bg-perla border-carmesi/25 text-carmesi'
+          : 'bg-perla border-black/8 text-vino'"
       >
         @if (tipo() === 'carrito-vacio') {
-          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <circle cx="9" cy="21" r="1" />
             <circle cx="20" cy="21" r="1" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
         } @else if (tipo() === 'error') {
-          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
           </svg>
         } @else {
-          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
           </svg>
@@ -36,9 +36,9 @@
     }
   </div>
 
-  <h2 class="font-display text-lg text-white tracking-wide">{{ titulo() }}</h2>
+  <h2 class="font-display text-2xl uppercase tracking-wide text-negro">{{ titulo() }}</h2>
   @if (descripcion()) {
-    <p class="text-sm text-slate-300 mt-1.5 leading-relaxed">{{ descripcion() }}</p>
+    <p class="text-sm text-negro/70 mt-1.5 leading-relaxed">{{ descripcion() }}</p>
   }
 
   <div class="mt-5">

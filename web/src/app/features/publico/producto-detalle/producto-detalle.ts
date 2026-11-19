@@ -8,7 +8,7 @@ import { EstadoVacioComponent } from '../../../shared/estado-vacio';
 import {
     POCAS_UNIDADES,
     esNotaTallaVisible,
-    esEscalaVisible,
+    etiquetaEscala,
 } from '../../../shared/catalogo-ui.utils';
 
 @Component({
@@ -24,7 +24,7 @@ export class ProductoDetalleComponent implements OnInit {
 
     readonly pocasUnidades = POCAS_UNIDADES;
     readonly esNotaTallaVisible = esNotaTallaVisible;
-    readonly esEscalaVisible = esEscalaVisible;
+    readonly etiquetaEscala = etiquetaEscala;
 
     readonly producto = signal<ProductoPublico | null>(null);
     readonly cargando = signal(true);

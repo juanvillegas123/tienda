@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CarritoService } from '../../../core/carrito.service';
 
@@ -10,4 +10,9 @@ import { CarritoService } from '../../../core/carrito.service';
 })
 export class PublicLayoutComponent {
     readonly carrito = inject(CarritoService);
+    readonly logoFallido = signal(false);
+
+    onErrorLogo(): void {
+        this.logoFallido.set(true);
+    }
 }
