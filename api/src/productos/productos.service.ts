@@ -3,7 +3,7 @@ import {
     NotFoundException,
     BadRequestException,
 } from '@nestjs/common';
-import { eq, and, like, or, desc, sql } from 'drizzle-orm';
+import { eq, and, like, desc, sql } from 'drizzle-orm';
 import { db } from '../db/db';
 import {
     productos,
@@ -54,12 +54,7 @@ export class ProductosService {
 
         if (filtro?.q && filtro.q.trim().length > 0) {
             const termino = `%${filtro.q.trim().toLowerCase()}%`;
-            condiciones.push(
-                or(
-                    like(sql`lower(${productos.nombre})`, termino),
-                    like(sql`lower(${productos.descripcion})`, termino),
-                )!,
-            );
+            condiciones.push(like(sql`lower(${productos.nombre})`, termino));
         }
 
         const rows = await db
@@ -172,12 +167,7 @@ export class ProductosService {
 
         if (filtro?.q && filtro.q.trim().length > 0) {
             const termino = `%${filtro.q.trim().toLowerCase()}%`;
-            condiciones.push(
-                or(
-                    like(sql`lower(${productos.nombre})`, termino),
-                    like(sql`lower(${productos.descripcion})`, termino),
-                )!,
-            );
+            condiciones.push(like(sql`lower(${productos.nombre})`, termino));
         }
 
         const query = db
