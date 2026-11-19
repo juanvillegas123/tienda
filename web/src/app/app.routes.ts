@@ -2,18 +2,10 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
-    // Redirigir raíz al catálogo (F3)
-    { path: '', pathMatch: 'full', redirectTo: 'catalogo' },
+    // Compatibilidad con ruta antigua /catalogo
+    { path: 'catalogo', pathMatch: 'full', redirectTo: '' },
 
-    // Catálogo público (placeholder hasta F3)
-    {
-        path: 'catalogo',
-        loadComponent: () =>
-            import('./shared/placeholder').then((m) => m.PlaceholderComponent),
-        title: 'Catálogo',
-    },
-
-    // Login
+    // Login de administración
     {
         path: 'admin/login',
         loadComponent: () =>
@@ -80,6 +72,35 @@ export const routes: Routes = [
         ],
     },
 
+    // Tienda pública (F3)
+    {
+        path: '',
+        loadComponent: () =>
+            import('./features/publico/layout/public-layout').then((m) => m.PublicLayoutComponent),
+        children: [
+            {
+                path: '',
+                loadComponent: () =>
+                    import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
+                title: 'Catálogo — OniiChan Store',
+            },
+            {
+                path: 'producto/:id',
+                loadComponent: () =>
+                    import('./features/publico/producto-detalle/producto-detalle').then(
+                        (m) => m.ProductoDetalleComponent,
+                    ),
+                title: 'Detalle de producto — OniiChan Store',
+            },
+            {
+                path: 'carrito',
+                loadComponent: () =>
+                    import('./features/publico/carrito/carrito').then((m) => m.CarritoComponent),
+                title: 'Carrito — OniiChan Store',
+            },
+        ],
+    },
+
     // Catch-all
-    { path: '**', redirectTo: 'catalogo' },
+    { path: '**', redirectTo: '' },
 ];

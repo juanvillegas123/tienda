@@ -95,6 +95,14 @@ export const filtroProductosSchema = z
     })
     .strict();
 
+export const filtroProductosPublicoSchema = z
+    .object({
+        categoriaId: z.coerce.number().int().positive().optional(),
+        q: z.string().trim().max(200).optional(),
+    })
+    .strict();
+
 export type CrearProductoDto = z.infer<typeof crearProductoSchema>;
 export type EditarProductoDto = z.infer<typeof editarProductoSchema>;
 export type FiltroProductosDto = z.infer<typeof filtroProductosSchema>;
+export type FiltroProductosPublicoDto = z.infer<typeof filtroProductosPublicoSchema>;

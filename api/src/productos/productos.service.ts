@@ -16,6 +16,7 @@ import {
     CrearProductoDto,
     EditarProductoDto,
     FiltroProductosDto,
+    FiltroProductosPublicoDto,
 } from './productos.schemas';
 
 export interface ProductoPublicoDto {
@@ -51,10 +52,10 @@ export interface PaginatedResult<T> {
 @Injectable()
 export class ProductosService {
     /**
-     * Catálogo público: solo productos activos y sin información de costos ni proveedores (RN-02 y 5.1).
+     * Catálogo público: solo productos activos cuya categoría también esté activa, sin costos ni proveedores (RN-02 y 5.1).
      */
-    async listarPublicos(filtro?: FiltroProductosDto): Promise<ProductoPublicoDto[]> {
-        const condiciones = [eq(productos.activo, true)];
+    async listarPublicos(filtro?: FiltroProductosPublicoDto): Promise<ProductoPublicoDto[]> {
+        const condiciones = [eq(productos.activo, true), eq(categorias.activa, true)];
 
         if (filtro?.categoriaId) {
             condiciones.push(eq(productos.categoriaId, filtro.categoriaId));
@@ -136,7 +137,7 @@ export class ProductosService {
             })
             .from(productos)
             .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
-            .where(and(eq(productos.id, id), eq(productos.activo, true)))
+            .where(and(eq(productos.id, id), eq(productos.activo, true), eq(categorias.activa, true)))
             .limit(1);
 
         if (!prod) {

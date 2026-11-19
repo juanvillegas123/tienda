@@ -21,11 +21,13 @@ import {
     crearProductoSchema,
     editarProductoSchema,
     filtroProductosSchema,
+    filtroProductosPublicoSchema,
 } from './productos.schemas';
 import type {
     CrearProductoDto,
     EditarProductoDto,
     FiltroProductosDto,
+    FiltroProductosPublicoDto,
 } from './productos.schemas';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { Public } from '../auth/public.decorator';
@@ -76,7 +78,9 @@ export class ProductosController {
      */
     @Public()
     @Get()
-    listarPublicos(@Query(new ZodValidationPipe(filtroProductosSchema)) filtro: FiltroProductosDto) {
+    listarPublicos(
+        @Query(new ZodValidationPipe(filtroProductosPublicoSchema)) filtro: FiltroProductosPublicoDto,
+    ) {
         return this.productosService.listarPublicos(filtro);
     }
 

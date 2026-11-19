@@ -1,4 +1,8 @@
-import { crearProductoSchema, editarProductoSchema } from './productos.schemas';
+import {
+    crearProductoSchema,
+    editarProductoSchema,
+    filtroProductosPublicoSchema,
+} from './productos.schemas';
 
 describe('ProductosSchemas (Zod)', () => {
     it('debe validar un producto completo y válido', () => {
@@ -51,5 +55,26 @@ describe('ProductosSchemas (Zod)', () => {
         });
 
         expect(resultado.success).toBe(true);
+    });
+
+    it('debe validar filtro público con categoriaId y q', () => {
+        const resultado = filtroProductosPublicoSchema.safeParse({
+            categoriaId: '2',
+            q: 'figura',
+        });
+
+        expect(resultado.success).toBe(true);
+        if (resultado.success) {
+            expect(resultado.data.categoriaId).toBe(2);
+            expect(resultado.data.q).toBe('figura');
+        }
+    });
+
+    it('debe rechazar parámetros administrativos en filtro público', () => {
+        const resultado = filtroProductosPublicoSchema.safeParse({
+            activo: 'false',
+        });
+
+        expect(resultado.success).toBe(false);
     });
 });

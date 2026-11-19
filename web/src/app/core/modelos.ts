@@ -28,6 +28,32 @@ export interface ImagenProducto {
     orden: number;
 }
 
+export interface ProductoPublico {
+    id: number;
+    categoriaId: number;
+    categoriaNombre: string;
+    nombre: string;
+    descripcion: string | null;
+    precioCentavos: number;
+    stock: number;
+    escala: string | null;
+    notaTalla: string | null;
+    imagenPrincipal: string | null;
+    imagenes: ImagenProducto[];
+    activo: boolean;
+}
+
+export interface ItemCarrito {
+    productoId: number;
+    nombre: string;
+    precioCentavos: number;
+    imagenPrincipal: string | null;
+    stockMaximo: number;
+    notaTallaInformativa: string | null;
+    cantidad: number;
+    notaCliente: string;
+}
+
 export interface ProductoAdmin {
     id: number;
     categoriaId: number;

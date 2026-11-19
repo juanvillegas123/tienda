@@ -1,0 +1,224 @@
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Tu carrito</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        Revisa tus productos, ajusta cantidades y agrega notas o tallas si lo necesitas.
+      </p>
+    </div>
+    <a
+      routerLink="/"
+      class="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+    >
+      Seguir comprando
+    </a>
+  </div>
+
+  @if (aviso()) {
+    <div class="mb-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-center justify-between gap-3">
+      <span>{{ aviso() }}</span>
+      <button
+        type="button"
+        (click)="aviso.set(null)"
+        class="text-amber-600 hover:text-amber-800 p-1 cursor-pointer"
+        aria-label="Cerrar aviso"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  }
+
+  @if (carrito.items().length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200/80 py-16 px-6 text-center shadow-2xs">
+      <svg class="w-14 h-14 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.25">
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+      <h2 class="text-lg font-bold text-gray-900">Tu carrito está vacío</h2>
+      <p class="text-sm text-gray-500 mt-1 mb-6">
+        Explora el catálogo y agrega los productos que te gusten.
+      </p>
+      <a
+        routerLink="/"
+        class="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-indigo-200 transition-colors"
+      >
+        Ver catálogo
+      </a>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <!-- Lista de productos en el carrito -->
+      <div class="lg:col-span-2 space-y-3">
+        @for (item of carrito.items(); track item.productoId) {
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs space-y-3">
+            <div class="flex gap-3.5">
+              <!-- Miniatura -->
+              <a
+                [routerLink]="['/producto', item.productoId]"
+                class="w-20 h-20 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center"
+              >
+                @if (item.imagenPrincipal) {
+                  <img [src]="item.imagenPrincipal" [alt]="item.nombre" class="w-full h-full object-cover" />
+                } @else {
+                  <svg class="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                    <circle cx="9" cy="9" r="2" />
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                  </svg>
+                }
+              </a>
+
+              <!-- Datos y controles -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <a
+                    [routerLink]="['/producto', item.productoId]"
+                    class="text-sm sm:text-base font-semibold text-gray-900 hover:text-indigo-600 leading-snug line-clamp-2"
+                  >
+                    {{ item.nombre }}
+                  </a>
+                  <button
+                    type="button"
+                    (click)="eliminar(item.productoId)"
+                    class="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                    title="Quitar producto"
+                    aria-label="Quitar producto"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+
+                @if (item.notaTallaInformativa) {
+                  <p class="text-xs text-gray-500 mt-0.5">{{ item.notaTallaInformativa }}</p>
+                }
+
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <!-- Selector de cantidad -->
+                  <div class="inline-flex items-center border border-gray-300 rounded-xl bg-white">
+                    <button
+                      type="button"
+                      (click)="cambiarCantidad(item, -1)"
+                      class="p-1.5 sm:p-2 text-gray-600 hover:text-indigo-600 cursor-pointer"
+                      aria-label="Disminuir cantidad"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span class="px-3 text-sm font-bold text-gray-900 select-none">{{ item.cantidad }}</span>
+                    <button
+                      type="button"
+                      (click)="cambiarCantidad(item, 1)"
+                      [disabled]="item.cantidad >= item.stockMaximo"
+                      class="p-1.5 sm:p-2 text-gray-600 hover:text-indigo-600 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+                      aria-label="Aumentar cantidad"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Precio unitario y subtotal -->
+                  <div class="text-right">
+                    <p class="text-sm sm:text-base font-bold text-gray-900 font-mono">
+                      {{ (item.precioCentavos * item.cantidad) | bs }}
+                    </p>
+                    @if (item.cantidad > 1) {
+                      <p class="text-[11px] text-gray-400 font-mono">
+                        {{ item.precioCentavos | bs }} c/u
+                      </p>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nota opcional por producto -->
+            <div class="pt-2 border-t border-gray-100">
+              <label
+                [attr.for]="'nota-' + item.productoId"
+                class="block text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1"
+              >
+                Nota / talla para este producto (opcional)
+              </label>
+              <input
+                [id]="'nota-' + item.productoId"
+                type="text"
+                maxlength="200"
+                [value]="item.notaCliente"
+                (input)="actualizarNota(item, $event)"
+                placeholder="Ej: Talla M, edición especial..."
+                class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs sm:text-sm bg-gray-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Resumen del carrito -->
+      <aside class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-2xs space-y-4 lg:sticky lg:top-24">
+        <h2 class="text-base font-bold text-gray-900">Resumen</h2>
+
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center justify-between text-gray-600">
+            <span>Productos ({{ carrito.cantidadTotal() }})</span>
+            <span class="font-mono font-medium">{{ carrito.totalCentavos() | bs }}</span>
+          </div>
+          <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-base font-bold text-gray-900">Total estimado</span>
+            <span class="text-xl font-bold text-gray-900 font-mono">{{ carrito.totalCentavos() | bs }}</span>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-indigo-50/80 border border-indigo-100 text-xs text-indigo-800 leading-relaxed">
+          Tu carrito se guarda automáticamente en este dispositivo. El envío de pedidos por WhatsApp estará disponible en la siguiente actualización.
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <a
+            routerLink="/"
+            class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            Seguir comprando
+          </a>
+
+          @if (!confirmandoVaciar()) {
+            <button
+              type="button"
+              (click)="confirmandoVaciar.set(true)"
+              class="w-full px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+            >
+              Vaciar carrito
+            </button>
+          } @else {
+            <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-2">
+              <p class="text-xs text-rose-800 font-medium text-center">¿Seguro que deseas vaciar todo el carrito?</p>
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  (click)="confirmandoVaciar.set(false)"
+                  class="flex-1 py-1.5 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  (click)="vaciarCarrito()"
+                  class="flex-1 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-lg hover:bg-rose-700 cursor-pointer"
+                >
+                  Sí, vaciar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</div>
