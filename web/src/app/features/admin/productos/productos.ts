@@ -1,5 +1,8 @@
-import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { Subject, of } from 'rxjs';
+import { debounceTime, switchMap, tap, catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProductosService } from '../../../core/productos.service';
 import { CategoriasService } from '../../../core/categorias.service';
 import { ProveedoresService } from '../../../core/proveedores.service';
@@ -23,7 +26,8 @@ function convertirBsACentavos(valor: unknown): number {
 function validadorDinero(control: AbstractControl): ValidationErrors | null {
     const v = control.value;
     if (v === null || v === undefined || v === '') return null;
-    const num = typeof v === 'number' ? v : parseFloat(String(v).trim().replace(',', '.'));
+    const str = String(v).trim().replace(',', '.');
+    const num = parseFloat(str);
     if (isNaN(num) || num < 0) {
         return { dineroInvalido: true };
     }
@@ -41,6 +45,8 @@ export class ProductosAdminComponent implements OnInit {
     private readonly categoriasService = inject(CategoriasService);
     private readonly proveedoresService = inject(ProveedoresService);
     private readonly fb = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly busqueda$ = new Subject<void>();
 
     // Listas y estados de carga
     readonly productos = signal<ProductoAdmin[]>([]);
@@ -49,6 +55,9 @@ export class ProductosAdminComponent implements OnInit {
     readonly cargando = signal(true);
     readonly guardando = signal(false);
     readonly dandoDeBaja = signal(false);
+    readonly subiendoImagen = signal(false);
+    readonly subiendoImagenAdicional = signal(false);
+    readonly mostrarUrlManual = signal(false);
 
     // Filtros
     readonly filtroTexto = signal('');
@@ -96,7 +105,39 @@ export class ProductosAdminComponent implements OnInit {
 
     ngOnInit(): void {
         this.cargarDependencias();
-        this.cargarProductos();
+
+        // Flujo reactivo con debounceTime y switchMap para eliminar condiciones de carrera
+        this.busqueda$
+            .pipe(
+                debounceTime(250),
+                tap(() => this.cargando.set(true)),
+                switchMap(() => {
+                    const catId = this.filtroCategoriaId();
+                    const q = this.filtroTexto().trim();
+                    const est = this.filtroEstado();
+
+                    return this.productosService
+                        .listarAdmin({
+                            categoriaId: catId ?? undefined,
+                            q: q.length > 0 ? q : undefined,
+                            activo: est,
+                        })
+                        .pipe(
+                            catchError(() => {
+                                this.mensajeError.set('No se pudo cargar la lista de productos.');
+                                return of([]);
+                            }),
+                        );
+                }),
+                takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe((prods) => {
+                this.productos.set(prods);
+                this.cargando.set(false);
+            });
+
+        // Carga inicial
+        this.busqueda$.next();
     }
 
     cargarDependencias(): void {
@@ -108,46 +149,22 @@ export class ProductosAdminComponent implements OnInit {
         });
     }
 
-    cargarProductos(): void {
-        this.cargando.set(true);
-        const catId = this.filtroCategoriaId();
-        const q = this.filtroTexto().trim();
-        const est = this.filtroEstado();
-
-        this.productosService
-            .listarAdmin({
-                categoriaId: catId ?? undefined,
-                q: q.length > 0 ? q : undefined,
-                activo: est,
-            })
-            .subscribe({
-                next: (prods) => {
-                    this.productos.set(prods);
-                    this.cargando.set(false);
-                },
-                error: () => {
-                    this.mensajeError.set('No se pudo cargar la lista de productos.');
-                    this.cargando.set(false);
-                },
-            });
-    }
-
     actualizarBusqueda(event: Event): void {
         const valor = (event.target as HTMLInputElement).value;
         this.filtroTexto.set(valor);
-        this.cargarProductos();
+        this.busqueda$.next();
     }
 
     actualizarCategoria(event: Event): void {
         const valor = (event.target as HTMLSelectElement).value;
         this.filtroCategoriaId.set(valor ? Number(valor) : null);
-        this.cargarProductos();
+        this.busqueda$.next();
     }
 
     actualizarEstado(event: Event): void {
         const valor = (event.target as HTMLSelectElement).value as 'todos' | 'true' | 'false';
         this.filtroEstado.set(valor);
-        this.cargarProductos();
+        this.busqueda$.next();
     }
 
     campoInvalido(campo: string): boolean {
@@ -155,7 +172,70 @@ export class ProductosAdminComponent implements OnInit {
         return !!(ctrl?.invalid && (ctrl.dirty || ctrl.touched));
     }
 
-    agregarImagenAdicional(urlInicial = ''): void {
+    // Subida de imagen principal desde el equipo
+    subirArchivoPrincipal(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const archivo = input.files?.[0];
+        if (!archivo) return;
+
+        if (archivo.size > 5 * 1024 * 1024) {
+            this.mensajeError.set('La imagen supera el límite de 5 MB.');
+            return;
+        }
+
+        this.subiendoImagen.set(true);
+        this.mensajeError.set(null);
+        this.productosService.subirImagen(archivo).subscribe({
+            next: (res) => {
+                this.form.patchValue({ imagenPrincipal: res.url });
+                this.subiendoImagen.set(false);
+                input.value = '';
+            },
+            error: (err: unknown) => {
+                this.subiendoImagen.set(false);
+                this.manejarError(err, 'No se pudo subir la imagen.');
+                input.value = '';
+            },
+        });
+    }
+
+    // Subida de imagen adicional desde el equipo
+    subirArchivoAdicional(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const archivo = input.files?.[0];
+        if (!archivo) return;
+
+        if (archivo.size > 5 * 1024 * 1024) {
+            this.mensajeError.set('La imagen supera el límite de 5 MB.');
+            return;
+        }
+
+        if (this.imagenesAdicionalesArray.length >= 10) {
+            this.mensajeError.set('Máximo 10 imágenes adicionales permitidas.');
+            return;
+        }
+
+        this.subiendoImagenAdicional.set(true);
+        this.mensajeError.set(null);
+        this.productosService.subirImagen(archivo).subscribe({
+            next: (res) => {
+                this.imagenesAdicionalesArray.push(this.fb.control(res.url));
+                this.subiendoImagenAdicional.set(false);
+                input.value = '';
+            },
+            error: (err: unknown) => {
+                this.subiendoImagenAdicional.set(false);
+                this.manejarError(err, 'No se pudo subir la imagen adicional.');
+                input.value = '';
+            },
+        });
+    }
+
+    eliminarImagenPrincipal(): void {
+        this.form.patchValue({ imagenPrincipal: '' });
+    }
+
+    agregarImagenAdicionalManual(urlInicial = ''): void {
         if (this.imagenesAdicionalesArray.length >= 10) return;
         this.imagenesAdicionalesArray.push(this.fb.control(urlInicial));
     }
@@ -167,6 +247,7 @@ export class ProductosAdminComponent implements OnInit {
     abrirModalCrear(): void {
         this.productoEnEdicion.set(null);
         this.mensajeError.set(null);
+        this.mostrarUrlManual.set(false);
         this.form.reset({
             categoriaId: this.categoriasActivas().length > 0 ? this.categoriasActivas()[0].id : null,
             proveedorId: null,
@@ -186,6 +267,7 @@ export class ProductosAdminComponent implements OnInit {
     abrirModalEditar(prod: ProductoAdmin): void {
         this.productoEnEdicion.set(prod);
         this.mensajeError.set(null);
+        this.mostrarUrlManual.set(false);
         this.imagenesAdicionalesArray.clear();
 
         this.form.reset({
@@ -203,7 +285,7 @@ export class ProductosAdminComponent implements OnInit {
 
         if (prod.imagenes && prod.imagenes.length > 0) {
             for (const img of prod.imagenes) {
-                this.agregarImagenAdicional(img.url);
+                this.imagenesAdicionalesArray.push(this.fb.control(img.url));
             }
         }
 

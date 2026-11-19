@@ -39,4 +39,13 @@ export class ProductosService {
     darDeBaja(id: number): Observable<ProductoAdmin> {
         return this.http.patch<ProductoAdmin>(`${this.base}/${id}/baja`, {});
     }
+
+    subirImagen(archivo: File): Observable<{ url: string; nombreOriginal: string }> {
+        const formData = new FormData();
+        formData.append('file', archivo);
+        return this.http.post<{ url: string; nombreOriginal: string }>(
+            `${this.base}/imagenes/subir`,
+            formData,
+        );
+    }
 }

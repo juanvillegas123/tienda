@@ -6,13 +6,37 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyMultipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
+    // Asegurar directorio de uploads
+    const uploadsDir = join(process.cwd(), 'uploads');
+    if (!existsSync(uploadsDir)) {
+        mkdirSync(uploadsDir, { recursive: true });
+    }
+
     // Helmet — cabeceras de seguridad
     await app.register(fastifyHelmet, {
         contentSecurityPolicy: false, // se ajustará en F8
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    });
+
+    // Subida de archivos multipart (máx 5MB)
+    await app.register(fastifyMultipart, {
+        limits: {
+            fileSize: 5 * 1024 * 1024,
+        },
+    });
+
+    // Servir archivos subidos estáticamente
+    await app.register(fastifyStatic, {
+        root: uploadsDir,
+        prefix: '/uploads/',
     });
 
     // CORS — solo el origen del frontend, con credenciales

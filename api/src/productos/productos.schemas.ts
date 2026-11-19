@@ -78,7 +78,10 @@ export const filtroProductosSchema = z
         activo: z
             .enum(['true', 'false', 'todos'])
             .optional()
-            .transform((val) => (val === 'todos' ? undefined : val === 'true')),
+            .transform((val) => {
+                if (val === undefined || val === 'todos') return undefined;
+                return val === 'true';
+            }),
     })
     .strict();
 

@@ -9,6 +9,10 @@ lerna-debug.log*
 # Production & Build outputs
 dist/
 build/
+uploads/*
+!uploads/.gitkeep
+api/uploads/*
+!api/uploads/.gitkeep
 /tmp
 /out-tsc
 /bazel-out

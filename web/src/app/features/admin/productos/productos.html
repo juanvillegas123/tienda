@@ -179,11 +179,11 @@
                 <!-- Stock -->
                 <td class="py-3 px-4 text-center">
                   @if (prod.stock > 0) {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {{ prod.stock }} unid.
                     </span>
                   } @else {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                       Agotado
                     </span>
                   }
@@ -236,7 +236,7 @@
       class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 flex flex-col max-h-[92vh] overflow-hidden"
       (click)="$event.stopPropagation()"
     >
-      <!-- Header fijo con botón 'X' siempre visible -->
+      <!-- Header fijo -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
         <h2 class="text-lg font-bold text-gray-900">
           {{ productoEnEdicion() ? 'Editar producto' : 'Nuevo producto' }}
@@ -253,7 +253,7 @@
         </button>
       </div>
 
-      <!-- Alerta de error DENTRO del modal si falla el guardado -->
+      <!-- Alerta de error DENTRO del modal -->
       @if (mensajeError()) {
         <div class="mx-6 mt-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center justify-between flex-shrink-0">
           <div class="flex items-center gap-2">
@@ -342,8 +342,9 @@
             ></textarea>
           </div>
 
-          <!-- Fila 4: Precios y Stock (RN-04) -->
+          <!-- Fila 4: Precios y Stock (Con validación visual en Costo) -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200/80">
+            <!-- Precio Venta -->
             <div>
               <label for="prodPrecio" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
                 Precio venta (Bs.) *
@@ -362,6 +363,7 @@
               }
             </div>
 
+            <!-- Costo de compra (Con restricción visual) -->
             <div>
               <label for="prodCosto" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
                 Costo de compra (Bs.)
@@ -373,9 +375,14 @@
                 formControlName="costoBs"
                 placeholder="Ej: 110,00"
                 class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                [class.border-red-400]="campoInvalido('costoBs')"
               />
+              @if (campoInvalido('costoBs')) {
+                <p class="text-xs text-red-600 mt-1">Ingresa un costo válido (≥ 0).</p>
+              }
             </div>
 
+            <!-- Stock -->
             <div>
               <label for="prodStock" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
                 {{ productoEnEdicion() ? 'Stock actual' : 'Stock inicial *' }}
@@ -396,7 +403,7 @@
             </div>
           </div>
 
-          <!-- Fila 5: Escala y Talla -->
+          <!-- Fila 5: Escala y Talla (Textos limpios sin códigos técnicos) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="prodEscala" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
@@ -413,7 +420,7 @@
 
             <div>
               <label for="prodTalla" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                Nota de talla (informativa, RN-05)
+                Nota de talla (opcional)
               </label>
               <input
                 id="prodTalla"
@@ -425,50 +432,173 @@
             </div>
           </div>
 
-          <!-- Fila 6: Imagen Principal -->
-          <div>
-            <label for="prodImg" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-              URL de imagen principal
-            </label>
-            <input
-              id="prodImg"
-              type="url"
-              formControlName="imagenPrincipal"
-              placeholder="https://ejemplo.com/imagen.jpg"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+          <!-- Fila 6: Imagen Principal (Subida desde equipo + previsualización) -->
+          <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
+                Imagen principal del producto
+              </label>
+              <button
+                type="button"
+                (click)="mostrarUrlManual.set(!mostrarUrlManual())"
+                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+              >
+                {{ mostrarUrlManual() ? 'Ocultar enlace manual' : 'O pegar enlace web' }}
+              </button>
+            </div>
+
+            @if (form.get('imagenPrincipal')?.value) {
+              <!-- Vista previa si ya tiene imagen -->
+              <div class="flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200">
+                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                  <img
+                    [src]="form.get('imagenPrincipal')?.value"
+                    alt="Vista previa"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium text-gray-800 truncate">
+                    {{ form.get('imagenPrincipal')?.value }}
+                  </p>
+                  <p class="text-xs text-emerald-600 font-medium mt-0.5 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Imagen cargada correctamente
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <label
+                    class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors"
+                  >
+                    Cambiar
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      class="hidden"
+                      (change)="subirArchivoPrincipal($event)"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    (click)="eliminarImagenPrincipal()"
+                    class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                    title="Eliminar imagen"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <!-- Botón / Dropzone para subir desde el equipo -->
+              <label
+                class="flex flex-col items-center justify-center p-5 border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-white rounded-xl cursor-pointer transition-colors group"
+              >
+                <div class="flex flex-col items-center justify-center text-center">
+                  @if (subiendoImagen()) {
+                    <svg class="animate-spin h-6 w-6 text-indigo-600 mb-2" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span class="text-xs text-indigo-600 font-medium">Subiendo imagen al servidor...</span>
+                  } @else {
+                    <svg class="w-8 h-8 text-gray-400 group-hover:text-indigo-600 transition-colors mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <p class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">
+                      Haz clic para subir imagen desde este equipo
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">Formatos JPG, PNG o WEBP (máx. 5 MB)</p>
+                  }
+                </div>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  class="hidden"
+                  [disabled]="subiendoImagen()"
+                  (change)="subirArchivoPrincipal($event)"
+                />
+              </label>
+            }
+
+            @if (mostrarUrlManual()) {
+              <div>
+                <input
+                  id="prodImg"
+                  type="url"
+                  formControlName="imagenPrincipal"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                />
+              </div>
+            }
           </div>
 
           <!-- Fila 7: Imágenes adicionales -->
-          <div class="border-t border-gray-100 pt-3">
-            <div class="flex items-center justify-between mb-2">
-              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                Imágenes adicionales por URL (máx. 10)
+          <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
+                Imágenes adicionales (máx. 10)
               </label>
               @if (imagenesAdicionalesArray.length < 10) {
-                <button
-                  type="button"
-                  (click)="agregarImagenAdicional()"
-                  class="text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
-                >
-                  + Agregar otra URL
-                </button>
+                <div class="flex items-center gap-3">
+                  <label
+                    class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Subir foto
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      class="hidden"
+                      [disabled]="subiendoImagenAdicional()"
+                      (change)="subirArchivoAdicional($event)"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    (click)="agregarImagenAdicionalManual()"
+                    class="text-xs text-gray-500 hover:text-gray-700 font-medium cursor-pointer"
+                  >
+                    + Enlace
+                  </button>
+                </div>
               }
             </div>
 
+            @if (subiendoImagenAdicional()) {
+              <div class="text-xs text-indigo-600 font-medium flex items-center gap-2 py-1">
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Subiendo imagen adicional...
+              </div>
+            }
+
             <div formArrayName="imagenesAdicionales" class="space-y-2">
               @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200">
+                  @if (ctrl.value) {
+                    <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                      <img [src]="ctrl.value" alt="Adicional" class="w-full h-full object-cover" />
+                    </div>
+                  }
                   <input
                     type="url"
                     [formControlName]="$index"
                     placeholder="https://ejemplo.com/adicional.jpg"
-                    class="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <button
                     type="button"
                     (click)="eliminarImagenAdicional($index)"
-                    class="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    class="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                     title="Eliminar imagen"
                   >
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -503,7 +633,7 @@
   </div>
 }
 
-<!-- Modal Confirmación de Baja -->
+<!-- Modal Confirmación de Baja (Limpio sin código RN-07) -->
 @if (productoParaBaja()) {
   <div
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
@@ -520,7 +650,7 @@
         <h3 class="text-base font-bold text-gray-900">¿Dar de baja producto?</h3>
       </div>
       <p class="text-sm text-gray-600 mb-5 leading-relaxed">
-        El producto <strong>"{{ productoParaBaja()!.nombre }}"</strong> pasará a estado inactivo (RN-07). Ya no se mostrará en el catálogo público ni en el punto de venta.
+        El producto <strong>"{{ productoParaBaja()!.nombre }}"</strong> pasará a estado inactivo. Ya no se mostrará en el catálogo público ni en el punto de venta.
       </p>
       <div class="flex justify-end gap-2">
         <button

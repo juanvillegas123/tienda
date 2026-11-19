@@ -6,9 +6,16 @@ import {
     Param,
     Query,
     Body,
+    Req,
+    BadRequestException,
     ParseIntPipe,
     UsePipes,
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { writeFile } from 'fs/promises';
+import { randomUUID } from 'crypto';
 import { ProductosService } from './productos.service';
 import {
     crearProductoSchema,
@@ -26,6 +33,43 @@ import { Public } from '../auth/public.decorator';
 @Controller('productos')
 export class ProductosController {
     constructor(private readonly productosService: ProductosService) {}
+
+    /**
+     * Subir imagen local desde el equipo (administradora).
+     */
+    @Post('imagenes/subir')
+    async subirImagen(@Req() req: FastifyRequest) {
+        if (!req.isMultipart()) {
+            throw new BadRequestException('La petición debe ser multipart/form-data');
+        }
+        const file = await req.file();
+        if (!file) {
+            throw new BadRequestException('No se envió ningún archivo de imagen');
+        }
+
+        const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!permitidos.includes(file.mimetype)) {
+            throw new BadRequestException('Formato no permitido. Solo se aceptan imágenes JPG, PNG o WEBP');
+        }
+
+        const uploadsDir = join(process.cwd(), 'uploads');
+        if (!existsSync(uploadsDir)) {
+            mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const ext = file.filename.split('.').pop()?.toLowerCase() || 'jpg';
+        const nombreSeguro = `prod-${Date.now()}-${randomUUID()}.${ext}`;
+        const rutaCompleta = join(uploadsDir, nombreSeguro);
+
+        const buffer = await file.toBuffer();
+        await writeFile(rutaCompleta, buffer);
+
+        const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
+        return {
+            url: `${appUrl}/uploads/${nombreSeguro}`,
+            nombreOriginal: file.filename,
+        };
+    }
 
     /**
      * Catálogo público: productos activos sin costos ni proveedores.
