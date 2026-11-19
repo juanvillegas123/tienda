@@ -4,17 +4,27 @@ import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
 import { ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import {
+    POCAS_UNIDADES,
+    esNotaTallaVisible,
+    esEscalaVisible,
+} from '../../../shared/catalogo-ui.utils';
 
 @Component({
     selector: 'app-producto-detalle',
     standalone: true,
-    imports: [RouterLink, BsPipe],
+    imports: [RouterLink, BsPipe, EstadoVacioComponent],
     templateUrl: './producto-detalle.html',
 })
 export class ProductoDetalleComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly catalogoService = inject(CatalogoService);
     readonly carrito = inject(CarritoService);
+
+    readonly pocasUnidades = POCAS_UNIDADES;
+    readonly esNotaTallaVisible = esNotaTallaVisible;
+    readonly esEscalaVisible = esEscalaVisible;
 
     readonly producto = signal<ProductoPublico | null>(null);
     readonly cargando = signal(true);

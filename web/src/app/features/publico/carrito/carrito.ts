@@ -3,15 +3,18 @@ import { RouterLink } from '@angular/router';
 import { CarritoService } from '../../../core/carrito.service';
 import { ItemCarrito } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import { esNotaTallaVisible } from '../../../shared/catalogo-ui.utils';
 
 @Component({
     selector: 'app-carrito-publico',
     standalone: true,
-    imports: [RouterLink, BsPipe],
+    imports: [RouterLink, BsPipe, EstadoVacioComponent],
     templateUrl: './carrito.html',
 })
 export class CarritoComponent {
     readonly carrito = inject(CarritoService);
+    readonly esNotaTallaVisible = esNotaTallaVisible;
 
     readonly aviso = signal<string | null>(null);
     readonly confirmandoVaciar = signal(false);

@@ -1,1 +1,42 @@
+@import "@fontsource/dela-gothic-one/latin-400.css";
+@import "@fontsource/dela-gothic-one/japanese-400.css";
+@import "@fontsource/zen-maru-gothic/latin-400.css";
+@import "@fontsource/zen-maru-gothic/latin-500.css";
+@import "@fontsource/zen-maru-gothic/latin-700.css";
+@import "@fontsource/zen-maru-gothic/japanese-400.css";
+@import "@fontsource/zen-maru-gothic/japanese-500.css";
+@import "@fontsource/zen-maru-gothic/japanese-700.css";
 @import "tailwindcss";
+
+@theme {
+  --color-noche: #0b1020;
+  --color-tarjeta: #131a33;
+  --color-violeta: #7c5cff;
+  --color-rosa: #ff4fa3;
+  --color-cian: #2fd9ff;
+  --color-sol: #ffd23f;
+  --font-display: "Dela Gothic One", system-ui, sans-serif;
+  --font-sans: "Zen Maru Gothic", system-ui, sans-serif;
+}
+
+.bg-trama-manga {
+  background-image: radial-gradient(#ffffff14 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.bg-lineas-velocidad {
+  background-image: repeating-conic-gradient(from 0deg, #ffffff0a 0 4deg, transparent 4deg 8deg);
+}
+
+.panel-manga-corte {
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+}
+
+.scrollbar-oculto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-oculto::-webkit-scrollbar {
+  display: none;
+}

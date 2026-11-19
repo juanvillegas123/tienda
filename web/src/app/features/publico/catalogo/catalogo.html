@@ -1,154 +1,224 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
-  <!-- Encabezado y buscador -->
-  <div class="mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Catálogo</h1>
-    <p class="text-sm text-gray-500 mt-1">
-      Explora figuras, poleras, peluches, pines y accesorios disponibles en tienda.
-    </p>
-
-    <!-- Buscador -->
-    <div class="relative mt-4 max-w-xl">
-      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
-        </svg>
+<!-- Banner superior compacto estilo manga -->
+<section class="relative border-b border-violeta/25 bg-gradient-to-r from-violeta/25 via-tarjeta to-rosa/20 bg-lineas-velocidad overflow-hidden">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+      <!-- Lema y accesos rápidos -->
+      <div class="md:col-span-7 space-y-2.5">
+        <p class="font-display text-lg sm:text-2xl text-white leading-snug tracking-wide">
+          Tu colección anime, <span class="text-cian">sin límites</span>
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
+          @for (cat of categoriasDestacadas(); track cat.id) {
+            <button
+              type="button"
+              (click)="seleccionarCategoria(cat.id)"
+              class="px-3 py-1 rounded-full text-xs font-semibold bg-noche/75 text-slate-100 border border-violeta/50 hover:border-cian hover:text-cian transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+            >
+              {{ cat.nombre }}
+            </button>
+          }
+        </div>
       </div>
-      <input
-        type="text"
-        [value]="filtroTexto()"
-        (input)="actualizarBusqueda($event)"
-        placeholder="Buscar por nombre de producto..."
-        aria-label="Buscar productos"
-        class="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-300 rounded-xl text-sm shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-      />
-      @if (filtroTexto().length > 0) {
-        <button
-          type="button"
-          (click)="limpiarBusqueda()"
-          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
-          aria-label="Limpiar búsqueda"
-        >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+
+      <!-- Collage de paneles inclinados estilo manga (con respaldo degradado) -->
+      <div class="hidden md:grid md:col-span-5 grid-cols-4 gap-1.5 h-24" aria-hidden="true">
+        @for (ruta of panelesBanner; track ruta; let i = $index) {
+          <div class="panel-manga-corte relative h-full w-full overflow-hidden bg-gradient-to-br from-violeta/60 via-rosa/50 to-noche border border-white/10">
+            @if (!panelesFallidos()[i]) {
+              <img
+                [src]="ruta"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                (error)="onErrorPanelBanner(i)"
+                class="w-full h-full object-cover"
+              />
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Barra sticky de búsqueda y chips de categoría -->
+<div class="sticky top-[66px] z-30 bg-noche/92 backdrop-blur-md border-b border-violeta/20">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-2.5 space-y-2.5">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+      <!-- Título compacto y descripción en una línea -->
+      <div class="min-w-0">
+        <h1 class="font-display text-base sm:text-lg text-white leading-tight">Catálogo</h1>
+        <p class="text-xs text-slate-400 truncate">
+          Figuras, poleras, peluches, pines y accesorios disponibles en tienda.
+        </p>
+      </div>
+
+      <!-- Buscador -->
+      <div class="relative w-full sm:w-72 md:w-80 shrink-0">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
           </svg>
-        </button>
-      }
+        </div>
+        <input
+          type="text"
+          [value]="filtroTexto()"
+          (input)="actualizarBusqueda($event)"
+          placeholder="Buscar producto..."
+          aria-label="Buscar productos por nombre"
+          class="w-full pl-9 pr-9 py-2 bg-tarjeta border border-violeta/35 rounded-xl text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cian focus:border-cian"
+        />
+        @if (filtroTexto().length > 0) {
+          <button
+            type="button"
+            (click)="limpiarBusqueda()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer focus-visible:outline-none focus-visible:text-cian"
+            aria-label="Limpiar búsqueda"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        }
+      </div>
     </div>
 
-    <!-- Filtro de categorías (deslizable horizontal en móvil) -->
+    <!-- Chips de categoría -->
     @if (categorias().length > 0) {
-      <div class="mt-4 flex items-center gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
+      <div class="flex items-center gap-2 overflow-x-auto scrollbar-oculto pb-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           type="button"
           (click)="seleccionarCategoria(null)"
           [class]="filtroCategoriaId() === null
-            ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-xs cursor-pointer transition-colors'
-            : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-indigo-300 hover:text-indigo-600 cursor-pointer transition-colors'"
+            ? 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-violeta text-white border-cian/70 shadow-[0_0_14px_rgba(124,92,255,0.55)] cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'
+            : 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-tarjeta text-slate-200 border-violeta/30 hover:border-violeta/70 hover:text-white cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'"
         >
-          Todas
+          <span class="block text-xs font-semibold leading-tight">Todas</span>
+          <span class="block text-[10px] leading-tight mt-0.5" [class]="filtroCategoriaId() === null ? 'text-white/80' : 'text-slate-400'">
+            すべて
+          </span>
         </button>
+
         @for (cat of categorias(); track cat.id) {
           <button
             type="button"
             (click)="seleccionarCategoria(cat.id)"
             [class]="filtroCategoriaId() === cat.id
-              ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-xs cursor-pointer transition-colors'
-              : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:border-indigo-300 hover:text-indigo-600 cursor-pointer transition-colors'"
+              ? 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-violeta text-white border-cian/70 shadow-[0_0_14px_rgba(124,92,255,0.55)] cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'
+              : 'shrink-0 px-3.5 py-1.5 rounded-xl text-left border bg-tarjeta text-slate-200 border-violeta/30 hover:border-violeta/70 hover:text-white cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'"
           >
-            {{ cat.nombre }}
+            <span class="block text-xs font-semibold leading-tight">{{ cat.nombre }}</span>
+            @if (textoJaponesCategoria(cat.nombre); as jp) {
+              <span
+                class="block text-[10px] leading-tight mt-0.5"
+                [class]="filtroCategoriaId() === cat.id ? 'text-white/80' : 'text-slate-400'"
+                aria-hidden="true"
+              >
+                {{ jp }}
+              </span>
+            }
           </button>
         }
       </div>
     }
   </div>
+</div>
 
-  <!-- Aviso flotante al agregar al carrito -->
+<!-- Contenido del catálogo -->
+<div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 sm:py-5">
+  <!-- Aviso flotante al agregar -->
   @if (aviso()) {
     <div
-      class="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-sm z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center justify-between gap-3"
+      class="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-sm z-50 px-4 py-3 rounded-xl shadow-xl border text-sm font-medium flex items-center justify-between gap-3 backdrop-blur-md"
       [class]="aviso()!.tipo === 'ok'
-        ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-        : 'bg-amber-50 border-amber-200 text-amber-900'"
+        ? 'bg-tarjeta/95 border-cian/60 text-white shadow-[0_0_20px_rgba(47,217,255,0.25)]'
+        : 'bg-tarjeta/95 border-rosa/70 text-white shadow-[0_0_20px_rgba(255,79,163,0.25)]'"
+      role="status"
     >
       <span>{{ aviso()!.texto }}</span>
       <a
         routerLink="/carrito"
-        class="shrink-0 text-xs font-bold underline hover:opacity-80"
+        class="shrink-0 text-xs font-bold text-sol underline hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian rounded"
       >
         Ver carrito
       </a>
     </div>
   }
 
-  <!-- Estados: cargando / error / vacío / grilla -->
   @if (cargando()) {
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-      @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
-        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden animate-pulse">
-          <div class="aspect-square bg-gray-200"></div>
-          <div class="p-3.5 space-y-2">
-            <div class="h-3 w-1/3 bg-gray-200 rounded"></div>
-            <div class="h-4 w-5/6 bg-gray-200 rounded"></div>
-            <div class="h-5 w-1/2 bg-gray-200 rounded mt-3"></div>
+    <!-- Esqueleto de carga -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+      @for (item of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track item) {
+        <div class="bg-tarjeta rounded-2xl border border-violeta/25 overflow-hidden animate-pulse">
+          <div class="aspect-[4/5] bg-white/5"></div>
+          <div class="p-3 space-y-2">
+            <div class="h-2.5 w-1/3 bg-white/10 rounded"></div>
+            <div class="h-3.5 w-5/6 bg-white/10 rounded"></div>
+            <div class="h-4 w-1/2 bg-white/10 rounded mt-2"></div>
           </div>
         </div>
       }
     </div>
   } @else if (errorCarga()) {
-    <div class="bg-white rounded-2xl border border-rose-200 p-8 text-center max-w-md mx-auto my-8">
-      <svg class="w-10 h-10 mx-auto text-rose-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-      <p class="text-sm text-gray-700 mb-4">{{ errorCarga() }}</p>
-      <button
-        type="button"
-        (click)="reintentar()"
-        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl cursor-pointer transition-colors"
+    <div class="py-6">
+      <app-estado-vacio
+        tipo="error"
+        titulo="Ocurrió un problema"
+        [descripcion]="errorCarga()!"
       >
-        Reintentar
-      </button>
-    </div>
-  } @else if (productos().length === 0) {
-    <div class="bg-white rounded-2xl border border-gray-200/80 py-16 px-6 text-center">
-      <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" />
-      </svg>
-      <h2 class="text-base font-semibold text-gray-800">No encontramos productos</h2>
-      <p class="text-sm text-gray-500 mt-1">
-        Prueba con otro término de búsqueda o selecciona otra categoría.
-      </p>
-      @if (filtroTexto() || filtroCategoriaId() !== null) {
         <button
           type="button"
-          (click)="filtroTexto.set(''); filtroCategoriaId.set(null); reintentar()"
-          class="mt-4 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-medium rounded-xl cursor-pointer transition-colors"
+          (click)="reintentar()"
+          class="px-4 py-2 bg-violeta hover:bg-violeta/90 text-white text-sm font-semibold rounded-xl cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
         >
-          Ver todo el catálogo
+          Reintentar
         </button>
-      }
+      </app-estado-vacio>
+    </div>
+  } @else if (productos().length === 0) {
+    <div class="py-6">
+      <app-estado-vacio
+        tipo="vacio"
+        titulo="Sin resultados"
+        descripcion="No encontramos productos con esos filtros. Prueba otra búsqueda o categoría."
+      >
+        @if (filtroTexto() || filtroCategoriaId() !== null) {
+          <button
+            type="button"
+            (click)="limpiarFiltros()"
+            class="px-4 py-2 bg-violeta hover:bg-violeta/90 text-white text-sm font-semibold rounded-xl cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+          >
+            Ver todo el catálogo
+          </button>
+        }
+      </app-estado-vacio>
     </div>
   } @else {
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
       @for (prod of productos(); track prod.id) {
         <article
-          class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all flex flex-col"
+          class="group bg-tarjeta rounded-2xl border overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          [class]="claseBordeCategoria(prod.categoriaNombre)"
         >
-          <!-- Imagen y enlace al detalle -->
-          <a [routerLink]="['/producto', prod.id]" class="relative block aspect-square bg-gray-100 overflow-hidden group">
+          <!-- Imagen vertical 4:5 tipo carta coleccionable -->
+          <a
+            [routerLink]="['/producto', prod.id]"
+            class="relative block aspect-[4/5] w-full bg-gradient-to-b from-violeta/20 via-noche/70 to-tarjeta overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cian"
+          >
             @if (prod.imagenPrincipal) {
               <img
                 [src]="prod.imagenPrincipal"
                 [alt]="prod.nombre"
                 loading="lazy"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                [class.opacity-60]="prod.stock === 0"
+                decoding="async"
+                class="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                [class.opacity-45]="prod.stock === 0"
+                [class.grayscale]="prod.stock === 0"
               />
             } @else {
-              <div class="w-full h-full flex items-center justify-center text-gray-300">
-                <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.25">
+              <div class="w-full h-full flex items-center justify-center text-slate-600">
+                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.3" aria-hidden="true">
                   <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                   <circle cx="9" cy="9" r="2" />
                   <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
@@ -156,61 +226,61 @@
               </div>
             }
 
-            <!-- Etiqueta Agotado -->
+            <!-- Etiquetas de disponibilidad (esquina superior izquierda) -->
             @if (prod.stock === 0) {
-              <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-amber-500 text-white shadow-sm">
+              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-orange-500 text-white shadow-sm">
                 Agotado
+              </span>
+            } @else if (prod.stock <= pocasUnidades) {
+              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-sol text-noche shadow-sm">
+                Pocas unidades
+              </span>
+            }
+
+            <!-- Sello de escala (esquina superior derecha, solo si existe) -->
+            @if (esEscalaVisible(prod.escala)) {
+              <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-noche/85 text-cian border border-cian/45 backdrop-blur-xs">
+                {{ prod.escala }}
               </span>
             }
           </a>
 
-          <!-- Información -->
-          <div class="p-3 sm:p-4 flex flex-col flex-1">
-            <span class="text-[11px] font-semibold uppercase tracking-wide text-indigo-600 truncate">
+          <!-- Cuerpo compacto de la tarjeta -->
+          <div class="p-2.5 sm:p-3 flex flex-col flex-1">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-cian/90 truncate">
               {{ prod.categoriaNombre }}
             </span>
 
             <a
               [routerLink]="['/producto', prod.id]"
-              class="mt-1 text-sm sm:text-base font-semibold text-gray-900 hover:text-indigo-600 line-clamp-2 leading-snug"
+              class="mt-0.5 text-xs sm:text-sm font-semibold text-slate-100 hover:text-cian line-clamp-2 leading-snug focus-visible:outline-none focus-visible:underline"
             >
               {{ prod.nombre }}
             </a>
 
-            @if (prod.notaTalla) {
-              <p class="mt-1 text-xs text-gray-500 truncate" [title]="prod.notaTalla">
+            @if (esNotaTallaVisible(prod.notaTalla)) {
+              <p class="mt-0.5 text-[11px] text-slate-400 truncate" [title]="prod.notaTalla!">
                 {{ prod.notaTalla }}
               </p>
             }
 
-            <div class="mt-auto pt-3 flex items-end justify-between gap-2">
-              <div>
-                <p class="text-base sm:text-lg font-bold text-gray-900 font-mono leading-none">
-                  {{ prod.precioCentavos | bs }}
-                </p>
-                @if (prod.stock > 0 && prod.stock <= 3) {
-                  <span class="block text-[11px] text-amber-600 font-medium mt-1">
-                    ¡Quedan {{ prod.stock }}!
-                  </span>
-                }
-              </div>
+            <div class="mt-auto pt-2.5 flex items-center justify-between gap-2">
+              <p class="text-sm sm:text-base font-bold text-sol tabular-nums leading-none">
+                {{ prod.precioCentavos | bs }}
+              </p>
 
-              @if (prod.stock === 0) {
-                <span class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-400 select-none">
-                  Agotado
-                </span>
-              } @else {
+              @if (prod.stock > 0) {
                 <button
                   type="button"
                   (click)="agregarRapido(prod, $event)"
                   [disabled]="alcanzoLimiteStock(prod)"
-                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  [title]="alcanzoLimiteStock(prod) ? 'Máximo disponible ya en tu carrito' : 'Agregar al carrito'"
+                  class="w-8 h-8 rounded-xl inline-flex items-center justify-center bg-violeta hover:bg-rosa text-white shadow-xs transition-colors cursor-pointer disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian"
+                  [attr.aria-label]="alcanzoLimiteStock(prod) ? 'Máximo disponible en el carrito' : 'Agregar ' + prod.nombre + ' al carrito'"
+                  [title]="alcanzoLimiteStock(prod) ? 'Máximo disponible en tu carrito' : 'Agregar al carrito'"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
-                  <span class="hidden sm:inline">{{ alcanzoLimiteStock(prod) ? 'Máximo' : 'Agregar' }}</span>
                 </button>
               }
             </div>

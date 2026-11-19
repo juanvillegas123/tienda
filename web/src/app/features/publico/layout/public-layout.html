@@ -1,49 +1,65 @@
-<div class="min-h-screen flex flex-col bg-gray-50 text-gray-900">
-  <!-- Barra de navegación fija (mobile-first) -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200/80 shadow-2xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-      <!-- Marca / Logo -->
-      <a routerLink="/" class="flex items-center gap-2.5 group focus:outline-none">
-        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shadow-indigo-200 group-hover:bg-indigo-700 transition-colors">
+<div class="min-h-screen flex flex-col bg-noche bg-trama-manga text-slate-100 font-sans overflow-x-clip">
+  <!-- Cabecera fija Neón Otaku -->
+  <header class="sticky top-0 z-40 bg-noche/90 backdrop-blur-md">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Logo -->
+      <a
+        routerLink="/"
+        class="flex items-center gap-2.5 group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian focus-visible:ring-offset-2 focus-visible:ring-offset-noche"
+      >
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violeta to-rosa text-white flex items-center justify-center font-display text-sm shadow-[0_0_16px_rgba(124,92,255,0.45)] group-hover:shadow-[0_0_20px_rgba(255,79,163,0.55)] transition-shadow">
           OS
         </div>
         <div class="leading-tight">
-          <span class="block text-base font-bold text-gray-900 tracking-tight">OniiChan Store</span>
-          <span class="hidden sm:block text-[11px] text-gray-500">Merchandising y coleccionables</span>
+          <span class="block font-display text-base sm:text-lg text-white tracking-wide">
+            OniiChan Store
+          </span>
+          <span class="hidden sm:block text-[11px] text-slate-400">
+            Merchandising &amp; coleccionables anime
+          </span>
         </div>
       </a>
 
-      <!-- Acciones de navegación -->
+      <!-- Navegación -->
       <nav class="flex items-center gap-2 sm:gap-3" aria-label="Navegación principal">
         <a
           routerLink="/"
-          routerLinkActive="text-indigo-600 bg-indigo-50"
+          routerLinkActive
+          #rlaCatalogo="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: true }"
-          class="px-3 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-100 transition-colors"
+          [class]="rlaCatalogo.isActive
+            ? 'px-3 py-2 rounded-xl text-sm font-medium text-cian bg-violeta/20 border border-violeta/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'
+            : 'px-3 py-2 rounded-xl text-sm font-medium text-slate-200 hover:text-white hover:bg-tarjeta border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian'"
         >
           Catálogo
         </a>
 
         <a
           routerLink="/carrito"
-          routerLinkActive="bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200"
-          class="relative inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border border-gray-200 bg-white text-gray-800 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
-          aria-label="Ver carrito"
+          routerLinkActive
+          #rlaCarrito="routerLinkActive"
+          [class]="rlaCarrito.isActive
+            ? 'inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border bg-violeta text-white border-cian shadow-[0_0_16px_rgba(124,92,255,0.55)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian focus-visible:ring-offset-2 focus-visible:ring-offset-noche'
+            : 'inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border bg-tarjeta text-slate-100 border-violeta/45 hover:border-cian hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cian focus-visible:ring-offset-2 focus-visible:ring-offset-noche'"
+          aria-label="Ver carrito de compras"
         >
-          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="9" cy="21" r="1" />
             <circle cx="20" cy="21" r="1" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
-          <span class="hidden sm:inline">Carrito</span>
+          <span>Carrito</span>
           @if (carrito.cantidadTotal() > 0) {
-            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-bold rounded-full bg-rose-500 text-white">
+            <span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-bold tabular-nums rounded-full bg-rosa text-white shadow-[0_0_10px_rgba(255,79,163,0.6)]">
               {{ carrito.cantidadTotal() }}
             </span>
           }
         </a>
       </nav>
     </div>
+
+    <!-- Borde inferior con degradado violeta a cian -->
+    <div class="h-[2px] w-full bg-gradient-to-r from-violeta via-rosa/70 to-cian" aria-hidden="true"></div>
   </header>
 
   <!-- Contenido principal -->
@@ -51,13 +67,11 @@
     <router-outlet />
   </main>
 
-  <!-- Pie de página -->
-  <footer class="bg-white border-t border-gray-200/80 mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-      <p>© OniiChan Store — Catálogo en línea</p>
-      <a routerLink="/admin/login" class="text-gray-400 hover:text-gray-600 transition-colors">
-        Acceso administración
-      </a>
+  <!-- Pie de página público (sin enlace de administración) -->
+  <footer class="border-t border-violeta/25 bg-noche/85 mt-12">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+      <p>© OniiChan Store — Todos los derechos reservados.</p>
+      <p class="text-slate-500">Figuras, poleras, peluches y coleccionables</p>
     </div>
   </footer>
 </div>
