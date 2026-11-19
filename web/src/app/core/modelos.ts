@@ -61,6 +61,14 @@ export interface CrearProductoPayload {
     imagenesAdicionales?: string[];
 }
 
+export interface PaginatedResult<T> {
+    items: T[];
+    total: number;
+    pagina: number;
+    limite: number;
+    totalPaginas: number;
+}
+
 export interface EditarProductoPayload {
     categoriaId?: number;
     proveedorId?: number | null;

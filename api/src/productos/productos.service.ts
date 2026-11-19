@@ -3,7 +3,7 @@ import {
     NotFoundException,
     BadRequestException,
 } from '@nestjs/common';
-import { eq, and, like, desc, sql } from 'drizzle-orm';
+import { eq, and, like, asc, desc, sql } from 'drizzle-orm';
 import { db } from '../db/db';
 import {
     productos,
@@ -38,6 +38,14 @@ export interface ProductoAdminDto extends ProductoPublicoDto {
     proveedorId: number | null;
     proveedorNombre: string | null;
     fechaCreacion: Date;
+}
+
+export interface PaginatedResult<T> {
+    items: T[];
+    total: number;
+    pagina: number;
+    limite: number;
+    totalPaginas: number;
 }
 
 @Injectable()
@@ -152,13 +160,17 @@ export class ProductosService {
     }
 
     /**
-     * Listado administrativo: incluye costos, proveedores y productos inactivos.
+     * Listado administrativo paginado y ordenable: incluye costos, proveedores y productos inactivos.
      */
-    async listarAdmin(filtro?: FiltroProductosDto): Promise<ProductoAdminDto[]> {
+    async listarAdmin(filtro?: FiltroProductosDto): Promise<PaginatedResult<ProductoAdminDto>> {
         const condiciones = [];
 
         if (filtro?.activo !== undefined) {
             condiciones.push(eq(productos.activo, filtro.activo));
+        }
+
+        if (filtro?.agotado === true) {
+            condiciones.push(eq(productos.stock, 0));
         }
 
         if (filtro?.categoriaId) {
@@ -170,7 +182,35 @@ export class ProductosService {
             condiciones.push(like(sql`lower(${productos.nombre})`, termino));
         }
 
-        const query = db
+        const pagina = filtro?.pagina ?? 1;
+        const limite = filtro?.limite ?? 15;
+        const ordenCampo = filtro?.ordenCampo ?? 'fecha';
+        const ordenDir = filtro?.ordenDir ?? 'desc';
+
+        const whereClause = condiciones.length > 0 ? and(...condiciones) : undefined;
+
+        const [conteo] = await db
+            .select({ total: sql<number>`count(*)` })
+            .from(productos)
+            .where(whereClause);
+
+        const total = Number(conteo?.total ?? 0);
+        const totalPaginas = Math.max(1, Math.ceil(total / limite));
+
+        const ordenClausulas =
+            ordenCampo === 'nombre'
+                ? [
+                      ordenDir === 'desc'
+                          ? desc(sql`lower(${productos.nombre})`)
+                          : asc(sql`lower(${productos.nombre})`),
+                      ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
+                  ]
+                : [
+                      ordenDir === 'desc' ? desc(productos.fechaCreacion) : asc(productos.fechaCreacion),
+                      ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
+                  ];
+
+        const rows = await db
             .select({
                 id: productos.id,
                 categoriaId: productos.categoriaId,
@@ -191,11 +231,14 @@ export class ProductosService {
             .from(productos)
             .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
             .leftJoin(proveedores, eq(productos.proveedorId, proveedores.id))
-            .orderBy(desc(productos.id));
+            .where(whereClause)
+            .orderBy(...ordenClausulas)
+            .limit(limite)
+            .offset((pagina - 1) * limite);
 
-        const rows = condiciones.length > 0 ? await query.where(and(...condiciones)) : await query;
-
-        if (rows.length === 0) return [];
+        if (rows.length === 0) {
+            return { items: [], total, pagina, limite, totalPaginas };
+        }
 
         const ids = rows.map((r) => r.id);
         const todasImagenes = await db
@@ -221,10 +264,12 @@ export class ProductosService {
             });
         }
 
-        return rows.map((r) => ({
+        const items = rows.map((r) => ({
             ...r,
             imagenes: mapaImagenes.get(r.id) ?? [],
         }));
+
+        return { items, total, pagina, limite, totalPaginas };
     }
 
     /**

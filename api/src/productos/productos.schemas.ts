@@ -82,6 +82,16 @@ export const filtroProductosSchema = z
                 if (val === undefined || val === 'todos') return undefined;
                 return val === 'true';
             }),
+        agotado: z
+            .enum(['true', 'false'])
+            .optional()
+            .transform((val) => (val === undefined ? undefined : val === 'true')),
+        // Paginación
+        pagina: z.coerce.number().int().min(1).default(1),
+        limite: z.coerce.number().int().min(1).max(100).default(15),
+        // Ordenamiento
+        ordenCampo: z.enum(['nombre', 'fecha']).default('fecha'),
+        ordenDir: z.enum(['asc', 'desc']).default('desc'),
     })
     .strict();
 

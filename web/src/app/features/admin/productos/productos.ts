@@ -1,12 +1,12 @@
 import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Subject, of } from 'rxjs';
+import { Subject, merge, of } from 'rxjs';
 import { debounceTime, switchMap, tap, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProductosService } from '../../../core/productos.service';
 import { CategoriasService } from '../../../core/categorias.service';
 import { ProveedoresService } from '../../../core/proveedores.service';
-import { ProductoAdmin, Categoria, Proveedor } from '../../../core/modelos';
+import { ProductoAdmin, Categoria, Proveedor, PaginatedResult } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -46,7 +46,8 @@ export class ProductosAdminComponent implements OnInit {
     private readonly proveedoresService = inject(ProveedoresService);
     private readonly fb = inject(FormBuilder);
     private readonly destroyRef = inject(DestroyRef);
-    private readonly busqueda$ = new Subject<void>();
+    private readonly busquedaTexto$ = new Subject<void>();
+    private readonly recargar$ = new Subject<void>();
 
     // Listas y estados de carga
     readonly productos = signal<ProductoAdmin[]>([]);
@@ -55,14 +56,42 @@ export class ProductosAdminComponent implements OnInit {
     readonly cargando = signal(true);
     readonly guardando = signal(false);
     readonly dandoDeBaja = signal(false);
+    readonly reactivandoId = signal<number | null>(null);
     readonly subiendoImagen = signal(false);
     readonly subiendoImagenAdicional = signal(false);
     readonly mostrarUrlManual = signal(false);
 
-    // Filtros
+    // Filtros y ordenamiento
     readonly filtroTexto = signal('');
     readonly filtroCategoriaId = signal<number | null>(null);
-    readonly filtroEstado = signal<'todos' | 'true' | 'false'>('todos');
+    readonly filtroEstado = signal<'true' | 'agotados' | 'false' | 'todos'>('true');
+    readonly filtroOrden = signal<'fecha-desc' | 'fecha-asc' | 'nombre-asc' | 'nombre-desc'>('fecha-desc');
+
+    // Paginación
+    readonly pagina = signal(1);
+    readonly limite = signal(15);
+    readonly totalProductos = signal(0);
+    readonly totalPaginas = signal(1);
+
+    readonly rangoInicio = computed(() =>
+        this.totalProductos() === 0 ? 0 : (this.pagina() - 1) * this.limite() + 1,
+    );
+    readonly rangoFin = computed(() =>
+        Math.min(this.pagina() * this.limite(), this.totalProductos()),
+    );
+    readonly paginasVisibles = computed(() => {
+        const total = this.totalPaginas();
+        const actual = this.pagina();
+        const maxBotones = 5;
+        let inicio = Math.max(1, actual - Math.floor(maxBotones / 2));
+        const fin = Math.min(total, inicio + maxBotones - 1);
+        inicio = Math.max(1, fin - maxBotones + 1);
+        const paginas: number[] = [];
+        for (let i = inicio; i <= fin; i++) {
+            paginas.push(i);
+        }
+        return paginas;
+    });
 
     // Modales y estados
     readonly modalAbierto = signal(false);
@@ -84,6 +113,7 @@ export class ProductosAdminComponent implements OnInit {
         notaTalla: [''],
         imagenPrincipal: [''],
         imagenesAdicionales: this.fb.array<string>([]),
+        activo: [true],
     });
 
     get imagenesAdicionalesArray(): FormArray {
@@ -106,38 +136,61 @@ export class ProductosAdminComponent implements OnInit {
     ngOnInit(): void {
         this.cargarDependencias();
 
-        // Flujo reactivo con debounceTime y switchMap para eliminar condiciones de carrera
-        this.busqueda$
+        // Flujo reactivo: búsqueda por texto con debounce y recargas inmediatas para selects/paginación
+        merge(this.busquedaTexto$.pipe(debounceTime(250)), this.recargar$)
             .pipe(
-                debounceTime(250),
                 tap(() => this.cargando.set(true)),
                 switchMap(() => {
                     const catId = this.filtroCategoriaId();
                     const q = this.filtroTexto().trim();
                     const est = this.filtroEstado();
+                    const [ordenCampo, ordenDir] = this.filtroOrden().split('-') as [
+                        'nombre' | 'fecha',
+                        'asc' | 'desc',
+                    ];
+
+                    const activoParam = est === 'agotados' ? 'true' : est;
+                    const agotadoParam = est === 'agotados' ? true : undefined;
 
                     return this.productosService
                         .listarAdmin({
                             categoriaId: catId ?? undefined,
                             q: q.length > 0 ? q : undefined,
-                            activo: est,
+                            activo: activoParam,
+                            agotado: agotadoParam,
+                            pagina: this.pagina(),
+                            limite: this.limite(),
+                            ordenCampo,
+                            ordenDir,
                         })
                         .pipe(
                             catchError(() => {
                                 this.mensajeError.set('No se pudo cargar la lista de productos.');
-                                return of([]);
+                                const vacio: PaginatedResult<ProductoAdmin> = {
+                                    items: [],
+                                    total: 0,
+                                    pagina: 1,
+                                    limite: this.limite(),
+                                    totalPaginas: 1,
+                                };
+                                return of(vacio);
                             }),
                         );
                 }),
                 takeUntilDestroyed(this.destroyRef),
             )
-            .subscribe((prods) => {
-                this.productos.set(prods);
+            .subscribe((res) => {
+                this.productos.set(res.items);
+                this.totalProductos.set(res.total);
+                this.totalPaginas.set(res.totalPaginas);
+                if (this.pagina() > res.totalPaginas && res.totalPaginas >= 1) {
+                    this.pagina.set(res.totalPaginas);
+                }
                 this.cargando.set(false);
             });
 
         // Carga inicial
-        this.busqueda$.next();
+        this.recargar$.next();
     }
 
     cargarDependencias(): void {
@@ -152,19 +205,46 @@ export class ProductosAdminComponent implements OnInit {
     actualizarBusqueda(event: Event): void {
         const valor = (event.target as HTMLInputElement).value;
         this.filtroTexto.set(valor);
-        this.busqueda$.next();
+        this.pagina.set(1);
+        this.busquedaTexto$.next();
     }
 
     actualizarCategoria(event: Event): void {
         const valor = (event.target as HTMLSelectElement).value;
         this.filtroCategoriaId.set(valor ? Number(valor) : null);
-        this.busqueda$.next();
+        this.pagina.set(1);
+        this.recargar$.next();
     }
 
     actualizarEstado(event: Event): void {
-        const valor = (event.target as HTMLSelectElement).value as 'todos' | 'true' | 'false';
+        const valor = (event.target as HTMLSelectElement).value as 'true' | 'agotados' | 'false' | 'todos';
         this.filtroEstado.set(valor);
-        this.busqueda$.next();
+        this.pagina.set(1);
+        this.recargar$.next();
+    }
+
+    actualizarOrden(event: Event): void {
+        const valor = (event.target as HTMLSelectElement).value as
+            | 'fecha-desc'
+            | 'fecha-asc'
+            | 'nombre-asc'
+            | 'nombre-desc';
+        this.filtroOrden.set(valor);
+        this.pagina.set(1);
+        this.recargar$.next();
+    }
+
+    alternarOrdenNombre(): void {
+        const actual = this.filtroOrden();
+        this.filtroOrden.set(actual === 'nombre-asc' ? 'nombre-desc' : 'nombre-asc');
+        this.pagina.set(1);
+        this.recargar$.next();
+    }
+
+    irAPagina(p: number): void {
+        if (p < 1 || p > this.totalPaginas() || p === this.pagina()) return;
+        this.pagina.set(p);
+        this.recargar$.next();
     }
 
     campoInvalido(campo: string): boolean {
@@ -259,6 +339,7 @@ export class ProductosAdminComponent implements OnInit {
             escala: '',
             notaTalla: '',
             imagenPrincipal: '',
+            activo: true,
         });
         this.imagenesAdicionalesArray.clear();
         this.modalAbierto.set(true);
@@ -281,6 +362,7 @@ export class ProductosAdminComponent implements OnInit {
             escala: prod.escala ?? '',
             notaTalla: prod.notaTalla ?? '',
             imagenPrincipal: prod.imagenPrincipal ?? '',
+            activo: prod.activo,
         });
 
         if (prod.imagenes && prod.imagenes.length > 0) {
@@ -337,15 +419,14 @@ export class ProductosAdminComponent implements OnInit {
                     notaTalla: v.notaTalla?.trim() || null,
                     imagenPrincipal: v.imagenPrincipal?.trim() || null,
                     imagenesAdicionales: imagenesFiltradas,
+                    activo: Boolean(v.activo),
                 })
                 .subscribe({
                     next: (actualizado) => {
-                        this.productos.update((lista) =>
-                            lista.map((p) => (p.id === actualizado.id ? actualizado : p)),
-                        );
                         this.guardando.set(false);
                         this.cerrarModal();
                         this.mensajeExito.set(`Producto "${actualizado.nombre}" actualizado.`);
+                        this.recargar$.next();
                     },
                     error: (err: unknown) => {
                         this.guardando.set(false);
@@ -369,10 +450,11 @@ export class ProductosAdminComponent implements OnInit {
                 })
                 .subscribe({
                     next: (creado) => {
-                        this.productos.update((lista) => [creado, ...lista]);
                         this.guardando.set(false);
                         this.cerrarModal();
                         this.mensajeExito.set(`Producto "${creado.nombre}" registrado exitosamente.`);
+                        this.pagina.set(1);
+                        this.recargar$.next();
                     },
                     error: (err: unknown) => {
                         this.guardando.set(false);
@@ -397,17 +479,34 @@ export class ProductosAdminComponent implements OnInit {
         this.dandoDeBaja.set(true);
         this.productosService.darDeBaja(prod.id).subscribe({
             next: (actualizado) => {
-                this.productos.update((lista) =>
-                    lista.map((p) => (p.id === actualizado.id ? actualizado : p)),
-                );
                 this.dandoDeBaja.set(false);
                 this.cerrarModalBaja();
                 this.mensajeExito.set(`Producto "${actualizado.nombre}" dado de baja.`);
+                this.recargar$.next();
             },
             error: () => {
                 this.dandoDeBaja.set(false);
                 this.cerrarModalBaja();
                 this.mensajeError.set('No se pudo dar de baja el producto.');
+            },
+        });
+    }
+
+    reactivarProducto(prod: ProductoAdmin): void {
+        if (this.reactivandoId() !== null) return;
+        this.reactivandoId.set(prod.id);
+        this.mensajeError.set(null);
+        this.mensajeExito.set(null);
+
+        this.productosService.reactivar(prod.id).subscribe({
+            next: (actualizado) => {
+                this.reactivandoId.set(null);
+                this.mensajeExito.set(`Producto "${actualizado.nombre}" reactivado exitosamente.`);
+                this.recargar$.next();
+            },
+            error: (err: unknown) => {
+                this.reactivandoId.set(null);
+                this.manejarError(err, 'No se pudo reactivar el producto.');
             },
         });
     }
