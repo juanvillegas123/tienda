@@ -28,6 +28,11 @@ export class ProveedoresController {
         return this.proveedoresService.listarActivos();
     }
 
+    @Get('admin')
+    listarAdmin() {
+        return this.proveedoresService.listarTodos();
+    }
+
     @Get(':id')
     obtenerPorId(@Param('id', ParseIntPipe) id: number) {
         return this.proveedoresService.obtenerPorId(id);
@@ -45,5 +50,10 @@ export class ProveedoresController {
         @Body(new ZodValidationPipe(editarProveedorSchema)) dto: EditarProveedorDto,
     ) {
         return this.proveedoresService.editar(id, dto);
+    }
+
+    @Patch(':id/baja')
+    darDeBaja(@Param('id', ParseIntPipe) id: number) {
+        return this.proveedoresService.darDeBaja(id);
     }
 }

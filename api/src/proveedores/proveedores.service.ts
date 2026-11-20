@@ -18,7 +18,7 @@ export class ProveedoresService {
         return db
             .select()
             .from(proveedores)
-            .orderBy(proveedores.id);
+            .orderBy(proveedores.nombre);
     }
 
     async obtenerPorId(id: number) {
@@ -53,6 +53,16 @@ export class ProveedoresService {
         const [actualizado] = await db
             .update(proveedores)
             .set(dto)
+            .where(eq(proveedores.id, id))
+            .returning();
+        return actualizado;
+    }
+
+    async darDeBaja(id: number) {
+        await this.obtenerPorId(id);
+        const [actualizado] = await db
+            .update(proveedores)
+            .set({ activo: false })
             .where(eq(proveedores.id, id))
             .returning();
         return actualizado;

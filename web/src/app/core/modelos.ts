@@ -252,3 +252,48 @@ export interface DevolucionRegistrada {
     fecha: string | number | Date;
     items: { productoId: number; cantidad: number }[];
 }
+
+export interface CrearProveedorPayload {
+    nombre: string;
+    contacto?: string | null;
+    telefono?: string | null;
+    correo?: string | null;
+}
+
+export interface EditarProveedorPayload {
+    nombre?: string;
+    contacto?: string | null;
+    telefono?: string | null;
+    correo?: string | null;
+    activo?: boolean;
+}
+
+export type TipoMovimientoInventario = 'ENTRADA' | 'SALIDA' | 'AJUSTE' | 'DEVOLUCION';
+
+export interface MovimientoInventario {
+    id: number;
+    productoId: number;
+    productoNombre: string;
+    proveedorId: number | null;
+    proveedorNombre: string | null;
+    tipo: TipoMovimientoInventario;
+    cantidad: number;
+    tipoReferencia: string | null;
+    idReferencia: number | null;
+    nota: string | null;
+    fecha: string | number | Date;
+}
+
+export interface CrearEntradaInventarioPayload {
+    productoId: number;
+    proveedorId?: number | null;
+    cantidad: number;
+    costoCentavos: number;
+    nota?: string | null;
+}
+
+export interface CrearAjusteInventarioPayload {
+    productoId: number;
+    nuevoStock: number;
+    nota: string;
+}

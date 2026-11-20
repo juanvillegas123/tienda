@@ -54,13 +54,17 @@ export const routes: Routes = [
             {
                 path: 'inventario',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/inventario/inventario').then(
+                        (m) => m.InventarioAdminComponent,
+                    ),
                 title: 'Inventario',
             },
             {
                 path: 'proveedores',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/proveedores/proveedores').then(
+                        (m) => m.ProveedoresAdminComponent,
+                    ),
                 title: 'Proveedores',
             },
             {

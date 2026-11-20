@@ -9,6 +9,7 @@ import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { CajasModule } from './cajas/cajas.module';
 import { VentasModule } from './ventas/ventas.module';
 import { DevolucionesModule } from './devoluciones/devoluciones.module';
+import { InventarioModule } from './inventario/inventario.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 
@@ -23,6 +24,7 @@ import { HttpExceptionFilter } from './common/http-exception.filter';
         CajasModule,
         VentasModule,
         DevolucionesModule,
+        InventarioModule,
     ],
     providers: [
         {
