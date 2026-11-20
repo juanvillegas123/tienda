@@ -17,6 +17,14 @@ export const urlImagenSeguraSchema = z
             }
         },
         { message: 'La URL de imagen debe usar el protocolo seguro https://' },
+    )
+    .refine(
+        (val) => {
+            const r2Base = process.env.R2_PUBLIC_URL?.trim().replace(/\/+$/, '');
+            if (!r2Base) return true;
+            return val.startsWith(`${r2Base}/`);
+        },
+        { message: 'La imagen debe ser subida desde el sistema (almacenamiento oficial de la tienda)' },
     );
 
 export const crearProductoSchema = z

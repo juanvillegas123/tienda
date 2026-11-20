@@ -18,6 +18,7 @@ import {
     FiltroProductosDto,
     FiltroProductosPublicoDto,
 } from './productos.schemas';
+import { AlmacenamientoService } from '../almacenamiento/almacenamiento.service';
 
 export interface ProductoPublicoDto {
     id: number;
@@ -51,6 +52,7 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class ProductosService {
+    constructor(private readonly almacenamientoService: AlmacenamientoService) {}
     /**
      * Catálogo público: solo productos activos cuya categoría también esté activa, sin costos ni proveedores (RN-02 y 5.1).
      */
@@ -478,7 +480,26 @@ export class ProductosService {
             }
         });
 
-        return this.obtenerAdminPorId(id);
+        // Limpiar en R2 las imágenes antiguas que dejaron de referenciarse (best-effort)
+        const actualizado = await this.obtenerAdminPorId(id);
+        const urlsActuales = new Set<string>();
+        if (actualizado.imagenPrincipal) urlsActuales.add(actualizado.imagenPrincipal);
+        for (const img of actualizado.imagenes) {
+            urlsActuales.add(img.url);
+        }
+
+        const urlsAnteriores: string[] = [];
+        if (actual.imagenPrincipal) urlsAnteriores.push(actual.imagenPrincipal);
+        for (const img of actual.imagenes) {
+            urlsAnteriores.push(img.url);
+        }
+
+        const huerfanas = urlsAnteriores.filter((url) => !urlsActuales.has(url));
+        if (huerfanas.length > 0) {
+            await Promise.all(huerfanas.map((url) => this.almacenamientoService.eliminarPorUrl(url)));
+        }
+
+        return actualizado;
     }
 
     /**

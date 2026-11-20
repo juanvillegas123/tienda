@@ -59,7 +59,8 @@ export class ProductosAdminComponent implements OnInit {
     readonly reactivandoId = signal<number | null>(null);
     readonly subiendoImagen = signal(false);
     readonly subiendoImagenAdicional = signal(false);
-    readonly mostrarUrlManual = signal(false);
+    readonly arrastrandoPrincipal = signal(false);
+    readonly arrastrandoAdicional = signal(false);
 
     // Filtros y ordenamiento
     readonly filtroTexto = signal('');
@@ -252,12 +253,46 @@ export class ProductosAdminComponent implements OnInit {
         return !!(ctrl?.invalid && (ctrl.dirty || ctrl.touched));
     }
 
-    // Subida de imagen principal desde el equipo
+    // Subida de imagen principal (clic o arrastrar y soltar)
     subirArchivoPrincipal(event: Event): void {
         const input = event.target as HTMLInputElement;
         const archivo = input.files?.[0];
         if (!archivo) return;
+        this.procesarArchivoPrincipal(archivo);
+        input.value = '';
+    }
 
+    onDragOverPrincipal(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!this.subiendoImagen()) {
+            this.arrastrandoPrincipal.set(true);
+        }
+    }
+
+    onDragLeavePrincipal(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.arrastrandoPrincipal.set(false);
+    }
+
+    onDropPrincipal(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.arrastrandoPrincipal.set(false);
+        if (this.subiendoImagen()) return;
+
+        const archivo = event.dataTransfer?.files?.[0];
+        if (archivo) {
+            this.procesarArchivoPrincipal(archivo);
+        }
+    }
+
+    private procesarArchivoPrincipal(archivo: File): void {
+        if (!this.esTipoImagenPermitido(archivo)) {
+            this.mensajeError.set('Formato no permitido. Usa imágenes JPG, PNG, WEBP o GIF.');
+            return;
+        }
         if (archivo.size > 5 * 1024 * 1024) {
             this.mensajeError.set('La imagen supera el límite de 5 MB.');
             return;
@@ -269,27 +304,58 @@ export class ProductosAdminComponent implements OnInit {
             next: (res) => {
                 this.form.patchValue({ imagenPrincipal: res.url });
                 this.subiendoImagen.set(false);
-                input.value = '';
             },
             error: (err: unknown) => {
                 this.subiendoImagen.set(false);
                 this.manejarError(err, 'No se pudo subir la imagen.');
-                input.value = '';
             },
         });
     }
 
-    // Subida de imagen adicional desde el equipo
+    // Subida de imagen adicional (clic o arrastrar y soltar)
     subirArchivoAdicional(event: Event): void {
         const input = event.target as HTMLInputElement;
         const archivo = input.files?.[0];
         if (!archivo) return;
+        this.procesarArchivoAdicional(archivo);
+        input.value = '';
+    }
 
+    onDragOverAdicional(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!this.subiendoImagenAdicional() && this.imagenesAdicionalesArray.length < 10) {
+            this.arrastrandoAdicional.set(true);
+        }
+    }
+
+    onDragLeaveAdicional(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.arrastrandoAdicional.set(false);
+    }
+
+    onDropAdicional(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.arrastrandoAdicional.set(false);
+        if (this.subiendoImagenAdicional()) return;
+
+        const archivo = event.dataTransfer?.files?.[0];
+        if (archivo) {
+            this.procesarArchivoAdicional(archivo);
+        }
+    }
+
+    private procesarArchivoAdicional(archivo: File): void {
+        if (!this.esTipoImagenPermitido(archivo)) {
+            this.mensajeError.set('Formato no permitido. Usa imágenes JPG, PNG, WEBP o GIF.');
+            return;
+        }
         if (archivo.size > 5 * 1024 * 1024) {
             this.mensajeError.set('La imagen supera el límite de 5 MB.');
             return;
         }
-
         if (this.imagenesAdicionalesArray.length >= 10) {
             this.mensajeError.set('Máximo 10 imágenes adicionales permitidas.');
             return;
@@ -301,23 +367,20 @@ export class ProductosAdminComponent implements OnInit {
             next: (res) => {
                 this.imagenesAdicionalesArray.push(this.fb.control(res.url));
                 this.subiendoImagenAdicional.set(false);
-                input.value = '';
             },
             error: (err: unknown) => {
                 this.subiendoImagenAdicional.set(false);
                 this.manejarError(err, 'No se pudo subir la imagen adicional.');
-                input.value = '';
             },
         });
     }
 
-    eliminarImagenPrincipal(): void {
-        this.form.patchValue({ imagenPrincipal: '' });
+    private esTipoImagenPermitido(archivo: File): boolean {
+        return ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(archivo.type);
     }
 
-    agregarImagenAdicionalManual(urlInicial = ''): void {
-        if (this.imagenesAdicionalesArray.length >= 10) return;
-        this.imagenesAdicionalesArray.push(this.fb.control(urlInicial));
+    eliminarImagenPrincipal(): void {
+        this.form.patchValue({ imagenPrincipal: '' });
     }
 
     eliminarImagenAdicional(index: number): void {
@@ -327,7 +390,8 @@ export class ProductosAdminComponent implements OnInit {
     abrirModalCrear(): void {
         this.productoEnEdicion.set(null);
         this.mensajeError.set(null);
-        this.mostrarUrlManual.set(false);
+        this.arrastrandoPrincipal.set(false);
+        this.arrastrandoAdicional.set(false);
         this.form.reset({
             categoriaId: this.categoriasActivas().length > 0 ? this.categoriasActivas()[0].id : null,
             proveedorId: null,
@@ -348,7 +412,8 @@ export class ProductosAdminComponent implements OnInit {
     abrirModalEditar(prod: ProductoAdmin): void {
         this.productoEnEdicion.set(prod);
         this.mensajeError.set(null);
-        this.mostrarUrlManual.set(false);
+        this.arrastrandoPrincipal.set(false);
+        this.arrastrandoAdicional.set(false);
         this.imagenesAdicionalesArray.clear();
 
         this.form.reset({

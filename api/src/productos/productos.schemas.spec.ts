@@ -121,4 +121,32 @@ describe('ProductosSchemas (Zod)', () => {
 
         expect(resultado.success).toBe(false);
     });
+
+    it('cuando R2_PUBLIC_URL está configurado, solo acepta URLs del bucket oficial', () => {
+        const prev = process.env.R2_PUBLIC_URL;
+        process.env.R2_PUBLIC_URL = 'https://pub-test123.r2.dev';
+        try {
+            const externa = crearProductoSchema.safeParse({
+                categoriaId: 1,
+                nombre: 'Figura Test',
+                precioCentavos: 15000,
+                imagenPrincipal: 'https://sitio-externo.com/foto.jpg',
+            });
+            expect(externa.success).toBe(false);
+
+            const oficial = crearProductoSchema.safeParse({
+                categoriaId: 1,
+                nombre: 'Figura Test',
+                precioCentavos: 15000,
+                imagenPrincipal: 'https://pub-test123.r2.dev/productos/2026/11/foto.webp',
+            });
+            expect(oficial.success).toBe(true);
+        } finally {
+            if (prev === undefined) {
+                delete process.env.R2_PUBLIC_URL;
+            } else {
+                process.env.R2_PUBLIC_URL = prev;
+            }
+        }
+    });
 });

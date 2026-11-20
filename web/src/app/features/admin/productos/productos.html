@@ -539,51 +539,54 @@
             </div>
           </div>
 
-          <!-- Fila 6: Imagen Principal (Subida desde equipo + previsualización) -->
+          <!-- Fila 6: Imagen Principal (Solo subida segura + Drag & Drop, optimizada a 4:5 en R2) -->
           <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
                 Imagen principal del producto
               </label>
-              <button
-                type="button"
-                (click)="mostrarUrlManual.set(!mostrarUrlManual())"
-                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
-              >
-                {{ mostrarUrlManual() ? 'Ocultar enlace manual' : 'O pegar enlace web' }}
-              </button>
+              <span class="text-[11px] text-gray-500">Se ajusta automáticamente a 4:5 (WebP)</span>
             </div>
 
             @if (form.get('imagenPrincipal')?.value) {
-              <!-- Vista previa si ya tiene imagen -->
-              <div class="flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200">
-                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+              <!-- Vista previa con soporte para soltar nueva foto encima -->
+              <div
+                (dragover)="onDragOverPrincipal($event)"
+                (dragleave)="onDragLeavePrincipal($event)"
+                (drop)="onDropPrincipal($event)"
+                [class]="arrastrandoPrincipal()
+                  ? 'flex items-center gap-4 bg-indigo-50/70 p-3 rounded-xl border-2 border-dashed border-indigo-500 transition-colors'
+                  : 'flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200 transition-colors'"
+              >
+                <div class="w-16 h-20 rounded-lg overflow-hidden bg-white border border-gray-200 shrink-0 p-1">
                   <img
                     [src]="form.get('imagenPrincipal')?.value"
                     alt="Vista previa"
-                    class="w-full h-full object-cover"
+                    referrerpolicy="no-referrer"
+                    class="w-full h-full object-contain"
                   />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs font-medium text-gray-800 truncate">
-                    {{ form.get('imagenPrincipal')?.value }}
-                  </p>
-                  <p class="text-xs text-emerald-600 font-medium mt-0.5 flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <p class="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    Imagen cargada correctamente
+                    Imagen optimizada y guardada
+                  </p>
+                  <p class="text-[11px] text-gray-400 mt-0.5">
+                    Puedes arrastrar otra imagen aquí o usar el botón Cambiar.
                   </p>
                 </div>
                 <div class="flex items-center gap-2">
                   <label
                     class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors"
                   >
-                    Cambiar
+                    {{ subiendoImagen() ? 'Subiendo...' : 'Cambiar' }}
                     <input
                       type="file"
-                      accept="image/png, image/jpeg, image/webp"
+                      accept="image/png, image/jpeg, image/webp, image/gif"
                       class="hidden"
+                      [disabled]="subiendoImagen()"
                       (change)="subirArchivoPrincipal($event)"
                     />
                   </label>
@@ -600,121 +603,123 @@
                 </div>
               </div>
             } @else {
-              <!-- Botón / Dropzone para subir desde el equipo -->
+              <!-- Dropzone con Drag & Drop funcional -->
               <label
-                class="flex flex-col items-center justify-center p-5 border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-white rounded-xl cursor-pointer transition-colors group"
+                (dragover)="onDragOverPrincipal($event)"
+                (dragleave)="onDragLeavePrincipal($event)"
+                (drop)="onDropPrincipal($event)"
+                [class]="arrastrandoPrincipal()
+                  ? 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-indigo-500 bg-indigo-50/70 rounded-xl cursor-pointer transition-colors group'
+                  : 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-white rounded-xl cursor-pointer transition-colors group'"
               >
-                <div class="flex flex-col items-center justify-center text-center">
+                <div class="flex flex-col items-center justify-center text-center pointer-events-none">
                   @if (subiendoImagen()) {
                     <svg class="animate-spin h-6 w-6 text-indigo-600 mb-2" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    <span class="text-xs text-indigo-600 font-medium">Subiendo imagen al servidor...</span>
+                    <span class="text-xs text-indigo-600 font-medium">Optimizando y subiendo imagen...</span>
                   } @else {
                     <svg class="w-8 h-8 text-gray-400 group-hover:text-indigo-600 transition-colors mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                     </svg>
                     <p class="text-xs font-semibold text-gray-700 group-hover:text-indigo-600">
-                      Haz clic para subir imagen desde este equipo
+                      {{ arrastrandoPrincipal() ? 'Suelta la imagen aquí' : 'Arrastra una imagen aquí o haz clic para seleccionarla' }}
                     </p>
-                    <p class="text-xs text-gray-400 mt-0.5">Formatos JPG, PNG o WEBP (máx. 5 MB)</p>
+                    <p class="text-xs text-gray-400 mt-0.5">JPG, PNG, WEBP o GIF (máx. 5 MB)</p>
                   }
                 </div>
                 <input
                   type="file"
-                  accept="image/png, image/jpeg, image/webp"
+                  accept="image/png, image/jpeg, image/webp, image/gif"
                   class="hidden"
                   [disabled]="subiendoImagen()"
                   (change)="subirArchivoPrincipal($event)"
                 />
               </label>
             }
-
-            @if (mostrarUrlManual()) {
-              <div>
-                <input
-                  id="prodImg"
-                  type="url"
-                  formControlName="imagenPrincipal"
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                />
-              </div>
-            }
           </div>
 
-          <!-- Fila 7: Imágenes adicionales -->
+          <!-- Fila 7: Imágenes adicionales (Solo subida segura + Drag & Drop) -->
           <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
-                Imágenes adicionales (máx. 10)
+                Imágenes adicionales ({{ imagenesAdicionalesArray.length }}/10)
               </label>
               @if (imagenesAdicionalesArray.length < 10) {
-                <div class="flex items-center gap-3">
-                  <label
-                    class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium cursor-pointer"
-                  >
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Subir foto
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp"
-                      class="hidden"
-                      [disabled]="subiendoImagenAdicional()"
-                      (change)="subirArchivoAdicional($event)"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    (click)="agregarImagenAdicionalManual()"
-                    class="text-xs text-gray-500 hover:text-gray-700 font-medium cursor-pointer"
-                  >
-                    + Enlace
-                  </button>
-                </div>
+                <label
+                  class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Subir foto
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp, image/gif"
+                    class="hidden"
+                    [disabled]="subiendoImagenAdicional()"
+                    (change)="subirArchivoAdicional($event)"
+                  />
+                </label>
               }
             </div>
 
-            @if (subiendoImagenAdicional()) {
-              <div class="text-xs text-indigo-600 font-medium flex items-center gap-2 py-1">
-                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-                Subiendo imagen adicional...
-              </div>
+            @if (imagenesAdicionalesArray.length < 10) {
+              <label
+                (dragover)="onDragOverAdicional($event)"
+                (dragleave)="onDragLeaveAdicional($event)"
+                (drop)="onDropAdicional($event)"
+                [class]="arrastrandoAdicional()
+                  ? 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-indigo-500 bg-indigo-50/70 rounded-xl cursor-pointer transition-colors text-xs font-medium text-indigo-700'
+                  : 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-white rounded-xl cursor-pointer transition-colors text-xs text-gray-500 hover:text-indigo-600'"
+              >
+                @if (subiendoImagenAdicional()) {
+                  <svg class="animate-spin h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <span>Optimizando y subiendo imagen adicional...</span>
+                } @else {
+                  <span class="pointer-events-none">
+                    {{ arrastrandoAdicional() ? 'Suelta la foto aquí para agregarla' : 'Arrastra una foto aquí o haz clic para añadir a la galería' }}
+                  </span>
+                }
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp, image/gif"
+                  class="hidden"
+                  [disabled]="subiendoImagenAdicional()"
+                  (change)="subirArchivoAdicional($event)"
+                />
+              </label>
             }
 
-            <div formArrayName="imagenesAdicionales" class="space-y-2">
-              @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
-                <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200">
-                  @if (ctrl.value) {
-                    <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
-                      <img [src]="ctrl.value" alt="Adicional" class="w-full h-full object-cover" />
-                    </div>
-                  }
-                  <input
-                    type="url"
-                    [formControlName]="$index"
-                    placeholder="https://ejemplo.com/adicional.jpg"
-                    class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
-                  />
-                  <button
-                    type="button"
-                    (click)="eliminarImagenAdicional($index)"
-                    class="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                    title="Eliminar imagen"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              }
-            </div>
+            @if (imagenesAdicionalesArray.length > 0) {
+              <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+                @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
+                  <div class="relative group aspect-[4/5] rounded-xl overflow-hidden bg-white border border-gray-200 p-1">
+                    <img
+                      [src]="ctrl.value"
+                      [alt]="'Imagen adicional ' + ($index + 1)"
+                      referrerpolicy="no-referrer"
+                      class="w-full h-full object-contain"
+                    />
+                    <button
+                      type="button"
+                      (click)="eliminarImagenAdicional($index)"
+                      class="absolute top-1 right-1 p-1 bg-white/90 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg shadow-xs transition-colors cursor-pointer"
+                      title="Eliminar imagen"
+                      aria-label="Eliminar imagen adicional"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
           </div>
 
           <!-- Fila 8: Estado activo (solo en edición) -->

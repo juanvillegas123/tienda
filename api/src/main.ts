@@ -7,18 +7,9 @@ import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyMultipart from '@fastify/multipart';
-import fastifyStatic from '@fastify/static';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
-
-    // Asegurar directorio de uploads
-    const uploadsDir = join(process.cwd(), 'uploads');
-    if (!existsSync(uploadsDir)) {
-        mkdirSync(uploadsDir, { recursive: true });
-    }
 
     // Helmet — cabeceras de seguridad
     await app.register(fastifyHelmet, {
@@ -31,12 +22,6 @@ async function bootstrap() {
         limits: {
             fileSize: 5 * 1024 * 1024,
         },
-    });
-
-    // Servir archivos subidos estáticamente
-    await app.register(fastifyStatic, {
-        root: uploadsDir,
-        prefix: '/uploads/',
     });
 
     // CORS — solo el origen del frontend, con credenciales
@@ -59,11 +44,17 @@ async function bootstrap() {
             const ruta = req.url.split('?')[0];
             if (req.method === 'POST' && ruta === '/api/pedidos') return 10;
             if (req.method === 'POST' && ruta === '/api/auth/login') return 15;
+            if (req.method === 'POST' && ruta === '/api/productos/imagenes/subir') return 30;
             return 200;
         },
         keyGenerator: (req) => {
             const ruta = req.url.split('?')[0];
-            if (req.method === 'POST' && (ruta === '/api/pedidos' || ruta === '/api/auth/login')) {
+            if (
+                req.method === 'POST' &&
+                (ruta === '/api/pedidos' ||
+                    ruta === '/api/auth/login' ||
+                    ruta === '/api/productos/imagenes/subir')
+            ) {
                 return `${req.ip}:POST:${ruta}`;
             }
             return req.ip;
