@@ -55,6 +55,8 @@ export class AlmacenamientoService {
                     accessKeyId: config.accessKeyId,
                     secretAccessKey: config.secretAccessKey,
                 },
+                requestChecksumCalculation: 'WHEN_REQUIRED',
+                responseChecksumValidation: 'WHEN_REQUIRED',
             });
         }
 
@@ -97,10 +99,9 @@ export class AlmacenamientoService {
                 }),
             );
         } catch (err) {
-            this.logger.error(
-                'Error al subir imagen a Cloudflare R2',
-                err instanceof Error ? err.message : '',
-            );
+            const detalle =
+                err instanceof Error ? `${err.name}: ${err.message}` : 'error desconocido';
+            this.logger.error(`Error al subir imagen a Cloudflare R2 (${detalle})`);
             throw new InternalServerErrorException(
                 'No se pudo guardar la imagen en el almacenamiento en la nube.',
             );
