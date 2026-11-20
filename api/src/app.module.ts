@@ -6,6 +6,9 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ProductosModule } from './productos/productos.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
+import { CajasModule } from './cajas/cajas.module';
+import { VentasModule } from './ventas/ventas.module';
+import { DevolucionesModule } from './devoluciones/devoluciones.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 
@@ -17,6 +20,9 @@ import { HttpExceptionFilter } from './common/http-exception.filter';
         ProductosModule,
         PedidosModule,
         ConfiguracionModule,
+        CajasModule,
+        VentasModule,
+        DevolucionesModule,
     ],
     providers: [
         {

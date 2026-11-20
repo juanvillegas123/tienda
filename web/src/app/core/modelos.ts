@@ -179,3 +179,76 @@ export interface ConfirmarPedidoPayload {
     }[];
 }
 
+
+export type EstadoCaja = 'ABIERTA' | 'CERRADA';
+export type CanalVenta = 'MOSTRADOR' | 'ONLINE';
+
+export interface CajaResumen {
+    id: number;
+    administradoraId: number;
+    fechaApertura: string | number | Date;
+    fechaCierre: string | number | Date | null;
+    montoInicialCentavos: number;
+    ventasEfectivoCentavos: number;
+    ventasQrCentavos: number;
+    devolucionesCentavos: number;
+    cantidadVentas: number;
+    cantidadDevoluciones: number;
+    efectivoEsperadoCentavos: number;
+    efectivoContadoCentavos: number | null;
+    diferenciaCentavos: number | null;
+    estado: EstadoCaja;
+}
+
+export interface DetalleVenta {
+    id: number;
+    productoId: number;
+    nombreProducto: string;
+    cantidad: number;
+    cantidadDevuelta: number;
+    cantidadDevolvible: number;
+    precioCentavos: number;
+    costoCentavos: number;
+}
+
+export interface DevolucionEnVenta {
+    id: number;
+    cajaId: number;
+    motivo: string;
+    montoCentavos: number;
+    fecha: string | number | Date;
+}
+
+export interface Venta {
+    id: number;
+    cajaId: number | null;
+    pedidoId: number | null;
+    administradoraId: number;
+    canal: CanalVenta;
+    metodoPago: MetodoPago;
+    totalCentavos: number;
+    fecha: string | number | Date;
+    items: DetalleVenta[];
+    devoluciones: DevolucionEnVenta[];
+}
+
+export interface CrearVentaPayload {
+    metodoPago: MetodoPago;
+    items: { productoId: number; cantidad: number }[];
+}
+
+export interface CrearDevolucionPayload {
+    ventaId: number;
+    motivo: string;
+    items: { productoId: number; cantidad: number }[];
+}
+
+export interface DevolucionRegistrada {
+    id: number;
+    ventaId: number;
+    cajaId: number;
+    motivo: string;
+    montoCentavos: number;
+    fecha: string | number | Date;
+    items: { productoId: number; cantidad: number }[];
+}

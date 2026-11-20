@@ -30,13 +30,13 @@ export const routes: Routes = [
             {
                 path: 'pos',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/pos/pos').then((m) => m.PosAdminComponent),
                 title: 'Punto de venta',
             },
             {
                 path: 'caja',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/caja/caja').then((m) => m.CajaAdminComponent),
                 title: 'Caja',
             },
             {
