@@ -133,3 +133,8 @@ export const movimientosInventario = sqliteTable('movimientos_inventario', {
     nota: text('nota'),
     fecha: fecha('fecha'),
 });
+
+export const configuracion = sqliteTable('configuracion', {
+    clave: text('clave').primaryKey(),
+    valor: text('valor').notNull(),
+});

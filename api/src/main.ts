@@ -52,10 +52,22 @@ async function bootstrap() {
         secret: process.env.COOKIE_SECRET ?? process.env.JWT_SECRET ?? 'dev-secret',
     });
 
-    // Rate limit global — moderado
+    // Rate limit global moderado y más estricto en endpoints públicos de escritura (5.2)
     await app.register(fastifyRateLimit, {
         global: true,
-        max: 200,
+        max: (req) => {
+            const ruta = req.url.split('?')[0];
+            if (req.method === 'POST' && ruta === '/api/pedidos') return 10;
+            if (req.method === 'POST' && ruta === '/api/auth/login') return 15;
+            return 200;
+        },
+        keyGenerator: (req) => {
+            const ruta = req.url.split('?')[0];
+            if (req.method === 'POST' && (ruta === '/api/pedidos' || ruta === '/api/auth/login')) {
+                return `${req.ip}:POST:${ruta}`;
+            }
+            return req.ip;
+        },
         timeWindow: '1 minute',
         errorResponseBuilder: () => ({
             statusCode: 429,

@@ -4,11 +4,20 @@ import { AuthModule } from './auth/auth.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ProductosModule } from './productos/productos.module';
+import { PedidosModule } from './pedidos/pedidos.module';
+import { ConfiguracionModule } from './configuracion/configuracion.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 
 @Module({
-    imports: [AuthModule, CategoriasModule, ProveedoresModule, ProductosModule],
+    imports: [
+        AuthModule,
+        CategoriasModule,
+        ProveedoresModule,
+        ProductosModule,
+        PedidosModule,
+        ConfiguracionModule,
+    ],
     providers: [
         {
             provide: APP_GUARD,
