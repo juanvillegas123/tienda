@@ -1,248 +1,351 @@
 <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 py-5 sm:py-8">
-  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-    <div>
-      <div class="flex items-center gap-2">
-        <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+  <!-- Pantalla de confirmación tras enviar pedido -->
+  @if (pedidoConfirmado(); as pedido) {
+    <div class="max-w-xl mx-auto bg-tarjeta rounded-2xl border border-[#00000014] p-6 sm:p-8 shadow-sm text-center space-y-5">
+      <div class="mx-auto w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
-        <h1 class="font-display text-3xl sm:text-4xl uppercase tracking-wide text-negro leading-none">
-          Tu carrito
-        </h1>
       </div>
-      <p class="text-sm text-negro/65 mt-1">
-        Revisa tus productos, ajusta cantidades y agrega notas o tallas si lo necesitas.
-      </p>
-    </div>
-    <a
-      routerLink="/"
-      class="inline-flex items-center gap-1.5 text-sm font-semibold text-carmesi hover:text-carmesi-claro transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-    >
-      Seguir comprando
-    </a>
-  </div>
 
-  @if (aviso()) {
-    <div
-      class="mb-4 p-3.5 rounded-xl bg-perla border border-carmesi/35 text-negro text-sm flex items-center justify-between gap-3"
-      role="alert"
-    >
-      <span>{{ aviso() }}</span>
-      <button
-        type="button"
-        (click)="aviso.set(null)"
-        class="text-carmesi hover:text-vino p-1 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-        aria-label="Cerrar aviso"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-  }
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-carmesi">Pedido registrado</p>
+        <h1 class="font-display text-4xl uppercase tracking-wide text-negro mt-1">
+          {{ pedido.codigo }}
+        </h1>
+        <p class="text-sm text-negro/70 mt-2 leading-relaxed">
+          Gracias, <strong>{{ pedido.nombreCliente }}</strong>. Tu pedido fue enviado con éxito.
+          La propietaria te responderá por WhatsApp para coordinar la entrega, tallas y el pago.
+        </p>
+      </div>
 
-  @if (carrito.items().length === 0) {
-    <div class="py-6">
-      <app-estado-vacio
-        tipo="carrito-vacio"
-        titulo="Tu carrito está vacío"
-        descripcion="Explora el catálogo y agrega las figuras, poleras o accesorios que más te gusten."
-      >
+      <!-- Resumen compacto -->
+      <div class="text-left bg-fondo rounded-xl border border-black/10 p-4 space-y-2 text-sm">
+        @for (item of pedido.items; track item.productoId) {
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-medium text-negro">
+                {{ item.cantidad }}x {{ item.nombreProducto }}
+              </p>
+              @if (item.notaCliente) {
+                <p class="text-xs text-negro/60">Nota: {{ item.notaCliente }}</p>
+              }
+            </div>
+            <span class="font-semibold text-negro tabular-nums shrink-0">
+              {{ item.subtotalCentavos | bs }}
+            </span>
+          </div>
+        }
+        <div class="pt-2 border-t border-black/10 flex items-center justify-between font-bold text-base">
+          <span class="text-negro">Total</span>
+          <span class="text-carmesi tabular-nums">{{ pedido.totalCentavos | bs }}</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-2">
+        @if (urlWhatsappGenerada(); as waUrl) {
+          <a
+            [href]="waUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+          >
+            Abrir WhatsApp nuevamente
+          </a>
+        }
         <a
           routerLink="/"
-          class="inline-flex items-center justify-center px-6 py-2.5 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2"
+          class="flex-1 inline-flex items-center justify-center px-5 py-2.5 bg-negro hover:bg-vino-oscuro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
         >
-          Ir al catálogo
+          Volver al catálogo
         </a>
-      </app-estado-vacio>
+      </div>
     </div>
   } @else {
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      <!-- Tarjetas blancas de productos en el carrito -->
-      <div class="lg:col-span-2 space-y-3">
-        @for (item of carrito.items(); track item.productoId) {
-          <div class="bg-tarjeta rounded-2xl border border-[#00000014] p-4 shadow-xs space-y-3">
-            <div class="flex gap-3.5">
-              <!-- Miniatura pequeña -->
-              <a
-                [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
-                class="h-16 w-16 rounded-xl bg-tarjeta border border-[#00000010] overflow-hidden shrink-0 flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-              >
-                @if (item.imagenPrincipal) {
-                  <img
-                    [src]="item.imagenPrincipal"
-                    [alt]="item.nombre"
-                    loading="lazy"
-                    decoding="async"
-                    referrerpolicy="no-referrer"
-                    class="w-full h-full object-contain"
-                  />
-                } @else {
-                  <svg class="w-6 h-6 text-negro/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                    <circle cx="9" cy="9" r="2" />
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                  </svg>
-                }
-              </a>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+          </svg>
+          <h1 class="font-display text-3xl sm:text-4xl uppercase tracking-wide text-negro leading-none">
+            Tu carrito
+          </h1>
+        </div>
+        <p class="text-sm text-negro/65 mt-1">
+          Revisa tus productos, ajusta cantidades y agrega notas o tallas si lo necesitas.
+        </p>
+      </div>
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-1.5 text-sm font-semibold text-carmesi hover:text-carmesi-claro transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+      >
+        Seguir comprando
+      </a>
+    </div>
 
-              <!-- Datos y controles -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between gap-2">
-                  <a
-                    [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
-                    class="text-sm sm:text-base font-semibold uppercase tracking-tight text-negro hover:text-carmesi leading-snug line-clamp-2 focus-visible:outline-none focus-visible:underline"
-                  >
-                    {{ item.nombre }}
-                  </a>
-                  <button
-                    type="button"
-                    (click)="eliminar(item.productoId)"
-                    class="p-1.5 text-negro/40 hover:text-carmesi hover:bg-perla rounded-full transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-                    title="Quitar producto"
-                    [attr.aria-label]="'Quitar ' + item.nombre + ' del carrito'"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+    @if (aviso()) {
+      <div
+        class="mb-4 p-3.5 rounded-xl bg-perla border border-carmesi/35 text-negro text-sm flex items-center justify-between gap-3"
+        role="alert"
+      >
+        <span>{{ aviso() }}</span>
+        <button
+          type="button"
+          (click)="aviso.set(null)"
+          class="text-carmesi hover:text-vino p-1 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          aria-label="Cerrar aviso"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    }
+
+    @if (carrito.items().length === 0) {
+      <div class="py-6">
+        <app-estado-vacio
+          tipo="carrito-vacio"
+          titulo="Tu carrito está vacío"
+          descripcion="Explora el catálogo y agrega las figuras, poleras o accesorios que más te gusten."
+        >
+          <a
+            routerLink="/"
+            class="inline-flex items-center justify-center px-6 py-2.5 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2"
+          >
+            Ir al catálogo
+          </a>
+        </app-estado-vacio>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- Tarjetas blancas de productos en el carrito -->
+        <div class="lg:col-span-2 space-y-3">
+          @for (item of carrito.items(); track item.productoId) {
+            <div class="bg-tarjeta rounded-2xl border border-[#00000014] p-4 shadow-xs space-y-3">
+              <div class="flex gap-3.5">
+                <!-- Miniatura pequeña -->
+                <a
+                  [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
+                  class="h-16 w-16 rounded-xl bg-tarjeta border border-[#00000010] overflow-hidden shrink-0 flex items-center justify-center p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+                >
+                  @if (item.imagenPrincipal) {
+                    <img
+                      [src]="item.imagenPrincipal"
+                      [alt]="item.nombre"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                      class="w-full h-full object-contain"
+                    />
+                  } @else {
+                    <svg class="w-6 h-6 text-negro/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                      <circle cx="9" cy="9" r="2" />
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                     </svg>
-                  </button>
-                </div>
+                  }
+                </a>
 
-                @if (esNotaTallaVisible(item.notaTallaInformativa)) {
-                  <p class="text-xs text-negro/60 mt-0.5">{{ item.notaTallaInformativa }}</p>
-                }
-
-                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
-                  <!-- Selector de cantidad -->
-                  <div class="inline-flex items-center border border-black/15 rounded-full bg-fondo">
+                <!-- Datos y controles -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2">
+                    <a
+                      [routerLink]="['/producto', rutaProducto(item.productoId, item.nombre)]"
+                      class="text-sm sm:text-base font-semibold uppercase tracking-tight text-negro hover:text-carmesi leading-snug line-clamp-2 focus-visible:outline-none focus-visible:underline"
+                    >
+                      {{ item.nombre }}
+                    </a>
                     <button
                       type="button"
-                      (click)="cambiarCantidad(item, -1)"
-                      class="p-1.5 sm:p-2 text-negro hover:text-carmesi cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-                      [attr.aria-label]="'Disminuir cantidad de ' + item.nombre"
+                      (click)="eliminar(item.productoId)"
+                      class="p-1.5 text-negro/40 hover:text-carmesi hover:bg-perla rounded-full transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+                      title="Quitar producto"
+                      [attr.aria-label]="'Quitar ' + item.nombre + ' del carrito'"
                     >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-                      </svg>
-                    </button>
-                    <span class="px-3 text-sm font-bold text-negro tabular-nums select-none">
-                      {{ item.cantidad }}
-                    </span>
-                    <button
-                      type="button"
-                      (click)="cambiarCantidad(item, 1)"
-                      [disabled]="item.cantidad >= item.stockMaximo"
-                      class="p-1.5 sm:p-2 text-negro hover:text-carmesi disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-                      [attr.aria-label]="'Aumentar cantidad de ' + item.nombre"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
                       </svg>
                     </button>
                   </div>
 
-                  <!-- Subtotal y precio unitario -->
-                  <div class="text-right">
-                    <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums">
-                      {{ (item.precioCentavos * item.cantidad) | bs }}
-                    </p>
-                    @if (item.cantidad > 1) {
-                      <p class="text-[11px] text-negro/55 tabular-nums">
-                        {{ item.precioCentavos | bs }} c/u
+                  @if (esNotaTallaVisible(item.notaTallaInformativa)) {
+                    <p class="text-xs text-negro/60 mt-0.5">{{ item.notaTallaInformativa }}</p>
+                  }
+
+                  <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <!-- Selector de cantidad -->
+                    <div class="inline-flex items-center border border-black/15 rounded-full bg-fondo">
+                      <button
+                        type="button"
+                        (click)="cambiarCantidad(item, -1)"
+                        class="p-1.5 sm:p-2 text-negro hover:text-carmesi cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+                        [attr.aria-label]="'Disminuir cantidad de ' + item.nombre"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <span class="px-3 text-sm font-bold text-negro tabular-nums select-none">
+                        {{ item.cantidad }}
+                      </span>
+                      <button
+                        type="button"
+                        (click)="cambiarCantidad(item, 1)"
+                        [disabled]="item.cantidad >= item.stockMaximo"
+                        class="p-1.5 sm:p-2 text-negro hover:text-carmesi disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+                        [attr.aria-label]="'Aumentar cantidad de ' + item.nombre"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Subtotal y precio unitario -->
+                    <div class="text-right">
+                      <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums">
+                        {{ (item.precioCentavos * item.cantidad) | bs }}
                       </p>
-                    }
+                      @if (item.cantidad > 1) {
+                        <p class="text-[11px] text-negro/55 tabular-nums">
+                          {{ item.precioCentavos | bs }} c/u
+                        </p>
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Nota opcional por producto -->
-            <div class="pt-2.5 border-t border-black/8">
-              <label
-                [attr.for]="'nota-' + item.productoId"
-                class="block text-[11px] font-semibold uppercase tracking-wide text-negro/60 mb-1"
-              >
-                Nota / talla para este producto (opcional)
-              </label>
-              <input
-                [id]="'nota-' + item.productoId"
-                type="text"
-                maxlength="200"
-                [value]="item.notaCliente"
-                (input)="actualizarNota(item, $event)"
-                placeholder="Ej: Talla M, edición especial..."
-                class="w-full px-3 py-1.5 bg-fondo border border-black/12 rounded-xl text-xs sm:text-sm text-negro placeholder:text-negro/40 focus:bg-tarjeta focus:outline-none focus:ring-2 focus:ring-carmesi focus:border-carmesi"
-              />
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Resumen en panel oscuro (negro con texto perla) -->
-      <aside class="bg-negro text-perla rounded-2xl border border-vino p-5 shadow-md space-y-4 lg:sticky lg:top-24">
-        <div class="flex items-center gap-2">
-          <svg class="w-3.5 h-3.5 text-carmesi-claro shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-          </svg>
-          <h2 class="font-display text-2xl uppercase tracking-wider text-perla leading-none">
-            Resumen
-          </h2>
-        </div>
-
-        <div class="space-y-2 text-sm">
-          <div class="flex items-center justify-between text-perla/75">
-            <span class="tabular-nums">Productos ({{ carrito.cantidadTotal() }})</span>
-            <span class="font-semibold text-perla tabular-nums">{{ carrito.totalCentavos() | bs }}</span>
-          </div>
-          <div class="pt-3 border-t border-white/15 flex items-center justify-between">
-            <span class="text-base font-bold text-perla">Total estimado</span>
-            <span class="text-2xl font-bold text-perla tabular-nums">{{ carrito.totalCentavos() | bs }}</span>
-          </div>
-        </div>
-
-        <div class="p-3 rounded-xl bg-vino-oscuro/80 border border-vino text-xs text-perla/85 leading-relaxed">
-          Tu carrito se guarda automáticamente en este dispositivo.
-        </div>
-
-        <div class="space-y-2 pt-1">
-          <button
-            type="button"
-            disabled
-            class="w-full inline-flex items-center justify-center px-5 py-2.5 bg-carmesi/45 text-perla/75 text-sm font-semibold rounded-full cursor-not-allowed border border-carmesi/40"
-          >
-            Finalizar pedido (próximamente)
-          </button>
-
-          @if (!confirmandoVaciar()) {
-            <button
-              type="button"
-              (click)="confirmandoVaciar.set(true)"
-              class="w-full px-4 py-2 text-xs font-medium text-perla/70 hover:text-perla hover:bg-white/8 rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-            >
-              Vaciar carrito
-            </button>
-          } @else {
-            <div class="p-3 rounded-xl bg-vino-oscuro border border-carmesi/60 space-y-2">
-              <p class="text-xs text-perla font-medium text-center">¿Seguro que deseas vaciar todo el carrito?</p>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  (click)="confirmandoVaciar.set(false)"
-                  class="flex-1 py-1.5 text-xs font-medium bg-negro border border-white/20 text-perla rounded-full hover:bg-white/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+              <!-- Nota opcional por producto -->
+              <div class="pt-2.5 border-t border-black/8">
+                <label
+                  [attr.for]="'nota-' + item.productoId"
+                  class="block text-[11px] font-semibold uppercase tracking-wide text-negro/60 mb-1"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  (click)="vaciarCarrito()"
-                  class="flex-1 py-1.5 text-xs font-bold bg-carmesi text-perla rounded-full hover:bg-carmesi-claro cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla"
-                >
-                  Sí, vaciar
-                </button>
+                  Nota / talla para este producto (opcional)
+                </label>
+                <input
+                  [id]="'nota-' + item.productoId"
+                  type="text"
+                  maxlength="200"
+                  [value]="item.notaCliente"
+                  (input)="actualizarNota(item, $event)"
+                  placeholder="Ej: Talla M, edición especial..."
+                  class="w-full px-3 py-1.5 bg-fondo border border-black/12 rounded-xl text-xs sm:text-sm text-negro placeholder:text-negro/40 focus:bg-tarjeta focus:outline-none focus:ring-2 focus:ring-carmesi focus:border-carmesi"
+                />
               </div>
             </div>
           }
         </div>
-      </aside>
-    </div>
+
+        <!-- Resumen y envío por WhatsApp en panel oscuro -->
+        <aside class="bg-negro text-perla rounded-2xl border border-vino p-5 shadow-md space-y-4 lg:sticky lg:top-24">
+          <div class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-carmesi-claro shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
+            </svg>
+            <h2 class="font-display text-2xl uppercase tracking-wider text-perla leading-none">
+              Resumen
+            </h2>
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between text-perla/75">
+              <span class="tabular-nums">Productos ({{ carrito.cantidadTotal() }})</span>
+              <span class="font-semibold text-perla tabular-nums">{{ carrito.totalCentavos() | bs }}</span>
+            </div>
+            <div class="pt-3 border-t border-white/15 flex items-center justify-between">
+              <span class="text-base font-bold text-perla">Total estimado</span>
+              <span class="text-2xl font-bold text-perla tabular-nums">{{ carrito.totalCentavos() | bs }}</span>
+            </div>
+          </div>
+
+          <!-- Formulario de datos del cliente -->
+          <form [formGroup]="form" (ngSubmit)="enviarPedido()" class="space-y-3 pt-2 border-t border-white/15" novalidate>
+            <div>
+              <label for="nombreCliente" class="block text-xs font-semibold uppercase tracking-wide text-perla/85 mb-1">
+                Tu nombre *
+              </label>
+              <input
+                id="nombreCliente"
+                type="text"
+                formControlName="nombreCliente"
+                autocomplete="name"
+                placeholder="Ej: María López"
+                class="w-full px-3 py-2 bg-vino-oscuro/70 border border-white/15 rounded-xl text-sm text-perla placeholder:text-perla/40 focus:outline-none focus:ring-2 focus:ring-carmesi-claro"
+                [class.border-rose-400]="campoInvalido('nombreCliente')"
+              />
+              @if (campoInvalido('nombreCliente')) {
+                <p class="text-xs text-rose-300 mt-1">Ingresa tu nombre (mínimo 2 caracteres).</p>
+              }
+            </div>
+
+            <div>
+              <label for="telefonoCliente" class="block text-xs font-semibold uppercase tracking-wide text-perla/75 mb-1">
+                Tu teléfono (opcional)
+              </label>
+              <input
+                id="telefonoCliente"
+                type="tel"
+                formControlName="telefonoCliente"
+                autocomplete="tel"
+                placeholder="Ej: 70012345"
+                class="w-full px-3 py-2 bg-vino-oscuro/70 border border-white/15 rounded-xl text-sm text-perla placeholder:text-perla/40 focus:outline-none focus:ring-2 focus:ring-carmesi-claro"
+              />
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="enviando()"
+              class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-carmesi hover:bg-carmesi-claro disabled:opacity-60 disabled:cursor-not-allowed text-perla text-sm font-semibold rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla"
+            >
+              @if (enviando()) {
+                <span>Registrando pedido...</span>
+              } @else {
+                <span>Enviar pedido por WhatsApp</span>
+              }
+            </button>
+          </form>
+
+          <p class="text-[11px] text-perla/65 leading-relaxed">
+            Al enviar, registraremos tu pedido con un código y abriremos WhatsApp para coordinar el pago y la entrega.
+          </p>
+
+          <div class="pt-1">
+            @if (!confirmandoVaciar()) {
+              <button
+                type="button"
+                (click)="confirmandoVaciar.set(true)"
+                class="w-full px-4 py-2 text-xs font-medium text-perla/70 hover:text-perla hover:bg-white/8 rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+              >
+                Vaciar carrito
+              </button>
+            } @else {
+              <div class="p-3 rounded-xl bg-vino-oscuro border border-carmesi/60 space-y-2">
+                <p class="text-xs text-perla font-medium text-center">¿Seguro que deseas vaciar todo el carrito?</p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    (click)="confirmandoVaciar.set(false)"
+                    class="flex-1 py-1.5 text-xs font-medium bg-negro border border-white/20 text-perla rounded-full hover:bg-white/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="vaciarCarrito()"
+                    class="flex-1 py-1.5 text-xs font-bold bg-carmesi text-perla rounded-full hover:bg-carmesi-claro cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla"
+                  >
+                    Sí, vaciar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </aside>
+      </div>
+    }
   }
 </div>

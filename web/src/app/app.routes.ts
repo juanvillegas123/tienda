@@ -24,7 +24,7 @@ export const routes: Routes = [
             {
                 path: 'pedidos',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/pedidos/pedidos').then((m) => m.PedidosAdminComponent),
                 title: 'Pedidos',
             },
             {

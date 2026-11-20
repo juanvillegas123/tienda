@@ -1,0 +1,459 @@
+<div class="p-6 max-w-7xl mx-auto">
+  <!-- Cabecera -->
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Pedidos online</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        Revisa los pedidos recibidos por WhatsApp, ajusta cantidades si hace falta y confirma la venta.
+      </p>
+    </div>
+
+    <!-- Configuración rápida de WhatsApp de la tienda -->
+    <div class="bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-xs flex flex-wrap items-center gap-3">
+      @if (!editandoWhatsapp()) {
+        <div class="text-xs">
+          <span class="text-gray-500 block">WhatsApp de pedidos (carrito)</span>
+          <span class="font-mono font-semibold text-gray-900 text-sm">+{{ whatsappActual() || 'Sin configurar' }}</span>
+        </div>
+        <button
+          type="button"
+          (click)="abrirEditorWhatsapp()"
+          class="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+        >
+          Cambiar número
+        </button>
+      } @else {
+        <form [formGroup]="formWhatsapp" (ngSubmit)="guardarWhatsapp()" class="flex flex-wrap items-center gap-2">
+          <div>
+            <label for="waNumero" class="sr-only">Número de WhatsApp con código de país</label>
+            <input
+              id="waNumero"
+              type="text"
+              formControlName="whatsappNumero"
+              placeholder="Ej: 59170000000"
+              class="w-40 px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              [class.border-red-400]="formWhatsapp.get('whatsappNumero')?.invalid && formWhatsapp.get('whatsappNumero')?.touched"
+            />
+          </div>
+          <button
+            type="submit"
+            [disabled]="guardandoWhatsapp()"
+            class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white rounded-lg cursor-pointer"
+          >
+            {{ guardandoWhatsapp() ? 'Guardando...' : 'Guardar' }}
+          </button>
+          <button
+            type="button"
+            (click)="editandoWhatsapp.set(false)"
+            class="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer"
+          >
+            Cancelar
+          </button>
+          @if (formWhatsapp.get('whatsappNumero')?.invalid && formWhatsapp.get('whatsappNumero')?.touched) {
+            <p class="w-full text-[11px] text-red-600">Solo dígitos con código de país (8 a 15 dígitos, ej: 59170000000).</p>
+          }
+        </form>
+      }
+    </div>
+  </div>
+
+  <!-- Mensajes de alerta -->
+  @if (mensajeExito()) {
+    <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeExito() }}</span>
+      <button type="button" (click)="mensajeExito.set(null)" class="text-green-600 hover:text-green-800 font-bold ml-2 cursor-pointer">✕</button>
+    </div>
+  }
+  @if (mensajeError()) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ mensajeError() }}</span>
+      <button type="button" (click)="mensajeError.set(null)" class="text-red-600 hover:text-red-800 font-bold ml-2 cursor-pointer">✕</button>
+    </div>
+  }
+
+  <!-- Pestañas por estado -->
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-200">
+    <div class="flex gap-1 -mb-px">
+      @for (tab of pestanas; track tab.id) {
+        <button
+          type="button"
+          (click)="cambiarPestana(tab.id)"
+          class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer"
+          [class.border-indigo-600]="pestanaActiva() === tab.id"
+          [class.text-indigo-600]="pestanaActiva() === tab.id"
+          [class.border-transparent]="pestanaActiva() !== tab.id"
+          [class.text-gray-500]="pestanaActiva() !== tab.id"
+          [class.hover:text-gray-800]="pestanaActiva() !== tab.id"
+        >
+          {{ tab.etiqueta }}
+        </button>
+      }
+    </div>
+
+    <button
+      type="button"
+      (click)="cargarPedidos()"
+      class="mb-2 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg cursor-pointer"
+    >
+      Actualizar lista
+    </button>
+  </div>
+
+  <!-- Tabla de Pedidos -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+    @if (cargando()) {
+      <div class="py-16 text-center text-gray-400 text-sm">
+        Cargando pedidos...
+      </div>
+    } @else if (pedidos().length === 0) {
+      <div class="py-16 text-center text-gray-400 text-sm">
+        No hay pedidos en esta pestaña.
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <th class="py-3 px-4">Código</th>
+              <th class="py-3 px-4">Cliente</th>
+              <th class="py-3 px-4 text-center">Unidades</th>
+              <th class="py-3 px-4">Fecha</th>
+              <th class="py-3 px-4 text-right">Total</th>
+              <th class="py-3 px-4 text-center">Estado</th>
+              <th class="py-3 px-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+            @for (ped of pedidos(); track ped.id) {
+              <tr class="hover:bg-gray-50/80 transition-colors">
+                <td class="py-3 px-4 font-mono font-bold text-gray-900">
+                  {{ ped.codigo }}
+                </td>
+                <td class="py-3 px-4">
+                  <div class="font-medium text-gray-900">{{ ped.nombreCliente || 'Sin nombre' }}</div>
+                  @if (ped.telefonoCliente) {
+                    <div class="text-xs text-gray-500">{{ ped.telefonoCliente }}</div>
+                  }
+                </td>
+                <td class="py-3 px-4 text-center tabular-nums">
+                  {{ ped.cantidadItems }}
+                </td>
+                <td class="py-3 px-4 text-xs text-gray-600 tabular-nums">
+                  {{ ped.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="py-3 px-4 text-right font-semibold text-gray-900 tabular-nums">
+                  {{ ped.totalCentavos | bs }}
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <div class="inline-flex flex-wrap items-center justify-center gap-1.5">
+                    @if (ped.estado === 'PENDIENTE') {
+                      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                        Pendiente
+                      </span>
+                    } @else if (ped.estado === 'CONFIRMADO') {
+                      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                        Confirmado
+                      </span>
+                    } @else {
+                      <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                        Cancelado
+                      </span>
+                    }
+
+                    @if (ped.vencido) {
+                      <span
+                        class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700"
+                        title="Superó las 24 horas sin confirmación"
+                      >
+                        Vencido
+                      </span>
+                    }
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-right">
+                  <button
+                    type="button"
+                    (click)="verDetalle(ped)"
+                    class="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    {{ ped.estado === 'PENDIENTE' ? 'Revisar / Confirmar' : 'Ver detalle' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Modal de Detalle y Confirmación -->
+@if (cargandoDetalle()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+    <div class="bg-white rounded-2xl px-8 py-6 text-sm text-gray-600 shadow-xl">
+      Cargando detalle del pedido...
+    </div>
+  </div>
+}
+
+@if (pedidoSeleccionado(); as pedido) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-gray-100 my-8 space-y-5">
+      <!-- Encabezado modal -->
+      <div class="flex items-start justify-between gap-4 pb-3 border-b border-gray-100">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-xl font-bold text-gray-900 font-mono">{{ pedido.codigo }}</h2>
+            @if (pedido.estado === 'PENDIENTE') {
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pendiente</span>
+            } @else if (pedido.estado === 'CONFIRMADO') {
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Confirmado</span>
+            } @else {
+              <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Cancelado</span>
+            }
+            @if (pedido.vencido) {
+              <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">Vencido (&gt;24h)</span>
+            }
+          </div>
+          <p class="text-sm text-gray-600 mt-1">
+            Cliente: <strong>{{ pedido.nombreCliente || 'Sin nombre' }}</strong>
+            @if (pedido.telefonoCliente) {
+              <span class="text-gray-400"> • </span>{{ pedido.telefonoCliente }}
+            }
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Creado: {{ pedido.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}
+            @if (pedido.fechaConfirmacion) {
+              • Confirmado: {{ pedido.fechaConfirmacion | date: 'dd/MM/yyyy HH:mm' }}
+            }
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarDetalle()"
+          class="text-gray-400 hover:text-gray-600 text-lg leading-none p-1 cursor-pointer"
+          aria-label="Cerrar detalle"
+        >
+          ✕
+        </button>
+      </div>
+
+      @if (errorModal()) {
+        <div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          {{ errorModal() }}
+        </div>
+      }
+
+      <!-- Productos del pedido -->
+      <div class="border border-gray-200 rounded-xl overflow-hidden">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase">
+              <th class="py-2.5 px-3">Producto / Nota cliente</th>
+              <th class="py-2.5 px-3 text-right">Precio u.</th>
+              <th class="py-2.5 px-3 text-center">Stock hoy</th>
+              <th class="py-2.5 px-3 text-center">Cantidad</th>
+              <th class="py-2.5 px-3 text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (item of pedido.items; track item.id) {
+              @let cantActual = cantidadItem(item.productoId, item.cantidad);
+              <tr [class.bg-red-50/60]="pedido.estado === 'PENDIENTE' && cantActual > 0 && (!item.productoActivo || cantActual > item.stockActual)">
+                <td class="py-3 px-3">
+                  <div class="flex items-start gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                      @if (item.imagenPrincipal) {
+                        <img [src]="item.imagenPrincipal" [alt]="item.nombreProducto" class="w-full h-full object-cover" />
+                      } @else {
+                        <span class="text-xs text-gray-300">📷</span>
+                      }
+                    </div>
+                    <div>
+                      <div class="font-medium text-gray-900">{{ item.nombreProducto }}</div>
+                      @if (item.notaCliente) {
+                        <div class="mt-1 inline-block text-xs bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded font-medium">
+                          Nota cliente: {{ item.notaCliente }}
+                        </div>
+                      }
+                      @if (!item.productoActivo) {
+                        <div class="text-xs text-red-600 font-semibold mt-0.5">Producto dado de baja</div>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="py-3 px-3 text-right tabular-nums text-gray-600">
+                  {{ item.precioCentavos | bs }}
+                </td>
+                <td class="py-3 px-3 text-center tabular-nums">
+                  <span
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    [class.bg-red-100]="item.stockActual < cantActual"
+                    [class.text-red-700]="item.stockActual < cantActual"
+                    [class.bg-gray-100]="item.stockActual >= cantActual"
+                    [class.text-gray-700]="item.stockActual >= cantActual"
+                  >
+                    {{ item.stockActual }}
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-center">
+                  @if (pedido.estado === 'PENDIENTE') {
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="item.stockActual"
+                      [value]="cantActual"
+                      (input)="actualizarCantidadItem(item.productoId, $any($event.target).valueAsNumber)"
+                      class="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center text-sm font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  } @else {
+                    <span class="font-semibold tabular-nums">{{ item.cantidad }}</span>
+                  }
+                </td>
+                <td class="py-3 px-3 text-right font-semibold text-gray-900 tabular-nums">
+                  {{ (item.precioCentavos * cantActual) | bs }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total y controles si está PENDIENTE -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+        @if (pedido.estado === 'PENDIENTE') {
+          <div>
+            <span class="block text-xs font-semibold uppercase tracking-wide text-gray-600 mb-1.5">
+              Método de pago recibido
+            </span>
+            <div class="inline-flex rounded-lg border border-gray-300 bg-white overflow-hidden">
+              <button
+                type="button"
+                (click)="metodoPago.set('EFECTIVO')"
+                class="px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer"
+                [class.bg-indigo-600]="metodoPago() === 'EFECTIVO'"
+                [class.text-white]="metodoPago() === 'EFECTIVO'"
+                [class.text-gray-700]="metodoPago() !== 'EFECTIVO'"
+              >
+                Efectivo
+              </button>
+              <button
+                type="button"
+                (click)="metodoPago.set('QR')"
+                class="px-4 py-1.5 text-sm font-medium border-l border-gray-300 transition-colors cursor-pointer"
+                [class.bg-indigo-600]="metodoPago() === 'QR'"
+                [class.text-white]="metodoPago() === 'QR'"
+                [class.text-gray-700]="metodoPago() !== 'QR'"
+              >
+                QR
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="text-xs text-gray-500">
+            Este pedido ya fue procesado y no puede modificarse.
+          </div>
+        }
+
+        <div class="text-right">
+          <span class="block text-xs uppercase tracking-wide text-gray-500">Total del pedido</span>
+          <span class="text-2xl font-bold text-gray-900 tabular-nums">
+            {{ (pedido.estado === 'PENDIENTE' ? totalCalculadoModal() : pedido.totalCentavos) | bs }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Confirmación de acción sensible -->
+      @if (accionConfirmacion() === 'CONFIRMAR') {
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-sm text-emerald-900">
+            ¿Confirmar la venta ONLINE por <strong>{{ totalCalculadoModal() | bs }}</strong> ({{ metodoPago() }}) y descontar el stock?
+          </p>
+          <div class="flex gap-2 shrink-0">
+            <button
+              type="button"
+              (click)="accionConfirmacion.set(null)"
+              [disabled]="procesando()"
+              class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-lg cursor-pointer"
+            >
+              Volver
+            </button>
+            <button
+              type="button"
+              (click)="ejecutarConfirmacion()"
+              [disabled]="procesando()"
+              class="px-4 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg cursor-pointer"
+            >
+              {{ procesando() ? 'Confirmando...' : 'Sí, confirmar venta' }}
+            </button>
+          </div>
+        </div>
+      } @else if (accionConfirmacion() === 'CANCELAR') {
+        <div class="p-4 rounded-xl bg-red-50 border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p class="text-sm text-red-900">
+            ¿Seguro que deseas cancelar el pedido <strong>{{ pedido.codigo }}</strong>? No afectará el stock.
+          </p>
+          <div class="flex gap-2 shrink-0">
+            <button
+              type="button"
+              (click)="accionConfirmacion.set(null)"
+              [disabled]="procesando()"
+              class="px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-lg cursor-pointer"
+            >
+              Volver
+            </button>
+            <button
+              type="button"
+              (click)="ejecutarCancelacion()"
+              [disabled]="procesando()"
+              class="px-4 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg cursor-pointer"
+            >
+              {{ procesando() ? 'Cancelando...' : 'Sí, cancelar pedido' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Botones del pie -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+        @if (pedido.estado === 'PENDIENTE') {
+          <button
+            type="button"
+            (click)="accionConfirmacion.set('CANCELAR')"
+            [disabled]="procesando()"
+            class="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+          >
+            Cancelar pedido
+          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="cerrarDetalle()"
+              class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 rounded-lg cursor-pointer"
+            >
+              Cerrar
+            </button>
+            <button
+              type="button"
+              (click)="accionConfirmacion.set('CONFIRMAR')"
+              [disabled]="procesando() || !tieneAlgunItemActivo() || tieneConflictoStock()"
+              class="px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg cursor-pointer"
+            >
+              Confirmar venta
+            </button>
+          </div>
+        } @else {
+          <div></div>
+          <button
+            type="button"
+            (click)="cerrarDetalle()"
+            class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 rounded-lg cursor-pointer"
+          >
+            Cerrar
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

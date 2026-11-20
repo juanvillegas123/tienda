@@ -109,3 +109,73 @@ export interface EditarProductoPayload {
     imagenesAdicionales?: string[];
     activo?: boolean;
 }
+
+export type EstadoPedido = 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO';
+export type MetodoPago = 'EFECTIVO' | 'QR';
+
+export interface CrearPedidoPayload {
+    nombreCliente: string;
+    telefonoCliente?: string | null;
+    items: {
+        productoId: number;
+        cantidad: number;
+        notaCliente?: string | null;
+    }[];
+}
+
+export interface PedidoCreadoPublico {
+    id: number;
+    codigo: string;
+    nombreCliente: string;
+    telefonoCliente: string | null;
+    totalCentavos: number;
+    estado: 'PENDIENTE';
+    fechaCreacion: string | number | Date;
+    items: {
+        productoId: number;
+        nombreProducto: string;
+        cantidad: number;
+        precioCentavos: number;
+        subtotalCentavos: number;
+        notaCliente: string | null;
+    }[];
+}
+
+export interface PedidoResumen {
+    id: number;
+    codigo: string;
+    nombreCliente: string | null;
+    telefonoCliente: string | null;
+    totalCentavos: number;
+    estado: EstadoPedido;
+    fechaCreacion: string | number | Date;
+    fechaConfirmacion: string | number | Date | null;
+    vencido: boolean;
+    cantidadItems: number;
+}
+
+export interface ItemPedidoDetalle {
+    id: number;
+    productoId: number;
+    nombreProducto: string;
+    imagenPrincipal: string | null;
+    cantidad: number;
+    precioCentavos: number;
+    subtotalCentavos: number;
+    notaCliente: string | null;
+    stockActual: number;
+    productoActivo: boolean;
+}
+
+export interface PedidoDetalle extends PedidoResumen {
+    items: ItemPedidoDetalle[];
+}
+
+export interface ConfirmarPedidoPayload {
+    metodoPago: MetodoPago;
+    itemsAjustados?: {
+        productoId: number;
+        cantidad: number;
+    }[];
+}
+
