@@ -28,8 +28,10 @@ export class AlmacenamientoService {
         const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
         const bucket = process.env.R2_BUCKET_NAME?.trim();
         const publicUrl = process.env.R2_PUBLIC_URL?.trim().replace(/\/+$/, '');
+        const endpointEnv = process.env.R2_ENDPOINT?.trim();
+        const jurisdiction = process.env.R2_JURISDICTION?.trim().toLowerCase();
 
-        if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) {
+        if ((!accountId && !endpointEnv) || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) {
             throw new InternalServerErrorException(
                 'El almacenamiento de imágenes (Cloudflare R2) no está configurado en el servidor.',
             );
@@ -41,7 +43,16 @@ export class AlmacenamientoService {
             );
         }
 
-        return { accountId, accessKeyId, secretAccessKey, bucket, publicUrl };
+        let endpoint: string;
+        if (endpointEnv) {
+            endpoint = new URL(endpointEnv).origin;
+        } else if (jurisdiction) {
+            endpoint = `https://${accountId}.${jurisdiction}.r2.cloudflarestorage.com`;
+        } else {
+            endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+        }
+
+        return { endpoint, accessKeyId, secretAccessKey, bucket, publicUrl };
     }
 
     private obtenerCliente(): { client: S3Client; bucket: string; publicUrl: string } {
@@ -50,7 +61,7 @@ export class AlmacenamientoService {
         if (!this.s3Client) {
             this.s3Client = new S3Client({
                 region: 'auto',
-                endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+                endpoint: config.endpoint,
                 credentials: {
                     accessKeyId: config.accessKeyId,
                     secretAccessKey: config.secretAccessKey,
