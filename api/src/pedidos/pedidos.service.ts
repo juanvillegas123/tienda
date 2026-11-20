@@ -4,7 +4,7 @@ import {
     NotFoundException,
     ConflictException,
 } from '@nestjs/common';
-import { eq, and, gte, inArray, desc, sql } from 'drizzle-orm';
+import { eq, and, gte, inArray, desc, sql, like, or } from 'drizzle-orm';
 import { db } from '../db/db';
 import {
     pedidos,
@@ -177,9 +177,25 @@ export class PedidosService {
     }
 
     /**
-     * Lista pedidos para la administradora con filtro opcional por estado y cálculo de vencimiento.
+     * Lista pedidos para la administradora con filtro opcional por estado, búsqueda (código o cliente) y cálculo de vencimiento.
      */
     async listar(filtro?: ListarPedidosQueryDto): Promise<PedidoResumenDto[]> {
+        const condiciones = [];
+
+        if (filtro?.estado) {
+            condiciones.push(eq(pedidos.estado, filtro.estado));
+        }
+
+        if (filtro?.q && filtro.q.trim().length > 0) {
+            const termino = `%${filtro.q.trim().toLowerCase()}%`;
+            condiciones.push(
+                or(
+                    like(sql`lower(${pedidos.codigo})`, termino),
+                    like(sql`lower(coalesce(${pedidos.nombreCliente}, ''))`, termino),
+                )!,
+            );
+        }
+
         const query = db
             .select({
                 id: pedidos.id,
@@ -194,9 +210,7 @@ export class PedidosService {
             .from(pedidos)
             .orderBy(desc(pedidos.id));
 
-        const rows = filtro?.estado
-            ? await query.where(eq(pedidos.estado, filtro.estado))
-            : await query;
+        const rows = condiciones.length > 0 ? await query.where(and(...condiciones)) : await query;
 
         if (rows.length === 0) return [];
 

@@ -56,8 +56,9 @@ describe('PedidosSchemas (Zod)', () => {
         ).toBe(false);
     });
 
-    it('debe validar filtro de estado', () => {
-        expect(listarPedidosQuerySchema.safeParse({ estado: 'PENDIENTE' }).success).toBe(true);
+    it('debe validar filtro de estado y búsqueda q', () => {
+        expect(listarPedidosQuerySchema.safeParse({ estado: 'PENDIENTE', q: 'PED-0001' }).success).toBe(true);
+        expect(listarPedidosQuerySchema.safeParse({ q: '  Ana  ' }).success).toBe(true);
         expect(listarPedidosQuerySchema.safeParse({ estado: 'OTRO' }).success).toBe(false);
     });
 });

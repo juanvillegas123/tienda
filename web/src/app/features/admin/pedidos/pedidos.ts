@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -24,10 +24,13 @@ export class PedidosAdminComponent implements OnInit {
     private readonly pedidosService = inject(PedidosService);
     private readonly configuracionService = inject(ConfiguracionService);
     private readonly fb = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
 
     readonly pedidos = signal<PedidoResumen[]>([]);
     readonly pestanaActiva = signal<PestanaEstado>('PENDIENTE');
+    readonly busqueda = signal('');
     readonly cargando = signal(true);
+    private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Detalle y confirmación
     readonly pedidoSeleccionado = signal<PedidoDetalle | null>(null);
@@ -88,6 +91,9 @@ export class PedidosAdminComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.destroyRef.onDestroy(() => {
+            if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        });
         this.cargarPedidos();
         this.cargarWhatsapp();
     }
@@ -135,10 +141,24 @@ export class PedidosAdminComponent implements OnInit {
         this.cargarPedidos();
     }
 
+    actualizarBusqueda(event: Event): void {
+        const valor = (event.target as HTMLInputElement).value;
+        this.busqueda.set(valor);
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => this.cargarPedidos(), 300);
+    }
+
+    limpiarBusqueda(): void {
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.busqueda.set('');
+        this.cargarPedidos();
+    }
+
     cargarPedidos(): void {
         this.cargando.set(true);
         const estado = this.pestanaActiva() === 'TODOS' ? undefined : (this.pestanaActiva() as EstadoPedido);
-        this.pedidosService.listar(estado).subscribe({
+        const q = this.busqueda().trim();
+        this.pedidosService.listar(estado, q.length > 0 ? q : undefined).subscribe({
             next: (lista) => {
                 this.pedidos.set(lista);
                 this.cargando.set(false);

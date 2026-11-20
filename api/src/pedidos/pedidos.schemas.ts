@@ -35,6 +35,7 @@ export const crearPedidoSchema = z
 export const listarPedidosQuerySchema = z
     .object({
         estado: z.enum(['PENDIENTE', 'CONFIRMADO', 'CANCELADO']).optional(),
+        q: z.string().trim().max(120, 'La búsqueda es demasiado larga').optional(),
     })
     .strict();
 

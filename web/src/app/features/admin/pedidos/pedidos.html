@@ -71,6 +71,37 @@
     </div>
   }
 
+  <!-- Buscador por código o cliente -->
+  <div class="bg-white rounded-xl border border-gray-200 p-3.5 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3">
+    <div class="relative flex-1 max-w-md">
+      <label for="buscarPedido" class="sr-only">Buscar por código o nombre del cliente</label>
+      <input
+        id="buscarPedido"
+        type="text"
+        [value]="busqueda()"
+        (input)="actualizarBusqueda($event)"
+        placeholder="Buscar por código (ej. PED-0001) o nombre del cliente..."
+        class="w-full pl-3 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+      @if (busqueda().trim().length > 0) {
+        <button
+          type="button"
+          (click)="limpiarBusqueda()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 text-xs cursor-pointer"
+          aria-label="Limpiar búsqueda"
+          title="Limpiar búsqueda"
+        >
+          ✕
+        </button>
+      }
+    </div>
+    @if (busqueda().trim().length > 0) {
+      <p class="text-xs text-gray-500">
+        Filtrando por: <strong class="text-gray-800">"{{ busqueda().trim() }}"</strong>
+      </p>
+    }
+  </div>
+
   <!-- Pestañas por estado -->
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-200">
     <div class="flex gap-1 -mb-px">
@@ -107,7 +138,11 @@
       </div>
     } @else if (pedidos().length === 0) {
       <div class="py-16 text-center text-gray-400 text-sm">
-        No hay pedidos en esta pestaña.
+        @if (busqueda().trim().length > 0) {
+          No se encontraron pedidos que coincidan con "{{ busqueda().trim() }}".
+        } @else {
+          No hay pedidos en esta pestaña.
+        }
       </div>
     } @else {
       <div class="overflow-x-auto">

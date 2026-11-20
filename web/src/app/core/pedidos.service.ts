@@ -20,10 +20,13 @@ export class PedidosService {
         return this.http.post<PedidoCreadoPublico>(this.base, payload);
     }
 
-    listar(estado?: EstadoPedido): Observable<PedidoResumen[]> {
+    listar(estado?: EstadoPedido, q?: string): Observable<PedidoResumen[]> {
         let params = new HttpParams();
         if (estado) {
             params = params.set('estado', estado);
+        }
+        if (q && q.trim().length > 0) {
+            params = params.set('q', q.trim());
         }
         return this.http.get<PedidoResumen[]>(this.base, { params });
     }
