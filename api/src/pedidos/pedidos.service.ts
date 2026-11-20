@@ -192,6 +192,7 @@ export class PedidosService {
                 or(
                     like(sql`lower(${pedidos.codigo})`, termino),
                     like(sql`lower(coalesce(${pedidos.nombreCliente}, ''))`, termino),
+                    like(sql`lower(coalesce(${pedidos.telefonoCliente}, ''))`, termino),
                 )!,
             );
         }

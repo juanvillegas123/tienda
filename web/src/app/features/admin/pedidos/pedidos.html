@@ -71,16 +71,16 @@
     </div>
   }
 
-  <!-- Buscador por código o cliente -->
+  <!-- Buscador por código, cliente o teléfono -->
   <div class="bg-white rounded-xl border border-gray-200 p-3.5 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3">
     <div class="relative flex-1 max-w-md">
-      <label for="buscarPedido" class="sr-only">Buscar por código o nombre del cliente</label>
+      <label for="buscarPedido" class="sr-only">Buscar por código, nombre o teléfono del cliente</label>
       <input
         id="buscarPedido"
         type="text"
         [value]="busqueda()"
         (input)="actualizarBusqueda($event)"
-        placeholder="Buscar por código (ej. PED-0001) o nombre del cliente..."
+        placeholder="Buscar por código (PED-0001), nombre o teléfono..."
         class="w-full pl-3 pr-9 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
       />
       @if (busqueda().trim().length > 0) {
