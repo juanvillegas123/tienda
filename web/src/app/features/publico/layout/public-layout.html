@@ -9,13 +9,15 @@
       >
         @if (!logoFallido()) {
           <img
-            src="img/logo.png"
-            alt="OniiChan Store"
+            src="img/logo-96.png"
+            alt="Logo de OniiChan Store"
+            width="48"
+            height="48"
             (error)="onErrorLogo()"
-            class="h-10 w-10 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
+            class="h-12 w-12 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
           />
         } @else {
-          <div class="h-10 w-10 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-lg tracking-wider shrink-0 ring-1 ring-perla/20 group-hover:bg-carmesi-claro transition-colors">
+          <div class="h-12 w-12 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-lg tracking-wider shrink-0 ring-1 ring-perla/20 group-hover:bg-carmesi-claro transition-colors">
             OS
           </div>
         }
@@ -82,15 +84,17 @@
       <div class="flex items-center gap-3">
         @if (!logoFallido()) {
           <img
-            src="img/logo.png"
-            alt="OniiChan Store"
+            src="img/logo-96.png"
+            alt="Logo de OniiChan Store"
+            width="48"
+            height="48"
             loading="lazy"
             decoding="async"
             (error)="onErrorLogo()"
-            class="h-9 w-9 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
+            class="h-12 w-12 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
           />
         } @else {
-          <div class="h-9 w-9 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-base tracking-wider shrink-0">
+          <div class="h-12 w-12 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-base tracking-wider shrink-0">
             OS
           </div>
         }
