@@ -25,9 +25,9 @@ export class LoginComponent implements OnInit {
     });
 
     ngOnInit(): void {
-        // Si ya tiene sesión, redirigir
+        // Si ya tiene sesión, redirigir al dashboard
         if (this.authService.estaAutenticada()) {
-            void this.router.navigate(['/admin/pedidos']);
+            void this.router.navigate(['/admin/dashboard']);
         }
     }
 
@@ -50,10 +50,14 @@ export class LoginComponent implements OnInit {
 
         this.authService.login(usuario, contrasena).subscribe({
             next: () => {
+                const rawReturnUrl = this.route.snapshot.queryParams['returnUrl'] as
+                    | string
+                    | undefined;
                 const returnUrl =
-                    (this.route.snapshot.queryParams['returnUrl'] as string) ??
-                    '/admin/pedidos';
-                void this.router.navigate([returnUrl]);
+                    rawReturnUrl && rawReturnUrl.startsWith('/admin')
+                        ? rawReturnUrl
+                        : '/admin/dashboard';
+                void this.router.navigateByUrl(returnUrl);
             },
             error: (err: unknown) => {
                 this.cargando.set(false);
