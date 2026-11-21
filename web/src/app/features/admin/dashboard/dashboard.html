@@ -2,73 +2,166 @@
   <!-- Cabecera -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Dashboard principal</h1>
-      <p class="text-sm text-gray-500 mt-0.5">
-        Indicadores clave en tiempo real de Onii-Chan Store
+      <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
+        Inicio
+      </h1>
+      <p class="text-sm text-negro/60 mt-1">
+        Resumen operativo y financiero en tiempo real de Onii-Chan Store
       </p>
     </div>
 
-    <button
-      type="button"
-      (click)="cargar()"
-      class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-xl cursor-pointer transition-colors self-start"
-    >
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-      Actualizar
-    </button>
+    <div class="flex items-center gap-2 self-start">
+      <a
+        routerLink="/admin/pos"
+        class="inline-flex items-center gap-1.5 px-4 py-2 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-xl shadow-xs transition-colors"
+      >
+        Punto de venta
+      </a>
+      <button
+        type="button"
+        (click)="cargar()"
+        class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-black/15 bg-tarjeta hover:bg-perla/50 text-negro text-sm font-medium rounded-xl cursor-pointer transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Actualizar
+      </button>
+    </div>
   </div>
 
   @if (cargando()) {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
       @for (i of [1, 2, 3, 4]; track i) {
-        <div class="h-32 bg-white rounded-2xl border border-gray-200/80"></div>
+        <div class="h-32 bg-tarjeta rounded-2xl border border-black/8"></div>
       }
     </div>
   } @else if (errorCarga() || !resumen()) {
-    <div class="bg-white rounded-2xl border border-rose-200 p-8 text-center">
-      <p class="text-sm text-rose-700 mb-3">{{ errorCarga() }}</p>
+    <div class="bg-tarjeta rounded-2xl border border-red-200 p-8 text-center">
+      <p class="text-sm text-red-700 mb-3">{{ errorCarga() }}</p>
       <button
         type="button"
         (click)="cargar()"
-        class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl cursor-pointer"
+        class="px-4 py-2 bg-carmesi text-perla text-sm font-semibold rounded-xl cursor-pointer"
       >
         Reintentar
       </button>
     </div>
   } @else {
-    <!-- KPIs principales -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- KPI 1: Ventas netas hoy -->
+    <!-- Fila 1: Resumen del mes e inventario valorizado (siempre útil aunque hoy no haya ventas) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Ventas netas del mes -->
       <a
         routerLink="/admin/reportes"
-        class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs hover:border-indigo-300 transition-colors block"
+        class="bg-negro text-perla rounded-2xl p-5 shadow-xs border border-vino hover:border-carmesi-claro transition-colors block"
       >
-        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas netas hoy</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-perla/70">Ventas netas del mes</p>
+          @if (resumen()!.mesActual.variacionVsMesAnteriorPct !== null) {
+            <span
+              class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums"
+              [class]="resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0
+                ? 'bg-emerald-500/20 text-emerald-300'
+                : 'bg-red-500/25 text-red-300'"
+            >
+              {{ resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0 ? '▲' : '▼' }}
+              {{ resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0 ? '+' : '' }}{{ resumen()!.mesActual.variacionVsMesAnteriorPct }}%
+            </span>
+          }
+        </div>
+        <p class="text-2xl font-bold text-perla mt-1.5 tabular-nums">
+          {{ resumen()!.mesActual.ventasNetasCentavos | bs }}
+        </p>
+        <p class="text-xs text-perla/65 mt-1 tabular-nums">
+          Mes anterior: {{ resumen()!.mesActual.ventasMesAnteriorCentavos | bs }}
+          • {{ resumen()!.mesActual.cantidadVentas }} ventas
+        </p>
+      </a>
+
+      <!-- Ganancia neta del mes -->
+      <a
+        routerLink="/admin/reportes"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ganancia del mes</p>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 tabular-nums">
+            Margen {{ resumen()!.mesActual.margenPorcentaje }}%
+          </span>
+        </div>
+        <p
+          class="text-2xl font-bold mt-1.5 tabular-nums"
+          [class]="resumen()!.mesActual.gananciaNetaCentavos >= 0 ? 'text-emerald-700' : 'text-red-600'"
+        >
+          @if (resumen()!.mesActual.gananciaNetaCentavos < 0) {
+            −{{ (resumen()!.mesActual.gananciaNetaCentavos * -1) | bs }}
+          } @else {
+            {{ resumen()!.mesActual.gananciaNetaCentavos | bs }}
+          }
+        </p>
+        <p class="text-xs text-negro/55 mt-1">Ingresos netos menos costo de mercadería</p>
+      </a>
+
+      <!-- Valor del inventario actual -->
+      <a
+        routerLink="/admin/inventario"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Valor del inventario</p>
+        <p class="text-2xl font-bold text-negro mt-1.5 tabular-nums">
+          {{ resumen()!.inventario.valorTotalCentavos | bs }}
+        </p>
+        <p class="text-xs text-negro/55 mt-1 tabular-nums">
+          Capital invertido en {{ resumen()!.inventario.totalUnidades }} unidades activas (stock × costo)
+        </p>
+      </a>
+    </div>
+
+    <!-- Fila 2: Operación del día -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Ventas de hoy vs ayer -->
+      <a
+        routerLink="/admin/pos"
+        [queryParams]="{ tab: 'historial' }"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ventas netas hoy</p>
+          @if (resumen()!.ventasHoy.variacionVsAyerPct !== null) {
+            <span
+              class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums"
+              [class]="resumen()!.ventasHoy.variacionVsAyerPct! >= 0
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-700'"
+            >
+              {{ resumen()!.ventasHoy.variacionVsAyerPct! >= 0 ? '▲' : '▼' }}
+              {{ resumen()!.ventasHoy.variacionVsAyerPct! >= 0 ? '+' : '' }}{{ resumen()!.ventasHoy.variacionVsAyerPct }}%
+            </span>
+          }
+        </div>
+        <p class="text-2xl font-bold text-negro mt-1.5 tabular-nums">
           {{ resumen()!.ventasHoy.netasCentavos | bs }}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
-          {{ resumen()!.ventasHoy.cantidad }} {{ resumen()!.ventasHoy.cantidad === 1 ? 'venta' : 'ventas' }}
+        <p class="text-xs text-negro/55 mt-1 tabular-nums">
+          Ayer: {{ resumen()!.ventasHoy.ayerNetasCentavos | bs }}
           @if (resumen()!.ventasHoy.devolucionesCentavos > 0) {
-            <span class="text-rose-600 ml-1">
+            <span class="text-red-600 font-medium ml-1">
               (−{{ resumen()!.ventasHoy.devolucionesCentavos | bs }} dev.)
             </span>
           }
         </p>
       </a>
 
-      <!-- KPI 2: Estado de caja -->
+      <!-- Caja del día -->
       <a
         routerLink="/admin/caja"
-        class="bg-white rounded-2xl border p-5 shadow-xs transition-colors block"
-        [class]="resumen()!.cajaActual ? 'border-emerald-200 hover:border-emerald-400' : 'border-amber-200 hover:border-amber-400'"
+        class="bg-tarjeta rounded-2xl border p-5 shadow-xs transition-colors block"
+        [class]="resumen()!.cajaActual ? 'border-emerald-300 hover:border-emerald-500' : 'border-amber-300 hover:border-amber-500'"
       >
         <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Caja del día</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Caja del día</p>
           @if (resumen()!.cajaActual) {
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
               Abierta
             </span>
           } @else {
@@ -81,124 +174,182 @@
           <p class="text-2xl font-bold text-emerald-700 mt-1.5 tabular-nums">
             {{ caja.efectivoEsperadoCentavos | bs }}
           </p>
-          <p class="text-xs text-gray-500 mt-1">
-            Caja #{{ caja.id }} • {{ caja.fechaApertura | date: 'HH:mm' }}
+          <p class="text-xs text-negro/55 mt-1">
+            Efectivo esperado • Caja #{{ caja.id }} ({{ caja.fechaApertura | date: 'HH:mm' }})
           </p>
         } @else {
-          <p class="text-lg font-bold text-amber-700 mt-2">Sin caja abierta</p>
-          <p class="text-xs text-gray-500 mt-1">Clic para abrir caja del día</p>
+          <p class="text-lg font-bold text-amber-800 mt-2">Sin caja abierta</p>
+          <p class="text-xs text-carmesi font-semibold mt-1">Abrir caja para vender →</p>
         }
       </a>
 
-      <!-- KPI 3: Pedidos WhatsApp pendientes -->
+      <!-- Pedidos online pendientes -->
       <a
         routerLink="/admin/pedidos"
-        class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs hover:border-indigo-300 transition-colors block"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
       >
-        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Pedidos pendientes</p>
-        <p class="text-2xl font-bold text-indigo-700 mt-1.5 tabular-nums">
+        <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Pedidos pendientes</p>
+        <p class="text-2xl font-bold text-vino mt-1.5 tabular-nums">
           {{ resumen()!.pedidosPendientes.total }}
         </p>
         @if (resumen()!.pedidosPendientes.vencidos > 0) {
-          <p class="text-xs font-semibold text-rose-600 mt-1">
-            {{ resumen()!.pedidosPendientes.vencidos }} con más de 24 h sin confirmar
+          <p class="text-xs font-semibold text-red-600 mt-1">
+            ⚠ {{ resumen()!.pedidosPendientes.vencidos }} con más de 24 h sin confirmar
           </p>
         } @else {
-          <p class="text-xs text-gray-500 mt-1">Pedidos online por confirmar</p>
+          <p class="text-xs text-negro/55 mt-1">Pedidos WhatsApp por confirmar</p>
         }
       </a>
 
-      <!-- KPI 4: Catálogo e inventario -->
+      <!-- Catálogo activo (umbral único <= 3) -->
       <a
         routerLink="/admin/productos"
-        class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs hover:border-indigo-300 transition-colors block"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
       >
-        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Catálogo activo</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1.5 tabular-nums">
+        <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Catálogo activo</p>
+        <p class="text-2xl font-bold text-negro mt-1.5 tabular-nums">
           {{ resumen()!.catalogo.productosActivos }}
-          <span class="text-sm font-medium text-gray-400">productos</span>
+          <span class="text-sm font-medium text-negro/45">productos</span>
         </p>
-        <p class="text-xs text-gray-500 mt-1">
-          <span class="text-amber-700 font-semibold">{{ resumen()!.catalogo.stockBajo }} bajo stock</span>
+        <p class="text-xs text-negro/60 mt-1">
+          <span class="text-amber-700 font-semibold">{{ resumen()!.catalogo.stockBajo }} stock bajo (≤ {{ resumen()!.catalogo.umbralStockBajo }})</span>
           •
-          <span class="text-rose-600 font-semibold">{{ resumen()!.catalogo.agotados }} agotados</span>
-          • {{ resumen()!.catalogo.categoriasActivas }} cat.
+          <span class="text-red-600 font-semibold">{{ resumen()!.catalogo.agotados }} agotados</span>
         </p>
       </a>
     </div>
 
-    <!-- Accesos rápidos -->
-    <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs">
-      <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">Accesos rápidos</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <a
-          routerLink="/admin/pos"
-          class="p-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/70 text-indigo-800 text-sm font-semibold text-center transition-colors"
-        >
-          Punto de venta (POS)
-        </a>
-        <a
-          routerLink="/admin/pedidos"
-          class="p-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 text-sm font-semibold text-center transition-colors"
-        >
-          Ver pedidos WhatsApp
-        </a>
-        <a
-          routerLink="/admin/inventario"
-          class="p-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 text-sm font-semibold text-center transition-colors"
-        >
-          Ingresar mercadería
-        </a>
-        <a
-          routerLink="/admin/reportes"
-          class="p-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 text-sm font-semibold text-center transition-colors"
-        >
-          Reportes detallados
-        </a>
+    <!-- Fila 3: Actividad reciente (Últimas 5 ventas y Últimos 5 pedidos) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- Últimas 5 ventas -->
+      <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 border-b border-black/8 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-negro uppercase tracking-wide">Últimas 5 ventas</h2>
+          <a
+            routerLink="/admin/pos"
+            [queryParams]="{ tab: 'historial' }"
+            class="text-xs font-semibold text-carmesi hover:underline"
+          >
+            Ver todas →
+          </a>
+        </div>
+        @if (resumen()!.ultimasVentas.length === 0) {
+          <div class="py-8 text-center text-sm text-negro/45">Aún no hay ventas registradas.</div>
+        } @else {
+          <div class="divide-y divide-black/6">
+            @for (v of resumen()!.ultimasVentas; track v.id) {
+              <div class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-negro">Venta #{{ v.id }}</span>
+                    <span
+                      class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                      [class]="v.canal === 'MOSTRADOR'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-perla text-vino border border-carmesi/25'"
+                    >
+                      {{ v.canal }}
+                    </span>
+                    <span class="text-xs text-negro/50">{{ v.metodoPago }}</span>
+                  </div>
+                  <p class="text-xs text-negro/45 mt-0.5">
+                    {{ v.fecha | date: 'dd/MM/yyyy HH:mm' }}
+                  </p>
+                </div>
+                <span class="font-bold text-negro tabular-nums shrink-0">
+                  {{ v.totalCentavos | bs }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Últimos 5 pedidos online -->
+      <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 border-b border-black/8 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-negro uppercase tracking-wide">Últimos 5 pedidos online</h2>
+          <a routerLink="/admin/pedidos" class="text-xs font-semibold text-carmesi hover:underline">
+            Gestionar →
+          </a>
+        </div>
+        @if (resumen()!.ultimosPedidos.length === 0) {
+          <div class="py-8 text-center text-sm text-negro/45">Aún no hay pedidos online.</div>
+        } @else {
+          <div class="divide-y divide-black/6">
+            @for (p of resumen()!.ultimosPedidos; track p.id) {
+              <div class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-negro">{{ p.codigo }}</span>
+                    <span
+                      class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                      [class]="p.estado === 'CONFIRMADO'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : p.estado === 'CANCELADO'
+                          ? 'bg-gray-100 text-gray-500 border border-gray-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'"
+                    >
+                      {{ p.estado }}
+                    </span>
+                    @if (p.vencido) {
+                      <span class="text-[10px] font-bold text-red-600">⚠ Vencido</span>
+                    }
+                  </div>
+                  <p class="text-xs text-negro/50 mt-0.5 truncate">
+                    {{ p.nombreCliente || 'Sin nombre' }} • {{ p.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}
+                  </p>
+                </div>
+                <span class="font-bold text-negro tabular-nums shrink-0">
+                  {{ p.totalCentavos | bs }}
+                </span>
+              </div>
+            }
+          </div>
+        }
       </div>
     </div>
 
-    <!-- Alertas de stock crítico -->
-    <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <!-- Fila 4: Alertas de stock bajo (umbral único <= 3) -->
+    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+      <div class="px-5 py-3.5 border-b border-black/8 flex items-center justify-between">
         <div>
-          <h2 class="text-base font-bold text-gray-900">Alertas de reposición (stock ≤ 5)</h2>
-          <p class="text-xs text-gray-500 mt-0.5">
-            Productos activos agotados o con pocas unidades disponibles
-          </p>
+          <h2 class="text-sm font-bold text-negro uppercase tracking-wide">
+            Alertas de stock bajo (≤ {{ resumen()!.catalogo.umbralStockBajo }} unidades)
+          </h2>
         </div>
-        <a routerLink="/admin/inventario" class="text-xs font-semibold text-indigo-600 hover:underline">
+        <a routerLink="/admin/inventario" class="text-xs font-semibold text-carmesi hover:underline">
           Ir a inventario →
         </a>
       </div>
 
       @if (resumen()!.alertasStock.length === 0) {
-        <div class="py-10 text-center text-sm text-emerald-700">
-          Todo el catálogo activo cuenta con stock saludable (> 5 unidades).
+        <div class="py-8 text-center text-sm text-emerald-700">
+          Todo el catálogo activo tiene más de {{ resumen()!.catalogo.umbralStockBajo }} unidades disponibles.
         </div>
       } @else {
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr class="bg-fondo border-b border-black/8 text-xs font-semibold text-negro/60 uppercase tracking-wider">
                 <th class="py-3 px-4">Producto</th>
                 <th class="py-3 px-4">Categoría</th>
-                <th class="py-3 px-4 text-center">Stock actual</th>
+                <th class="py-3 px-4 text-center">Disponibilidad</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+            <tbody class="divide-y divide-black/6 text-sm text-negro/80">
               @for (item of resumen()!.alertasStock; track item.id) {
-                <tr class="hover:bg-gray-50/70">
-                  <td class="py-3 px-4 font-semibold text-gray-900">{{ item.nombre }}</td>
-                  <td class="py-3 px-4 text-gray-600">{{ item.categoriaNombre }}</td>
+                <tr class="hover:bg-fondo/60">
+                  <td class="py-3 px-4 font-semibold text-negro">{{ item.nombre }}</td>
+                  <td class="py-3 px-4 text-negro/65">{{ item.categoriaNombre }}</td>
                   <td class="py-3 px-4 text-center">
                     @if (item.stock === 0) {
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
                         Agotado (0)
                       </span>
                     } @else {
                       <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 tabular-nums">
-                        {{ item.stock }} unid.
+                        Stock bajo: {{ item.stock }} {{ item.stock === 1 ? 'unidad' : 'unidades' }}
                       </span>
                     }
                   </td>

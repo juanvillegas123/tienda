@@ -37,3 +37,18 @@
 .scrollbar-oculto::-webkit-scrollbar {
   display: none;
 }
+
+@media print {
+  .no-imprimir {
+    display: none !important;
+  }
+
+  .solo-impresion {
+    display: block !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0c1014 !important;
+  }
+}

@@ -5,10 +5,13 @@ import { AuthService } from '../../../core/auth.service';
 interface NavItem {
     nombre: string;
     ruta: string;
+    queryParams?: Record<string, string>;
+    exacto?: boolean;
     id:
         | 'dashboard'
         | 'pedidos'
         | 'pos'
+        | 'ventas'
         | 'caja'
         | 'productos'
         | 'categorias'
@@ -32,7 +35,13 @@ export class AdminLayoutComponent implements OnInit {
     readonly navItems: NavItem[] = [
         { nombre: 'Inicio', ruta: '/admin/dashboard', id: 'dashboard' },
         { nombre: 'Pedidos', ruta: '/admin/pedidos', id: 'pedidos' },
-        { nombre: 'Punto de venta', ruta: '/admin/pos', id: 'pos' },
+        { nombre: 'Punto de venta', ruta: '/admin/pos', exacto: true, id: 'pos' },
+        {
+            nombre: 'Ventas y devoluciones',
+            ruta: '/admin/pos',
+            queryParams: { tab: 'historial' },
+            id: 'ventas',
+        },
         { nombre: 'Caja', ruta: '/admin/caja', id: 'caja' },
         { nombre: 'Productos', ruta: '/admin/productos', id: 'productos' },
         { nombre: 'Categorías', ruta: '/admin/categorias', id: 'categorias' },

@@ -6,8 +6,12 @@ import {
     ResumenDashboard,
     ReporteMasVendidos,
     ReporteVentasPorCanal,
+    ReporteVentasPorDia,
+    ReporteVentasPorCategoria,
     ReporteCierresCaja,
+    DetalleCierreCaja,
     ReporteMargen,
+    ReporteInteligenciaStock,
 } from './modelos';
 
 export interface FiltroFechasReporte {
@@ -38,16 +42,36 @@ export class ReportesService {
         });
     }
 
+    ventasPorDia(filtro?: FiltroFechasReporte): Observable<ReporteVentasPorDia> {
+        return this.http.get<ReporteVentasPorDia>(`${this.base}/ventas-por-dia`, {
+            params: this.crearParams(filtro),
+        });
+    }
+
+    ventasPorCategoria(filtro?: FiltroFechasReporte): Observable<ReporteVentasPorCategoria> {
+        return this.http.get<ReporteVentasPorCategoria>(`${this.base}/ventas-por-categoria`, {
+            params: this.crearParams(filtro),
+        });
+    }
+
     cierresDeCaja(filtro?: FiltroFechasReporte): Observable<ReporteCierresCaja> {
         return this.http.get<ReporteCierresCaja>(`${this.base}/cierres-de-caja`, {
             params: this.crearParams(filtro),
         });
     }
 
+    detalleCierre(cajaId: number): Observable<DetalleCierreCaja> {
+        return this.http.get<DetalleCierreCaja>(`${this.base}/cierres-de-caja/${cajaId}`);
+    }
+
     margen(filtro?: FiltroFechasReporte): Observable<ReporteMargen> {
         return this.http.get<ReporteMargen>(`${this.base}/margen`, {
             params: this.crearParams(filtro),
         });
+    }
+
+    inteligenciaStock(): Observable<ReporteInteligenciaStock> {
+        return this.http.get<ReporteInteligenciaStock>(`${this.base}/inteligencia-stock`);
     }
 
     private crearParams(filtro?: FiltroFechasReporte): HttpParams {

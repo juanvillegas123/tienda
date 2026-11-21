@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { eq, and, gte, lte, desc, asc, sql } from 'drizzle-orm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { eq, and, gte, lte, desc, asc, inArray, sql } from 'drizzle-orm';
 import { db } from '../db/db';
 import {
     ventas,
@@ -13,9 +13,15 @@ import {
 } from '../db/schema';
 import { RangoFechasDto, MasVendidosQueryDto } from './reportes.schemas';
 import {
+    UMBRAL_STOCK_BAJO,
+    formatearFechaLocal,
     resolverRangoFechas,
+    calcularRangoAnterior,
+    generarFechasEnRango,
+    calcularVariacionPorcentual,
     calcularMetricasNetasProducto,
     calcularPorcentajeMargen,
+    calcularCoberturaYReposicion,
 } from './reportes.utils';
 import { esPedidoVencido } from '../pedidos/pedidos.utils';
 
@@ -61,6 +67,42 @@ export interface ReporteVentasPorCanalDto {
         devolucionesCentavos: number;
         ventasNetasCentavos: number;
     };
+    periodoAnterior: {
+        desde: string;
+        hasta: string;
+        ventasNetasCentavos: number;
+        variacionPorcentaje: number | null;
+    };
+}
+
+export interface VentaDiariaDto {
+    fecha: string;
+    mostradorNetoCentavos: number;
+    onlineNetoCentavos: number;
+    devolucionesCentavos: number;
+    totalNetoCentavos: number;
+    cantidadVentas: number;
+}
+
+export interface ReporteVentasPorDiaDto {
+    desde: string;
+    hasta: string;
+    dias: VentaDiariaDto[];
+}
+
+export interface VentaCategoriaDto {
+    categoriaId: number;
+    nombre: string;
+    unidadesNetas: number;
+    ventasNetasCentavos: number;
+    porcentaje: number;
+}
+
+export interface ReporteVentasPorCategoriaDto {
+    desde: string;
+    hasta: string;
+    totalNetoCentavos: number;
+    categorias: VentaCategoriaDto[];
 }
 
 export interface CierreCajaItemDto {
@@ -83,6 +125,37 @@ export interface ReporteCierresCajaDto {
         diferenciaAcumuladaCentavos: number;
     };
     cierres: CierreCajaItemDto[];
+}
+
+export interface DetalleCierreCajaDto {
+    caja: {
+        id: number;
+        estado: 'ABIERTA' | 'CERRADA';
+        fechaApertura: Date;
+        fechaCierre: Date | null;
+        montoInicialCentavos: number;
+        ventasEfectivoCentavos: number;
+        ventasQrCentavos: number;
+        devolucionesCentavos: number;
+        efectivoEsperadoCentavos: number;
+        efectivoContadoCentavos: number | null;
+        diferenciaCentavos: number | null;
+    };
+    ventas: {
+        id: number;
+        canal: 'MOSTRADOR' | 'ONLINE';
+        metodoPago: 'EFECTIVO' | 'QR';
+        totalCentavos: number;
+        fecha: Date;
+        items: { nombreProducto: string; cantidad: number; precioCentavos: number }[];
+    }[];
+    devoluciones: {
+        id: number;
+        ventaId: number;
+        motivo: string;
+        montoCentavos: number;
+        fecha: Date;
+    }[];
 }
 
 export interface MargenProductoDto {
@@ -108,12 +181,52 @@ export interface ReporteMargenDto {
     items: MargenProductoDto[];
 }
 
+export interface ReporteInteligenciaStockDto {
+    resumen: {
+        totalSinRotacion: number;
+        valorInmovilizadoCentavos: number;
+        productosParaReponer: number;
+    };
+    sinRotacion30d: {
+        productoId: number;
+        nombre: string;
+        categoriaNombre: string;
+        stockActual: number;
+        costoCentavos: number;
+        valorInmovilizadoCentavos: number;
+    }[];
+    cobertura: {
+        productoId: number;
+        nombre: string;
+        categoriaNombre: string;
+        stockActual: number;
+        unidadesNetas30d: number;
+        velocidadDiaria: number;
+        diasCobertura: number;
+        sugerenciaReposicion: number;
+    }[];
+}
+
 export interface ResumenDashboardDto {
     ventasHoy: {
         cantidad: number;
         brutasCentavos: number;
         devolucionesCentavos: number;
         netasCentavos: number;
+        ayerNetasCentavos: number;
+        variacionVsAyerPct: number | null;
+    };
+    mesActual: {
+        cantidadVentas: number;
+        ventasNetasCentavos: number;
+        ventasMesAnteriorCentavos: number;
+        variacionVsMesAnteriorPct: number | null;
+        gananciaNetaCentavos: number;
+        margenPorcentaje: number;
+    };
+    inventario: {
+        valorTotalCentavos: number;
+        totalUnidades: number;
     };
     cajaActual: {
         id: number;
@@ -130,6 +243,7 @@ export interface ResumenDashboardDto {
         agotados: number;
         categoriasActivas: number;
         categoriasInactivas: number;
+        umbralStockBajo: number;
     };
     alertasStock: {
         id: number;
@@ -137,54 +251,69 @@ export interface ResumenDashboardDto {
         categoriaNombre: string;
         stock: number;
     }[];
+    ultimasVentas: {
+        id: number;
+        canal: 'MOSTRADOR' | 'ONLINE';
+        metodoPago: 'EFECTIVO' | 'QR';
+        totalCentavos: number;
+        fecha: Date;
+    }[];
+    ultimosPedidos: {
+        id: number;
+        codigo: string;
+        nombreCliente: string | null;
+        estado: 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO';
+        totalCentavos: number;
+        fechaCreacion: Date;
+        vencido: boolean;
+    }[];
 }
 
 @Injectable()
 export class ReportesService {
     /**
-     * KPIs en tiempo real para el Dashboard Principal (/admin/dashboard).
+     * KPIs en tiempo real + comparativas + actividad reciente para /admin/dashboard (Bloque 2).
      */
     async obtenerResumenDashboard(): Promise<ResumenDashboardDto> {
         const ahora = new Date();
-        const inicioHoy = new Date(
-            ahora.getFullYear(),
-            ahora.getMonth(),
-            ahora.getDate(),
-            0,
-            0,
-            0,
-            0,
-        );
-        const finHoy = new Date(
-            ahora.getFullYear(),
-            ahora.getMonth(),
-            ahora.getDate(),
-            23,
-            59,
-            59,
-            999,
-        );
+        const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0, 0);
+        const finHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 23, 59, 59, 999);
 
-        // 1. Ventas y devoluciones de hoy
-        const [ventasHoyRow] = await db
-            .select({
-                cantidad: sql<number>`count(*)`,
-                brutas: sql<number>`coalesce(sum(${ventas.totalCentavos}), 0)`,
-            })
-            .from(ventas)
-            .where(and(gte(ventas.fecha, inicioHoy), lte(ventas.fecha, finHoy)));
+        const inicioAyer = new Date(inicioHoy);
+        inicioAyer.setDate(inicioAyer.getDate() - 1);
+        const finAyer = new Date(finHoy);
+        finAyer.setDate(finAyer.getDate() - 1);
 
-        const [devHoyRow] = await db
-            .select({
-                total: sql<number>`coalesce(sum(${devoluciones.montoCentavos}), 0)`,
-            })
-            .from(devoluciones)
-            .where(and(gte(devoluciones.fecha, inicioHoy), lte(devoluciones.fecha, finHoy)));
+        const inicioMesActual = new Date(ahora.getFullYear(), ahora.getMonth(), 1, 0, 0, 0, 0);
+        const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1, 0, 0, 0, 0);
+        const finMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth(), 0, 23, 59, 59, 999);
 
-        const brutasHoy = Number(ventasHoyRow?.brutas ?? 0);
-        const devHoy = Number(devHoyRow?.total ?? 0);
+        // 1. Ventas hoy vs ayer
+        const hoyTot = await this.obtenerVentasNetasEnRango(inicioHoy, finHoy);
+        const ayerTot = await this.obtenerVentasNetasEnRango(inicioAyer, finAyer);
 
-        // 2. Caja abierta actual
+        // 2. Mes actual vs mes anterior + ganancia neta del mes actual
+        const mesActualTot = await this.obtenerVentasNetasEnRango(inicioMesActual, finHoy);
+        const mesAnteriorTot = await this.obtenerVentasNetasEnRango(inicioMesAnterior, finMesAnterior);
+        const mapaMesActual = await this.agregarPorProductoEnRango(inicioMesActual, finHoy);
+
+        let ingresosMes = 0;
+        let costosMes = 0;
+        for (const p of mapaMesActual.values()) {
+            const m = calcularMetricasNetasProducto(
+                p.unidadesVendidas,
+                p.ingresosBrutosCentavos,
+                p.costoBrutoCentavos,
+                p.unidadesDevueltas,
+                p.ingresosDevueltosCentavos,
+                p.costoDevueltoCentavos,
+            );
+            ingresosMes += m.ingresosNetosCentavos;
+            costosMes += m.costoNetoCentavos;
+        }
+        const gananciaMes = ingresosMes - costosMes;
+
+        // 3. Caja abierta actual
         const [cajaAbierta] = await db
             .select({
                 id: cajas.id,
@@ -222,7 +351,7 @@ export class ReportesService {
             };
         }
 
-        // 3. Pedidos pendientes y vencidos
+        // 4. Pedidos pendientes y vencidos
         const pendientesRows = await db
             .select({
                 estado: pedidos.estado,
@@ -235,12 +364,14 @@ export class ReportesService {
             esPedidoVencido(p.estado, p.fechaCreacion, ahora),
         ).length;
 
-        // 4. Salud de catálogo e inventario
+        // 5. Salud de catálogo e inventario valorizado (stock * costo) con umbral unificado <= 3
         const [prodStats] = await db
             .select({
                 activos: sql<number>`coalesce(sum(case when ${productos.activo} = 1 then 1 else 0 end), 0)`,
-                stockBajo: sql<number>`coalesce(sum(case when ${productos.activo} = 1 and ${productos.stock} between 1 and 5 then 1 else 0 end), 0)`,
+                stockBajo: sql<number>`coalesce(sum(case when ${productos.activo} = 1 and ${productos.stock} between 1 and ${UMBRAL_STOCK_BAJO} then 1 else 0 end), 0)`,
                 agotados: sql<number>`coalesce(sum(case when ${productos.activo} = 1 and ${productos.stock} = 0 then 1 else 0 end), 0)`,
+                valorInventario: sql<number>`coalesce(sum(case when ${productos.activo} = 1 then ${productos.stock} * ${productos.costoCentavos} else 0 end), 0)`,
+                totalUnidades: sql<number>`coalesce(sum(case when ${productos.activo} = 1 then ${productos.stock} else 0 end), 0)`,
             })
             .from(productos);
 
@@ -260,16 +391,67 @@ export class ReportesService {
             })
             .from(productos)
             .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
-            .where(and(eq(productos.activo, true), lte(productos.stock, 5)))
+            .where(and(eq(productos.activo, true), lte(productos.stock, UMBRAL_STOCK_BAJO)))
             .orderBy(asc(productos.stock), asc(productos.nombre))
             .limit(8);
 
+        // 6. Actividad reciente: últimas 5 ventas y últimos 5 pedidos
+        const ultimasVentas = await db
+            .select({
+                id: ventas.id,
+                canal: ventas.canal,
+                metodoPago: ventas.metodoPago,
+                totalCentavos: ventas.totalCentavos,
+                fecha: ventas.fecha,
+            })
+            .from(ventas)
+            .orderBy(desc(ventas.id))
+            .limit(5);
+
+        const ultimosPedidosRaw = await db
+            .select({
+                id: pedidos.id,
+                codigo: pedidos.codigo,
+                nombreCliente: pedidos.nombreCliente,
+                estado: pedidos.estado,
+                totalCentavos: pedidos.totalCentavos,
+                fechaCreacion: pedidos.fechaCreacion,
+            })
+            .from(pedidos)
+            .orderBy(desc(pedidos.id))
+            .limit(5);
+
+        const ultimosPedidos = ultimosPedidosRaw.map((p) => ({
+            ...p,
+            vencido: esPedidoVencido(p.estado, p.fechaCreacion, ahora),
+        }));
+
         return {
             ventasHoy: {
-                cantidad: Number(ventasHoyRow?.cantidad ?? 0),
-                brutasCentavos: brutasHoy,
-                devolucionesCentavos: devHoy,
-                netasCentavos: brutasHoy - devHoy,
+                cantidad: hoyTot.cantidad,
+                brutasCentavos: hoyTot.brutasCentavos,
+                devolucionesCentavos: hoyTot.devolucionesCentavos,
+                netasCentavos: hoyTot.netasCentavos,
+                ayerNetasCentavos: ayerTot.netasCentavos,
+                variacionVsAyerPct: calcularVariacionPorcentual(
+                    hoyTot.netasCentavos,
+                    ayerTot.netasCentavos,
+                ),
+            },
+            mesActual: {
+                cantidadVentas: mesActualTot.cantidad,
+                ventasNetasCentavos: mesActualTot.netasCentavos,
+                ventasMesAnteriorCentavos: mesAnteriorTot.netasCentavos,
+                variacionVsMesAnteriorPct: calcularVariacionPorcentual(
+                    mesActualTot.netasCentavos,
+                    mesAnteriorTot.netasCentavos,
+                ),
+                gananciaNetaCentavos: gananciaMes,
+                margenPorcentaje: calcularPorcentajeMargen(gananciaMes, ingresosMes),
+            },
+            inventario: {
+                valorTotalCentavos: Number(prodStats?.valorInventario ?? 0),
+                totalUnidades: Number(prodStats?.totalUnidades ?? 0),
             },
             cajaActual: cajaResumen,
             pedidosPendientes: {
@@ -282,8 +464,11 @@ export class ReportesService {
                 agotados: Number(prodStats?.agotados ?? 0),
                 categoriasActivas: Number(catStats?.activas ?? 0),
                 categoriasInactivas: Number(catStats?.inactivas ?? 0),
+                umbralStockBajo: UMBRAL_STOCK_BAJO,
             },
             alertasStock,
+            ultimasVentas,
+            ultimosPedidos,
         };
     }
 
@@ -331,10 +516,12 @@ export class ReportesService {
     }
 
     /**
-     * Reporte: Ventas por canal (Mostrador vs. Online) y método de pago, restando devoluciones.
+     * Reporte: Ventas por canal (Mostrador vs. Online) y método de pago, restando devoluciones
+     * + comparación contra período anterior.
      */
     async ventasPorCanal(query: RangoFechasDto): Promise<ReporteVentasPorCanalDto> {
         const rango = resolverRangoFechas(query.desde, query.hasta);
+        const rangoPrev = calcularRangoAnterior(rango.desdeTexto, rango.hastaTexto);
 
         const ventasCanalRows = await db
             .select({
@@ -419,12 +606,152 @@ export class ReportesService {
             },
         );
 
+        const prevTot = await this.obtenerVentasNetasEnRango(rangoPrev.inicio, rangoPrev.fin);
+
         return {
             desde: rango.desdeTexto,
             hasta: rango.hastaTexto,
             canales,
             metodosPago,
             totales,
+            periodoAnterior: {
+                desde: rangoPrev.desdeTexto,
+                hasta: rangoPrev.hastaTexto,
+                ventasNetasCentavos: prevTot.netasCentavos,
+                variacionPorcentaje: calcularVariacionPorcentual(
+                    totales.ventasNetasCentavos,
+                    prevTot.netasCentavos,
+                ),
+            },
+        };
+    }
+
+    /**
+     * Reporte (Bloque 3): Serie diaria de ventas netas (Mostrador y Online apilados, restando devoluciones).
+     */
+    async ventasPorDia(query: RangoFechasDto): Promise<ReporteVentasPorDiaDto> {
+        const rango = resolverRangoFechas(query.desde, query.hasta);
+        const fechas = generarFechasEnRango(rango.desdeTexto, rango.hastaTexto);
+
+        const mapa = new Map<string, VentaDiariaDto>();
+        for (const f of fechas) {
+            mapa.set(f, {
+                fecha: f,
+                mostradorNetoCentavos: 0,
+                onlineNetoCentavos: 0,
+                devolucionesCentavos: 0,
+                totalNetoCentavos: 0,
+                cantidadVentas: 0,
+            });
+        }
+
+        const ventasRows = await db
+            .select({
+                canal: ventas.canal,
+                totalCentavos: ventas.totalCentavos,
+                fecha: ventas.fecha,
+            })
+            .from(ventas)
+            .where(and(gte(ventas.fecha, rango.inicio), lte(ventas.fecha, rango.fin)));
+
+        for (const v of ventasRows) {
+            const clave = formatearFechaLocal(v.fecha);
+            const dia = mapa.get(clave);
+            if (!dia) continue;
+            if (v.canal === 'MOSTRADOR') {
+                dia.mostradorNetoCentavos += v.totalCentavos;
+            } else {
+                dia.onlineNetoCentavos += v.totalCentavos;
+            }
+            dia.cantidadVentas += 1;
+        }
+
+        const devRows = await db
+            .select({
+                canal: ventas.canal,
+                montoCentavos: devoluciones.montoCentavos,
+                fecha: devoluciones.fecha,
+            })
+            .from(devoluciones)
+            .innerJoin(ventas, eq(devoluciones.ventaId, ventas.id))
+            .where(and(gte(devoluciones.fecha, rango.inicio), lte(devoluciones.fecha, rango.fin)));
+
+        for (const d of devRows) {
+            const clave = formatearFechaLocal(d.fecha);
+            const dia = mapa.get(clave);
+            if (!dia) continue;
+            if (d.canal === 'MOSTRADOR') {
+                dia.mostradorNetoCentavos -= d.montoCentavos;
+            } else {
+                dia.onlineNetoCentavos -= d.montoCentavos;
+            }
+            dia.devolucionesCentavos += d.montoCentavos;
+        }
+
+        const dias = fechas.map((f) => {
+            const dia = mapa.get(f)!;
+            dia.totalNetoCentavos = dia.mostradorNetoCentavos + dia.onlineNetoCentavos;
+            return dia;
+        });
+
+        return {
+            desde: rango.desdeTexto,
+            hasta: rango.hastaTexto,
+            dias,
+        };
+    }
+
+    /**
+     * Reporte (Bloque 3): Ventas netas y unidades netas por categoría (restando devoluciones).
+     */
+    async ventasPorCategoria(query: RangoFechasDto): Promise<ReporteVentasPorCategoriaDto> {
+        const rango = resolverRangoFechas(query.desde, query.hasta);
+        const mapaProds = await this.agregarPorProductoEnRango(rango.inicio, rango.fin);
+
+        const mapaCat = new Map<
+            number,
+            { categoriaId: number; nombre: string; unidadesNetas: number; ventasNetasCentavos: number }
+        >();
+
+        for (const p of mapaProds.values()) {
+            const m = calcularMetricasNetasProducto(
+                p.unidadesVendidas,
+                p.ingresosBrutosCentavos,
+                p.costoBrutoCentavos,
+                p.unidadesDevueltas,
+                p.ingresosDevueltosCentavos,
+                p.costoDevueltoCentavos,
+            );
+            const prev = mapaCat.get(p.categoriaId) ?? {
+                categoriaId: p.categoriaId,
+                nombre: p.categoriaNombre,
+                unidadesNetas: 0,
+                ventasNetasCentavos: 0,
+            };
+            prev.unidadesNetas += m.unidadesNetas;
+            prev.ventasNetasCentavos += m.ingresosNetosCentavos;
+            mapaCat.set(p.categoriaId, prev);
+        }
+
+        const listaOrdenada = Array.from(mapaCat.values()).sort(
+            (a, b) => b.ventasNetasCentavos - a.ventasNetasCentavos,
+        );
+
+        const totalNetoCentavos = listaOrdenada.reduce((a, c) => a + c.ventasNetasCentavos, 0);
+
+        const categoriasRes: VentaCategoriaDto[] = listaOrdenada.map((c) => ({
+            ...c,
+            porcentaje:
+                totalNetoCentavos > 0
+                    ? Math.round((c.ventasNetasCentavos / totalNetoCentavos) * 1000) / 10
+                    : 0,
+        }));
+
+        return {
+            desde: rango.desdeTexto,
+            hasta: rango.hastaTexto,
+            totalNetoCentavos,
+            categorias: categoriasRes,
         };
     }
 
@@ -489,6 +816,103 @@ export class ReportesService {
     }
 
     /**
+     * Detalle completo y auditable de un cierre de caja (Bloque 4).
+     */
+    async obtenerDetalleCierre(cajaId: number): Promise<DetalleCierreCajaDto> {
+        const [caja] = await db.select().from(cajas).where(eq(cajas.id, cajaId)).limit(1);
+        if (!caja) {
+            throw new NotFoundException(`Caja #${cajaId} no encontrada.`);
+        }
+
+        const ventasRows = await db
+            .select({
+                id: ventas.id,
+                canal: ventas.canal,
+                metodoPago: ventas.metodoPago,
+                totalCentavos: ventas.totalCentavos,
+                fecha: ventas.fecha,
+            })
+            .from(ventas)
+            .where(eq(ventas.cajaId, cajaId))
+            .orderBy(desc(ventas.id));
+
+        const ventaIds = ventasRows.map((v) => v.id);
+        const itemsRows =
+            ventaIds.length > 0
+                ? await db
+                      .select({
+                          ventaId: detalleVenta.ventaId,
+                          nombreProducto: productos.nombre,
+                          cantidad: detalleVenta.cantidad,
+                          precioCentavos: detalleVenta.precioCentavos,
+                      })
+                      .from(detalleVenta)
+                      .innerJoin(productos, eq(detalleVenta.productoId, productos.id))
+                      .where(inArray(detalleVenta.ventaId, ventaIds))
+                : [];
+
+        const mapaItems = new Map<
+            number,
+            { nombreProducto: string; cantidad: number; precioCentavos: number }[]
+        >();
+        for (const it of itemsRows) {
+            const lista = mapaItems.get(it.ventaId) ?? [];
+            lista.push({
+                nombreProducto: it.nombreProducto,
+                cantidad: it.cantidad,
+                precioCentavos: it.precioCentavos,
+            });
+            mapaItems.set(it.ventaId, lista);
+        }
+
+        const devsRows = await db
+            .select({
+                id: devoluciones.id,
+                ventaId: devoluciones.ventaId,
+                motivo: devoluciones.motivo,
+                montoCentavos: devoluciones.montoCentavos,
+                fecha: devoluciones.fecha,
+            })
+            .from(devoluciones)
+            .where(eq(devoluciones.cajaId, cajaId))
+            .orderBy(desc(devoluciones.id));
+
+        let ventasEfectivoCentavos = 0;
+        let ventasQrCentavos = 0;
+        for (const v of ventasRows) {
+            if (v.metodoPago === 'EFECTIVO') ventasEfectivoCentavos += v.totalCentavos;
+            else ventasQrCentavos += v.totalCentavos;
+        }
+        const devolucionesCentavos = devsRows.reduce((a, d) => a + d.montoCentavos, 0);
+        const esperadoCalculado =
+            caja.montoInicialCentavos + ventasEfectivoCentavos - devolucionesCentavos;
+
+        return {
+            caja: {
+                id: caja.id,
+                estado: caja.estado,
+                fechaApertura: caja.fechaApertura,
+                fechaCierre: caja.fechaCierre,
+                montoInicialCentavos: caja.montoInicialCentavos,
+                ventasEfectivoCentavos,
+                ventasQrCentavos,
+                devolucionesCentavos,
+                efectivoEsperadoCentavos:
+                    caja.estado === 'CERRADA' && caja.efectivoEsperadoCentavos !== null
+                        ? caja.efectivoEsperadoCentavos
+                        : esperadoCalculado,
+                efectivoContadoCentavos: caja.efectivoContadoCentavos,
+                diferenciaCentavos: caja.diferenciaCentavos,
+            },
+            ventas: ventasRows.map((v) => ({
+                ...v,
+                items: mapaItems.get(v.id) ?? [],
+            })),
+            devoluciones: devsRows,
+        };
+    }
+
+    /**
      * Reporte: Margen de ganancia por producto en el rango de fechas (restando devoluciones).
      */
     async margenPorProducto(query: RangoFechasDto): Promise<ReporteMargenDto> {
@@ -538,10 +962,106 @@ export class ReportesService {
         };
     }
 
+    /**
+     * Bloque 5: Inteligencia de stock (sin ventas en 30 días, días de cobertura y reposición sugerida).
+     */
+    async inteligenciaStock(): Promise<ReporteInteligenciaStockDto> {
+        const rango30 = resolverRangoFechas(undefined, undefined);
+        const mapaVentas30 = await this.agregarPorProductoEnRango(rango30.inicio, rango30.fin);
+
+        const activos = await db
+            .select({
+                productoId: productos.id,
+                nombre: productos.nombre,
+                categoriaNombre: categorias.nombre,
+                stockActual: productos.stock,
+                costoCentavos: productos.costoCentavos,
+            })
+            .from(productos)
+            .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
+            .where(eq(productos.activo, true));
+
+        const sinRotacion30d: ReporteInteligenciaStockDto['sinRotacion30d'] = [];
+        const cobertura: ReporteInteligenciaStockDto['cobertura'] = [];
+
+        for (const prod of activos) {
+            const v = mapaVentas30.get(prod.productoId);
+            const unidadesNetas30d = v ? v.unidadesVendidas - v.unidadesDevueltas : 0;
+
+            if (unidadesNetas30d <= 0) {
+                if (prod.stockActual > 0) {
+                    sinRotacion30d.push({
+                        productoId: prod.productoId,
+                        nombre: prod.nombre,
+                        categoriaNombre: prod.categoriaNombre,
+                        stockActual: prod.stockActual,
+                        costoCentavos: prod.costoCentavos,
+                        valorInmovilizadoCentavos: prod.stockActual * prod.costoCentavos,
+                    });
+                }
+            } else {
+                const calc = calcularCoberturaYReposicion(prod.stockActual, unidadesNetas30d);
+                cobertura.push({
+                    productoId: prod.productoId,
+                    nombre: prod.nombre,
+                    categoriaNombre: prod.categoriaNombre,
+                    stockActual: prod.stockActual,
+                    unidadesNetas30d,
+                    velocidadDiaria: calc.velocidadDiaria,
+                    diasCobertura: calc.diasCobertura ?? 0,
+                    sugerenciaReposicion: calc.sugerenciaReposicion,
+                });
+            }
+        }
+
+        sinRotacion30d.sort((a, b) => b.valorInmovilizadoCentavos - a.valorInmovilizadoCentavos);
+        cobertura.sort((a, b) => a.diasCobertura - b.diasCobertura);
+
+        return {
+            resumen: {
+                totalSinRotacion: sinRotacion30d.length,
+                valorInmovilizadoCentavos: sinRotacion30d.reduce(
+                    (a, i) => a + i.valorInmovilizadoCentavos,
+                    0,
+                ),
+                productosParaReponer: cobertura.filter((c) => c.sugerenciaReposicion > 0).length,
+            },
+            sinRotacion30d,
+            cobertura,
+        };
+    }
+
+    private async obtenerVentasNetasEnRango(inicio: Date, fin: Date) {
+        const [vRow] = await db
+            .select({
+                cantidad: sql<number>`count(*)`,
+                brutas: sql<number>`coalesce(sum(${ventas.totalCentavos}), 0)`,
+            })
+            .from(ventas)
+            .where(and(gte(ventas.fecha, inicio), lte(ventas.fecha, fin)));
+
+        const [dRow] = await db
+            .select({
+                total: sql<number>`coalesce(sum(${devoluciones.montoCentavos}), 0)`,
+            })
+            .from(devoluciones)
+            .where(and(gte(devoluciones.fecha, inicio), lte(devoluciones.fecha, fin)));
+
+        const brutasCentavos = Number(vRow?.brutas ?? 0);
+        const devolucionesCentavos = Number(dRow?.total ?? 0);
+        return {
+            cantidad: Number(vRow?.cantidad ?? 0),
+            brutasCentavos,
+            devolucionesCentavos,
+            netasCentavos: brutasCentavos - devolucionesCentavos,
+        };
+    }
+
     private async agregarPorProductoEnRango(inicio: Date, fin: Date) {
         const ventasRows = await db
             .select({
                 productoId: detalleVenta.productoId,
+                categoriaId: productos.categoriaId,
                 nombre: productos.nombre,
                 categoriaNombre: categorias.nombre,
                 stockActual: productos.stock,
@@ -554,11 +1074,18 @@ export class ReportesService {
             .innerJoin(productos, eq(detalleVenta.productoId, productos.id))
             .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
             .where(and(gte(ventas.fecha, inicio), lte(ventas.fecha, fin)))
-            .groupBy(detalleVenta.productoId, productos.nombre, categorias.nombre, productos.stock);
+            .groupBy(
+                detalleVenta.productoId,
+                productos.categoriaId,
+                productos.nombre,
+                categorias.nombre,
+                productos.stock,
+            );
 
         const devRows = await db
             .select({
                 productoId: detalleDevolucion.productoId,
+                categoriaId: productos.categoriaId,
                 nombre: productos.nombre,
                 categoriaNombre: categorias.nombre,
                 stockActual: productos.stock,
@@ -580,6 +1107,7 @@ export class ReportesService {
             .where(and(gte(devoluciones.fecha, inicio), lte(devoluciones.fecha, fin)))
             .groupBy(
                 detalleDevolucion.productoId,
+                productos.categoriaId,
                 productos.nombre,
                 categorias.nombre,
                 productos.stock,
@@ -589,6 +1117,7 @@ export class ReportesService {
             number,
             {
                 productoId: number;
+                categoriaId: number;
                 nombre: string;
                 categoriaNombre: string;
                 stockActual: number;
@@ -604,6 +1133,7 @@ export class ReportesService {
         for (const r of ventasRows) {
             mapa.set(r.productoId, {
                 productoId: r.productoId,
+                categoriaId: r.categoriaId,
                 nombre: r.nombre,
                 categoriaNombre: r.categoriaNombre,
                 stockActual: r.stockActual,
@@ -625,6 +1155,7 @@ export class ReportesService {
             } else {
                 mapa.set(d.productoId, {
                     productoId: d.productoId,
+                    categoriaId: d.categoriaId,
                     nombre: d.nombre,
                     categoriaNombre: d.categoriaNombre,
                     stockActual: d.stockActual,

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ReportesService } from './reportes.service';
 import { rangoFechasSchema, masVendidosQuerySchema } from './reportes.schemas';
 import type { RangoFechasDto, MasVendidosQueryDto } from './reportes.schemas';
@@ -29,6 +29,22 @@ export class ReportesController {
         return this.reportesService.ventasPorCanal(query);
     }
 
+    @Get('ventas-por-dia')
+    ventasPorDia(
+        @Query(new ZodValidationPipe(rangoFechasSchema))
+        query: RangoFechasDto,
+    ) {
+        return this.reportesService.ventasPorDia(query);
+    }
+
+    @Get('ventas-por-categoria')
+    ventasPorCategoria(
+        @Query(new ZodValidationPipe(rangoFechasSchema))
+        query: RangoFechasDto,
+    ) {
+        return this.reportesService.ventasPorCategoria(query);
+    }
+
     @Get('cierres-de-caja')
     cierresDeCaja(
         @Query(new ZodValidationPipe(rangoFechasSchema))
@@ -37,11 +53,21 @@ export class ReportesController {
         return this.reportesService.cierresDeCaja(query);
     }
 
+    @Get('cierres-de-caja/:id')
+    detalleCierre(@Param('id', ParseIntPipe) id: number) {
+        return this.reportesService.obtenerDetalleCierre(id);
+    }
+
     @Get('margen')
     margen(
         @Query(new ZodValidationPipe(rangoFechasSchema))
         query: RangoFechasDto,
     ) {
         return this.reportesService.margenPorProducto(query);
+    }
+
+    @Get('inteligencia-stock')
+    inteligenciaStock() {
+        return this.reportesService.inteligenciaStock();
     }
 }

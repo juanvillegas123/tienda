@@ -304,6 +304,20 @@ export interface ResumenDashboard {
         brutasCentavos: number;
         devolucionesCentavos: number;
         netasCentavos: number;
+        ayerNetasCentavos: number;
+        variacionVsAyerPct: number | null;
+    };
+    mesActual: {
+        cantidadVentas: number;
+        ventasNetasCentavos: number;
+        ventasMesAnteriorCentavos: number;
+        variacionVsMesAnteriorPct: number | null;
+        gananciaNetaCentavos: number;
+        margenPorcentaje: number;
+    };
+    inventario: {
+        valorTotalCentavos: number;
+        totalUnidades: number;
     };
     cajaActual: {
         id: number;
@@ -320,12 +334,29 @@ export interface ResumenDashboard {
         agotados: number;
         categoriasActivas: number;
         categoriasInactivas: number;
+        umbralStockBajo: number;
     };
     alertasStock: {
         id: number;
         nombre: string;
         categoriaNombre: string;
         stock: number;
+    }[];
+    ultimasVentas: {
+        id: number;
+        canal: CanalVenta;
+        metodoPago: MetodoPago;
+        totalCentavos: number;
+        fecha: string | number | Date;
+    }[];
+    ultimosPedidos: {
+        id: number;
+        codigo: string;
+        nombreCliente: string | null;
+        estado: EstadoPedido;
+        totalCentavos: number;
+        fechaCreacion: string | number | Date;
+        vencido: boolean;
     }[];
 }
 
@@ -367,6 +398,42 @@ export interface ReporteVentasPorCanal {
         devolucionesCentavos: number;
         ventasNetasCentavos: number;
     };
+    periodoAnterior: {
+        desde: string;
+        hasta: string;
+        ventasNetasCentavos: number;
+        variacionPorcentaje: number | null;
+    };
+}
+
+export interface VentaDiaria {
+    fecha: string;
+    mostradorNetoCentavos: number;
+    onlineNetoCentavos: number;
+    devolucionesCentavos: number;
+    totalNetoCentavos: number;
+    cantidadVentas: number;
+}
+
+export interface ReporteVentasPorDia {
+    desde: string;
+    hasta: string;
+    dias: VentaDiaria[];
+}
+
+export interface VentaCategoria {
+    categoriaId: number;
+    nombre: string;
+    unidadesNetas: number;
+    ventasNetasCentavos: number;
+    porcentaje: number;
+}
+
+export interface ReporteVentasPorCategoria {
+    desde: string;
+    hasta: string;
+    totalNetoCentavos: number;
+    categorias: VentaCategoria[];
 }
 
 export interface ReporteCierresCaja {
@@ -386,6 +453,37 @@ export interface ReporteCierresCaja {
         efectivoEsperadoCentavos: number;
         efectivoContadoCentavos: number;
         diferenciaCentavos: number;
+    }[];
+}
+
+export interface DetalleCierreCaja {
+    caja: {
+        id: number;
+        estado: EstadoCaja;
+        fechaApertura: string | number | Date;
+        fechaCierre: string | number | Date | null;
+        montoInicialCentavos: number;
+        ventasEfectivoCentavos: number;
+        ventasQrCentavos: number;
+        devolucionesCentavos: number;
+        efectivoEsperadoCentavos: number;
+        efectivoContadoCentavos: number | null;
+        diferenciaCentavos: number | null;
+    };
+    ventas: {
+        id: number;
+        canal: CanalVenta;
+        metodoPago: MetodoPago;
+        totalCentavos: number;
+        fecha: string | number | Date;
+        items: { nombreProducto: string; cantidad: number; precioCentavos: number }[];
+    }[];
+    devoluciones: {
+        id: number;
+        ventaId: number;
+        motivo: string;
+        montoCentavos: number;
+        fecha: string | number | Date;
     }[];
 }
 
@@ -410,4 +508,30 @@ export interface ReporteMargen {
         margenPorcentajePromedio: number;
     };
     items: MargenProducto[];
+}
+
+export interface ReporteInteligenciaStock {
+    resumen: {
+        totalSinRotacion: number;
+        valorInmovilizadoCentavos: number;
+        productosParaReponer: number;
+    };
+    sinRotacion30d: {
+        productoId: number;
+        nombre: string;
+        categoriaNombre: string;
+        stockActual: number;
+        costoCentavos: number;
+        valorInmovilizadoCentavos: number;
+    }[];
+    cobertura: {
+        productoId: number;
+        nombre: string;
+        categoriaNombre: string;
+        stockActual: number;
+        unidadesNetas30d: number;
+        velocidadDiaria: number;
+        diasCobertura: number;
+        sugerenciaReposicion: number;
+    }[];
 }

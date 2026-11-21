@@ -10,7 +10,7 @@ import {
     ElementRef,
     viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, of } from 'rxjs';
@@ -44,6 +44,7 @@ interface ItemTicketPos {
     templateUrl: './pos.html',
 })
 export class PosAdminComponent implements OnInit, AfterViewInit {
+    private readonly route = inject(ActivatedRoute);
     private readonly cajasService = inject(CajasService);
     private readonly productosService = inject(ProductosService);
     private readonly ventasService = inject(VentasService);
@@ -139,6 +140,19 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
+        this.route.queryParamMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((params) => {
+                const tab = params.get('tab');
+                if (tab === 'historial') {
+                    this.pestana.set('historial');
+                    this.cargarHistorialVentas();
+                } else {
+                    this.pestana.set('pos');
+                    setTimeout(() => this.enfocarBuscador(), 50);
+                }
+            });
+
         this.cargarCaja();
 
         this.busqueda$
