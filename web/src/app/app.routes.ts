@@ -20,7 +20,15 @@ export const routes: Routes = [
             import('./features/admin/layout/admin-layout').then((m) => m.AdminLayoutComponent),
         canActivate: [authGuard],
         children: [
-            { path: '', redirectTo: 'pedidos', pathMatch: 'full' },
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            {
+                path: 'dashboard',
+                loadComponent: () =>
+                    import('./features/admin/dashboard/dashboard').then(
+                        (m) => m.DashboardAdminComponent,
+                    ),
+                title: 'Inicio — Panel de administración',
+            },
             {
                 path: 'pedidos',
                 loadComponent: () =>
@@ -70,7 +78,9 @@ export const routes: Routes = [
             {
                 path: 'reportes',
                 loadComponent: () =>
-                    import('./shared/placeholder').then((m) => m.PlaceholderComponent),
+                    import('./features/admin/reportes/reportes').then(
+                        (m) => m.ReportesAdminComponent,
+                    ),
                 title: 'Reportes',
             },
         ],

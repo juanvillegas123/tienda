@@ -297,3 +297,117 @@ export interface CrearAjusteInventarioPayload {
     nuevoStock: number;
     nota: string;
 }
+
+export interface ResumenDashboard {
+    ventasHoy: {
+        cantidad: number;
+        brutasCentavos: number;
+        devolucionesCentavos: number;
+        netasCentavos: number;
+    };
+    cajaActual: {
+        id: number;
+        fechaApertura: string | number | Date;
+        efectivoEsperadoCentavos: number;
+    } | null;
+    pedidosPendientes: {
+        total: number;
+        vencidos: number;
+    };
+    catalogo: {
+        productosActivos: number;
+        stockBajo: number;
+        agotados: number;
+        categoriasActivas: number;
+        categoriasInactivas: number;
+    };
+    alertasStock: {
+        id: number;
+        nombre: string;
+        categoriaNombre: string;
+        stock: number;
+    }[];
+}
+
+export interface ProductoMasVendido {
+    productoId: number;
+    nombre: string;
+    categoriaNombre: string;
+    stockActual: number;
+    unidadesVendidas: number;
+    unidadesDevueltas: number;
+    unidadesNetas: number;
+    ingresosNetosCentavos: number;
+}
+
+export interface ReporteMasVendidos {
+    desde: string;
+    hasta: string;
+    items: ProductoMasVendido[];
+}
+
+export interface ReporteVentasPorCanal {
+    desde: string;
+    hasta: string;
+    canales: {
+        canal: CanalVenta;
+        cantidadVentas: number;
+        ventasBrutasCentavos: number;
+        devolucionesCentavos: number;
+        ventasNetasCentavos: number;
+    }[];
+    metodosPago: {
+        metodoPago: MetodoPago;
+        cantidadVentas: number;
+        ventasBrutasCentavos: number;
+    }[];
+    totales: {
+        cantidadVentas: number;
+        ventasBrutasCentavos: number;
+        devolucionesCentavos: number;
+        ventasNetasCentavos: number;
+    };
+}
+
+export interface ReporteCierresCaja {
+    desde: string;
+    hasta: string;
+    totales: {
+        cantidadCierres: number;
+        totalEsperadoCentavos: number;
+        totalContadoCentavos: number;
+        diferenciaAcumuladaCentavos: number;
+    };
+    cierres: {
+        id: number;
+        fechaApertura: string | number | Date;
+        fechaCierre: string | number | Date | null;
+        montoInicialCentavos: number;
+        efectivoEsperadoCentavos: number;
+        efectivoContadoCentavos: number;
+        diferenciaCentavos: number;
+    }[];
+}
+
+export interface MargenProducto {
+    productoId: number;
+    nombre: string;
+    categoriaNombre: string;
+    unidadesNetas: number;
+    ingresosNetosCentavos: number;
+    costoNetoCentavos: number;
+    margenCentavos: number;
+    margenPorcentaje: number;
+}
+
+export interface ReporteMargen {
+    desde: string;
+    hasta: string;
+    totales: {
+        ingresosNetosCentavos: number;
+        costoNetoCentavos: number;
+        margenTotalCentavos: number;
+        margenPorcentajePromedio: number;
+    };
+    items: MargenProducto[];
+}

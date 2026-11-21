@@ -5,7 +5,16 @@ import { AuthService } from '../../../core/auth.service';
 interface NavItem {
     nombre: string;
     ruta: string;
-    id: 'pedidos' | 'pos' | 'caja' | 'productos' | 'categorias' | 'inventario' | 'proveedores' | 'reportes';
+    id:
+        | 'dashboard'
+        | 'pedidos'
+        | 'pos'
+        | 'caja'
+        | 'productos'
+        | 'categorias'
+        | 'inventario'
+        | 'proveedores'
+        | 'reportes';
 }
 
 @Component({
@@ -21,6 +30,7 @@ export class AdminLayoutComponent implements OnInit {
     readonly sesion = this.authService.sesion;
 
     readonly navItems: NavItem[] = [
+        { nombre: 'Inicio', ruta: '/admin/dashboard', id: 'dashboard' },
         { nombre: 'Pedidos', ruta: '/admin/pedidos', id: 'pedidos' },
         { nombre: 'Punto de venta', ruta: '/admin/pos', id: 'pos' },
         { nombre: 'Caja', ruta: '/admin/caja', id: 'caja' },
