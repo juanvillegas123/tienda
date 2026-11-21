@@ -49,11 +49,6 @@ export class CatalogoComponent implements OnInit {
     readonly filtroCategoriaId = signal<number | null>(null);
     readonly logoHeroFallido = signal(false);
 
-    readonly productoHero = computed(() => {
-        const lista = this.productosBase().length > 0 ? this.productosBase() : this.productos();
-        return lista.find((p) => !!p.imagenPrincipal) ?? null;
-    });
-
     readonly destacados = computed(() => {
         const lista = this.productosBase().length > 0 ? this.productosBase() : this.productos();
         return lista.filter((p) => !!p.imagenPrincipal).slice(0, 8);

@@ -96,7 +96,7 @@ export const routes: Routes = [
                 path: '',
                 loadComponent: () =>
                     import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
-                title: 'Catálogo — OniiChan Store',
+                title: 'Catálogo — Onii-Chan Store',
             },
             {
                 path: 'producto/:ruta',
@@ -104,13 +104,13 @@ export const routes: Routes = [
                     import('./features/publico/producto-detalle/producto-detalle').then(
                         (m) => m.ProductoDetalleComponent,
                     ),
-                title: 'Detalle de producto — OniiChan Store',
+                title: 'Detalle de producto — Onii-Chan Store',
             },
             {
                 path: 'carrito',
                 loadComponent: () =>
                     import('./features/publico/carrito/carrito').then((m) => m.CarritoComponent),
-                title: 'Carrito — OniiChan Store',
+                title: 'Carrito — Onii-Chan Store',
             },
             {
                 path: '**',
@@ -118,7 +118,7 @@ export const routes: Routes = [
                     import('./features/publico/no-encontrado/no-encontrado').then(
                         (m) => m.NoEncontradoComponent,
                     ),
-                title: 'Página no encontrada — OniiChan Store',
+                title: 'Página no encontrada — Onii-Chan Store',
             },
         ],
     },

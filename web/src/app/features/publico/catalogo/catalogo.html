@@ -8,7 +8,7 @@
           <svg class="w-3 h-3 text-perla shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
           </svg>
-          <span class="truncate">OniiChan Store</span>
+          <span class="truncate">Onii-Chan Store</span>
         </div>
         <h1 class="font-display text-4xl sm:text-5xl uppercase tracking-wider text-perla leading-none break-words">
           Calidad en figuras
@@ -30,41 +30,25 @@
         </div>
       </div>
 
-      <!-- Derecha: círculo recortado con producto destacado (oculto en < 640px) -->
+      <!-- Derecha: logo oficial fijo en el hero (oculto en < 640px) -->
       <div class="hidden sm:block shrink-0 min-w-0">
-        @if (productoHero(); as hero) {
-          <a
-            [routerLink]="['/producto', rutaProducto(hero.id, hero.nombre)]"
-            class="group relative block w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-perla/25 hover:ring-carmesi-claro transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-            [attr.aria-label]="'Ver producto destacado: ' + hero.nombre"
-          >
+        <div class="w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-perla/25 flex items-center justify-center">
+          @if (!logoHeroFallido()) {
             <img
-              [src]="hero.imagenPrincipal!"
-              [alt]="hero.nombre"
-              loading="lazy"
+              src="img/logo-512.png"
+              alt="Logo de Onii-Chan Store"
+              width="160"
+              height="160"
               decoding="async"
-              referrerpolicy="no-referrer"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              (error)="onErrorLogoHero()"
+              class="w-full h-full object-cover"
             />
-          </a>
-        } @else {
-          <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-perla/25 flex items-center justify-center">
-            @if (!logoHeroFallido()) {
-              <img
-                src="img/logo.png"
-                alt="OniiChan Store"
-                loading="lazy"
-                decoding="async"
-                (error)="onErrorLogoHero()"
-                class="w-full h-full object-cover"
-              />
-            } @else {
-              <div class="w-full h-full bg-carmesi text-perla flex items-center justify-center font-display text-4xl tracking-wider">
-                OS
-              </div>
-            }
-          </div>
-        }
+          } @else {
+            <div class="w-full h-full bg-carmesi text-perla flex items-center justify-center font-display text-4xl tracking-wider">
+              OS
+            </div>
+          }
+        </div>
       </div>
     </div>
   </div>
