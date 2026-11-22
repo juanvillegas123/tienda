@@ -130,9 +130,8 @@ export const routes: Routes = [
             {
                 path: '',
                 canActivate: [redirigirFiltrosInicioGuard],
-                // En Etapa B se reemplaza por InicioComponent (inicio por capítulos)
                 loadComponent: () =>
-                    import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
+                    import('./features/publico/inicio/inicio').then((m) => m.InicioComponent),
                 title: 'Figuras de colección y merchandising anime en Sucre | Onii-Chan Store',
                 data: {
                     seo: {

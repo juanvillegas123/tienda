@@ -1,0 +1,257 @@
+import { DOCUMENT } from '@angular/common';
+import {
+    Component,
+    DestroyRef,
+    ElementRef,
+    OnInit,
+    computed,
+    effect,
+    inject,
+    signal,
+    viewChild,
+} from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { CatalogoService } from '../../../core/catalogo.service';
+import { CarritoService } from '../../../core/carrito.service';
+import { ConfiguracionService } from '../../../core/configuracion.service';
+import { SeoService } from '../../../core/seo.service';
+import { Categoria, ProductoPublico } from '../../../core/modelos';
+import { BsPipe } from '../../../shared/bs.pipe';
+import { FranjaCapituloComponent } from '../../../shared/ui/franja-capitulo/franja-capitulo';
+import { NEGOCIO_CONFIG } from '../../../shared/negocio.config';
+import { generarSlug } from '../../../shared/slug';
+import {
+    POCAS_UNIDADES,
+    esNotaTallaVisible,
+    etiquetaEscala,
+    rutaProducto,
+} from '../../../shared/catalogo-ui.utils';
+
+interface TiraCategoria {
+    categoria: Categoria;
+    slug: string;
+    productos: ProductoPublico[];
+}
+
+const DIAS_EN_A_NUM: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+};
+
+function calcularAbiertoEnBolivia(ahora: Date = new Date()): boolean {
+    const horario = NEGOCIO_CONFIG.horarioEstructurado;
+    try {
+        const partes = new Intl.DateTimeFormat('en-US', {
+            timeZone: horario.zonaHoraria,
+            weekday: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        }).formatToParts(ahora);
+
+        const diaTxt = partes.find((p) => p.type === 'weekday')?.value ?? '';
+        const horaTxt = partes.find((p) => p.type === 'hour')?.value ?? '0';
+        const minTxt = partes.find((p) => p.type === 'minute')?.value ?? '0';
+
+        const diaNum = DIAS_EN_A_NUM[diaTxt];
+        if (diaNum === undefined || !horario.diasAbiertos.includes(diaNum)) {
+            return false;
+        }
+
+        const hora = Number(horaTxt) % 24;
+        const minuto = Number(minTxt);
+        const minutosActuales = hora * 60 + minuto;
+        const inicio = horario.horaApertura * 60 + horario.minutoApertura;
+        const fin = horario.horaCierre * 60 + horario.minutoCierre;
+        return minutosActuales >= inicio && minutosActuales < fin;
+    } catch {
+        return false;
+    }
+}
+
+@Component({
+    selector: 'app-inicio-publico',
+    standalone: true,
+    imports: [RouterLink, BsPipe, FranjaCapituloComponent],
+    templateUrl: './inicio.html',
+})
+export class InicioComponent implements OnInit {
+    private readonly catalogoService = inject(CatalogoService);
+    private readonly configService = inject(ConfiguracionService);
+    private readonly seo = inject(SeoService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly doc = inject(DOCUMENT);
+    readonly carrito = inject(CarritoService);
+
+    readonly info = this.configService.infoTienda;
+    readonly negocio = NEGOCIO_CONFIG;
+    readonly pocasUnidades = POCAS_UNIDADES;
+    readonly esNotaTallaVisible = esNotaTallaVisible;
+    readonly etiquetaEscala = etiquetaEscala;
+    readonly rutaProducto = rutaProducto;
+
+    readonly categorias = signal<Categoria[]>([]);
+    readonly productos = signal<ProductoPublico[]>([]);
+    readonly cargandoCatalogo = signal(true);
+    readonly errorCatalogo = signal(false);
+
+    readonly logoHeroFallido = signal(false);
+    readonly direccionCopiada = signal(false);
+    readonly preguntaAbierta = signal<number | null>(0);
+    readonly abiertoAhora = signal<boolean>(calcularAbiertoEnBolivia());
+
+    readonly aviso = signal<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
+    private avisoTimer: ReturnType<typeof setTimeout> | null = null;
+    private readonly mapaIframe = viewChild<ElementRef<HTMLIFrameElement>>('mapaIframe');
+
+    readonly recienLlegados = computed(() => this.productos().slice(0, 8));
+
+    readonly tirasPorCategoria = computed<TiraCategoria[]>(() => {
+        const prods = this.productos();
+        const cats = this.categorias();
+        const resultado: TiraCategoria[] = [];
+
+        for (const cat of cats) {
+            const deCategoria = prods.filter((p) => p.categoriaId === cat.id).slice(0, 8);
+            if (deCategoria.length > 0) {
+                resultado.push({
+                    categoria: cat,
+                    slug: generarSlug(cat.nombre),
+                    productos: deCategoria,
+                });
+            }
+        }
+        return resultado;
+    });
+
+    /**
+     * Solo genera enlace de WhatsApp si llegó un número real desde la API.
+     */
+    readonly enlaceWhatsapp = computed(() => {
+        const num = this.info().whatsappNumero?.replace(/\D/g, '') || '';
+        if (!num) return null;
+        const msg = encodeURIComponent(
+            'Hola Onii-Chan Store, tengo una consulta sobre sus productos.',
+        );
+        return `https://wa.me/${num}?text=${msg}`;
+    });
+
+    readonly mapaEmbedValido = computed(() => {
+        const url = this.info().googleMapsEmbedUrl?.trim() || '';
+        return /^https:\/\/(www\.)?google\.com\/maps\/embed[^\s]*$/i.test(url) ? url : null;
+    });
+
+    constructor() {
+        // Actualizar JSON-LD Store reactivamente cuando lleguen datos de la API
+        effect(() => {
+            const infoActual = this.info();
+            this.seo.establecerJsonLdTienda(infoActual);
+        });
+
+        effect(() => {
+            const url = this.mapaEmbedValido();
+            const iframe = this.mapaIframe()?.nativeElement;
+            if (url && iframe && iframe.src !== url) {
+                iframe.src = url;
+            }
+        });
+    }
+
+    ngOnInit(): void {
+        this.seo.limpiarJsonLd(['product', 'breadcrumb']);
+        this.seo.actualizar({
+            titulo: 'Figuras de colección y merchandising anime en Sucre | Onii-Chan Store',
+            descripcion:
+                'Figuras de colección, poleras, peluches, pines y accesorios anime en Sucre, Bolivia. Calidad en figuras — Onii-Chan Store, Calle Loa #406.',
+            rutaCanonica: '/',
+        });
+        this.seo.establecerJsonLdTienda(this.info());
+        this.seo.establecerJsonLdFaq(this.negocio.preguntasFrecuentes);
+
+        this.configService.cargarInfoTienda().subscribe();
+        this.cargarDatosCatalogo();
+        this.iniciarRelojHorarioBolivia();
+    }
+
+    cargarDatosCatalogo(): void {
+        this.cargandoCatalogo.set(true);
+        this.errorCatalogo.set(false);
+
+        forkJoin({
+            categorias: this.catalogoService
+                .listarCategorias()
+                .pipe(catchError(() => of([] as Categoria[]))),
+            productos: this.catalogoService.listarProductos().pipe(
+                catchError(() => {
+                    this.errorCatalogo.set(true);
+                    return of([] as ProductoPublico[]);
+                }),
+            ),
+        }).subscribe(({ categorias, productos }) => {
+            this.categorias.set(categorias);
+            this.productos.set(productos);
+            this.cargandoCatalogo.set(false);
+        });
+    }
+
+    private iniciarRelojHorarioBolivia(): void {
+        const actualizar = () => this.abiertoAhora.set(calcularAbiertoEnBolivia());
+        actualizar();
+
+        const intervalo = setInterval(actualizar, 60_000);
+        const onVisibility = () => {
+            if (this.doc.visibilityState === 'visible') {
+                actualizar();
+            }
+        };
+        this.doc.addEventListener('visibilitychange', onVisibility);
+
+        this.destroyRef.onDestroy(() => {
+            clearInterval(intervalo);
+            this.doc.removeEventListener('visibilitychange', onVisibility);
+            if (this.avisoTimer) {
+                clearTimeout(this.avisoTimer);
+            }
+        });
+    }
+
+    alternarPregunta(idx: number): void {
+        this.preguntaAbierta.update((actual) => (actual === idx ? null : idx));
+    }
+
+    async copiarDireccion(): Promise<void> {
+        const i = this.info();
+        const texto = `${i.direccion}, ${i.ciudad}`;
+        try {
+            await navigator.clipboard.writeText(texto);
+            this.direccionCopiada.set(true);
+            setTimeout(() => this.direccionCopiada.set(false), 2500);
+        } catch {
+            // Silencioso si el navegador restringe el portapapeles
+        }
+    }
+
+    agregarRapido(prod: ProductoPublico, event: Event): void {
+        event.preventDefault();
+        event.stopPropagation();
+        const res = this.carrito.agregar(prod, 1);
+        this.aviso.set({ tipo: res.ok ? 'ok' : 'error', texto: res.mensaje });
+        if (this.avisoTimer) clearTimeout(this.avisoTimer);
+        this.avisoTimer = setTimeout(() => this.aviso.set(null), 3000);
+    }
+
+    alcanzoLimiteStock(prod: ProductoPublico): boolean {
+        return this.carrito.cantidadEnCarrito(prod.id) >= prod.stock;
+    }
+
+    onErrorLogoHero(): void {
+        this.logoHeroFallido.set(true);
+    }
+}

@@ -31,6 +31,38 @@
   --font-sans: "DM Sans", system-ui, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.tira-horizontal {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.franja-capitulo {
+  --a: 18px;
+  clip-path: polygon(0 var(--a), 100% 0, 100% calc(100% - var(--a)), 0 100%);
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.franja-capitulo-invertida {
+  clip-path: polygon(0 0, 100% var(--a), 100% 100%, 0 calc(100% - var(--a)));
+}
+
+@media (max-width: 639px) {
+  .franja-capitulo {
+    --a: 10px;
+  }
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
