@@ -21,6 +21,13 @@ import type { JwtPayload } from './jwt-auth.guard';
 const COOKIE_NOMBRE = 'sesion';
 const COOKIE_MAX_AGE = 10 * 60 * 60; // 10 horas en segundos
 
+function esCookieSegura(): boolean {
+    const raw = process.env.COOKIE_SECURE?.trim().toLowerCase();
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+    return process.env.NODE_ENV === 'production';
+}
+
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -32,10 +39,9 @@ export class AuthController {
     async login(@Body() dto: LoginDto, @Res({ passthrough: true }) reply: FastifyReply) {
         const token = await this.authService.login(dto);
 
-        const isProduction = process.env.NODE_ENV === 'production';
         void reply.setCookie(COOKIE_NOMBRE, token, {
             httpOnly: true,
-            secure: isProduction,
+            secure: esCookieSegura(),
             sameSite: (process.env.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') ?? 'lax',
             path: '/',
             maxAge: COOKIE_MAX_AGE,
@@ -65,10 +71,9 @@ export class AuthController {
     ) {
         const { usuario, token } = await this.authService.cambiarUsuario(sesion.sub, dto);
 
-        const isProduction = process.env.NODE_ENV === 'production';
         void reply.setCookie(COOKIE_NOMBRE, token, {
             httpOnly: true,
-            secure: isProduction,
+            secure: esCookieSegura(),
             sameSite: (process.env.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') ?? 'lax',
             path: '/',
             maxAge: COOKIE_MAX_AGE,
