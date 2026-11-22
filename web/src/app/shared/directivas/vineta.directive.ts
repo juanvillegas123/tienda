@@ -27,27 +27,48 @@ export class VinetaDirective implements OnInit {
         }
 
         let observer: IntersectionObserver | null = null;
+        let revelado = false;
+
+        const revelar = () => {
+            if (revelado) return;
+            revelado = true;
+            el.classList.add('in');
+            observer?.disconnect();
+            observer = null;
+            window.removeEventListener('scroll', comprobarPosicion);
+        };
+
+        const comprobarPosicion = () => {
+            if (revelado) return;
+            const rect = el.getBoundingClientRect();
+            const vh = window.innerHeight || 800;
+            // Revelar si está dentro del viewport o ya quedó por encima tras un salto de ancla
+            if (rect.top <= vh + 40) {
+                revelar();
+            }
+        };
+
         this.ngZone.runOutsideAngular(() => {
             observer = new IntersectionObserver(
                 (entries) => {
                     for (const entry of entries) {
-                        if (entry.isIntersecting) {
-                            el.classList.add('in');
-                            observer?.unobserve(el);
-                            observer?.disconnect();
-                            observer = null;
+                        if (entry.isIntersecting || entry.boundingClientRect.top <= window.innerHeight) {
+                            revelar();
                             break;
                         }
                     }
                 },
-                { threshold: 0.1, rootMargin: '0px 0px -24px 0px' },
+                { threshold: 0, rootMargin: '60px 0px 40px 0px' },
             );
             observer.observe(el);
+            window.addEventListener('scroll', comprobarPosicion, { passive: true });
+            requestAnimationFrame(comprobarPosicion);
         });
 
         this.destroyRef.onDestroy(() => {
             observer?.disconnect();
             observer = null;
+            window.removeEventListener('scroll', comprobarPosicion);
         });
     }
 }

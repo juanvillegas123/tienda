@@ -21,6 +21,7 @@ import { SeoService } from '../../../core/seo.service';
 import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { FranjaCapituloComponent } from '../../../shared/ui/franja-capitulo/franja-capitulo';
+import { IconoShurikenComponent } from '../../../shared/ui/icono-shuriken/icono-shuriken';
 import { ProgresoScrollDirective } from '../../../shared/directivas/progreso-scroll.directive';
 import { VinetaDirective } from '../../../shared/directivas/vineta.directive';
 import { ScrollEfectosService } from '../../../shared/directivas/scroll-efectos.service';
@@ -32,6 +33,10 @@ import {
     etiquetaEscala,
     rutaProducto,
 } from '../../../shared/catalogo-ui.utils';
+
+const LIMITE_RECIEN_LLEGADOS = 6;
+const LIMITE_CATEGORIAS_INICIO = 3;
+const LIMITE_PRODUCTOS_POR_CATEGORIA = 6;
 
 interface TiraCategoria {
     categoria: Categoria;
@@ -87,6 +92,7 @@ function calcularAbiertoEnBolivia(ahora: Date = new Date()): boolean {
         RouterLink,
         BsPipe,
         FranjaCapituloComponent,
+        IconoShurikenComponent,
         ProgresoScrollDirective,
         VinetaDirective,
     ],
@@ -125,25 +131,33 @@ export class InicioComponent implements OnInit {
     private readonly barraProgreso = viewChild<ElementRef<HTMLElement>>('barraProgreso');
     private fragmentoPendiente: string | null = null;
 
-    readonly recienLlegados = computed(() => this.productos().slice(0, 8));
+    readonly recienLlegados = computed(() => this.productos().slice(0, LIMITE_RECIEN_LLEGADOS));
 
-    readonly tirasPorCategoria = computed<TiraCategoria[]>(() => {
+    private readonly todasLasTirasConProductos = computed<TiraCategoria[]>(() => {
         const prods = this.productos();
         const cats = this.categorias();
         const resultado: TiraCategoria[] = [];
 
         for (const cat of cats) {
-            const deCategoria = prods.filter((p) => p.categoriaId === cat.id).slice(0, 8);
+            const deCategoria = prods.filter((p) => p.categoriaId === cat.id);
             if (deCategoria.length > 0) {
                 resultado.push({
                     categoria: cat,
                     slug: generarSlug(cat.nombre),
-                    productos: deCategoria,
+                    productos: deCategoria.slice(0, LIMITE_PRODUCTOS_POR_CATEGORIA),
                 });
             }
         }
-        return resultado;
+        return resultado.sort((a, b) => b.productos.length - a.productos.length);
     });
+
+    readonly tirasPorCategoria = computed<TiraCategoria[]>(() =>
+        this.todasLasTirasConProductos().slice(0, LIMITE_CATEGORIAS_INICIO),
+    );
+
+    readonly hayMasCategorias = computed(
+        () => this.todasLasTirasConProductos().length > LIMITE_CATEGORIAS_INICIO,
+    );
 
     /**
      * Solo genera enlace de WhatsApp si llegó un número real desde la API.
@@ -159,7 +173,11 @@ export class InicioComponent implements OnInit {
 
     readonly mapaEmbedValido = computed(() => {
         const url = this.info().googleMapsEmbedUrl?.trim() || '';
-        return /^https:\/\/(www\.)?google\.com\/maps\/embed[^\s]*$/i.test(url) ? url : null;
+        return /^https:\/\/(www\.)?google\.com\/maps(\/embed|\?[^\s]*output=embed)[^\s]*$/i.test(
+            url,
+        )
+            ? url
+            : null;
     });
 
     constructor() {

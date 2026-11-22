@@ -7,6 +7,7 @@ import { SeoService } from '../../../core/seo.service';
 import { ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import { IconoShurikenComponent } from '../../../shared/ui/icono-shuriken/icono-shuriken';
 import { generarSlug } from '../../../shared/slug';
 import {
     POCAS_UNIDADES,
@@ -19,7 +20,7 @@ import {
 @Component({
     selector: 'app-producto-detalle',
     standalone: true,
-    imports: [RouterLink, BsPipe, EstadoVacioComponent],
+    imports: [RouterLink, BsPipe, EstadoVacioComponent, IconoShurikenComponent],
     templateUrl: './producto-detalle.html',
 })
 export class ProductoDetalleComponent implements OnInit {

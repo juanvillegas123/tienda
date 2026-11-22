@@ -52,6 +52,8 @@ export class ConfiguracionService {
             map((res) => ({
                 ...INFO_TIENDA_RESPALDO,
                 ...res,
+                googleMapsEmbedUrl:
+                    res.googleMapsEmbedUrl?.trim() || INFO_TIENDA_RESPALDO.googleMapsEmbedUrl,
                 // Solo usar el número real devuelto por la API
                 whatsappNumero: res.whatsappNumero?.trim() || null,
             })),

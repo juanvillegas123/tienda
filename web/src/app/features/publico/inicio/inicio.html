@@ -1,5 +1,7 @@
-<!-- Barra fina de progreso de scroll bajo el encabezado -->
-<div #barraProgreso class="barra-progreso-scroll" aria-hidden="true"></div>
+<!-- Barra fina de progreso de scroll bajo el encabezado (carril blanco + avance carmesí) -->
+<div class="barra-progreso-pista" aria-hidden="true">
+  <div #barraProgreso class="barra-progreso-scroll"></div>
+</div>
 
 <!-- Aviso flotante de carrito -->
 @if (aviso()) {
@@ -26,8 +28,9 @@
     <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] items-center gap-8">
       <!-- Zona 1: Kicker, H1 único, descripción y acciones -->
       <div class="max-w-2xl text-center md:text-left">
-        <p class="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-[11px] font-bold uppercase tracking-[0.16em] bg-vino/80 text-perla border border-carmesi-claro/60">
-          Tienda física &amp; online · {{ info().ciudad }}
+        <p class="kicker-editorial">
+          <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
+          <span>Tienda física &amp; online · {{ info().ciudad }}</span>
         </p>
 
         <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl uppercase tracking-wider text-perla leading-none mt-3">
@@ -86,10 +89,11 @@
   </div>
 </section>
 
-<!-- 1. CAP. 01 ✦ CATÁLOGO -->
+<!-- 1. CAP. 01 — CATÁLOGO -->
 <app-franja-capitulo
   idAncla="cap-1"
-  titulo="CAP. 01 ✦ CATÁLOGO"
+  numero="CAP. 01"
+  titulo="CATÁLOGO"
   subtitulo="Piezas seleccionadas para tu colección, organizadas por categoría."
 />
 
@@ -177,9 +181,9 @@
                   }
 
                   @if (prod.stock === 0) {
-                    <span class="absolute top-2 left-2 badge-sello badge-peligro-solido">Agotado</span>
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-agotado">Agotado</span>
                   } @else if (prod.stock <= pocasUnidades) {
-                    <span class="absolute top-2 left-2 badge-sello badge-alerta">Pocas unidades</span>
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Últimas unidades</span>
                   }
                 </a>
 
@@ -271,9 +275,9 @@
                   }
 
                   @if (prod.stock === 0) {
-                    <span class="absolute top-2 left-2 badge-sello badge-peligro-solido">Agotado</span>
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-agotado">Agotado</span>
                   } @else if (prod.stock <= pocasUnidades) {
-                    <span class="absolute top-2 left-2 badge-sello badge-alerta">Pocas unidades</span>
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Últimas unidades</span>
                   }
                 </a>
 
@@ -313,14 +317,27 @@
           </div>
         </div>
       }
+
+      @if (hayMasCategorias()) {
+        <div class="pt-2 flex justify-center">
+          <a
+            routerLink="/catalogo"
+            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-negro hover:bg-carmesi text-perla text-xs sm:text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2"
+          >
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
+            <span>Ver todas las categorías en el catálogo →</span>
+          </a>
+        </div>
+      }
     }
   </div>
 </section>
 
-<!-- 2. CAP. 02 ✦ CÓMO COMPRAR Y UBICACIÓN -->
+<!-- 2. CAP. 02 — CÓMO COMPRAR Y UBICACIÓN -->
 <app-franja-capitulo
   idAncla="cap-2"
-  titulo="CAP. 02 ✦ CÓMO COMPRAR Y UBICACIÓN"
+  numero="CAP. 02"
+  titulo="CÓMO COMPRAR Y UBICACIÓN"
   subtitulo="Compra sin registros en 3 pasos o visítanos directamente en nuestra tienda en Sucre."
   [invertida]="true"
 />
@@ -438,7 +455,8 @@
             #mapaIframe
             title="Ubicación de Onii-Chan Store en Google Maps"
             loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
             class="w-full h-full min-h-[280px] border-0 flex-1"
           ></iframe>
         } @else {
@@ -472,10 +490,11 @@
   </div>
 </section>
 
-<!-- 3. CAP. 03 ✦ REDES Y PREGUNTAS FRECUENTES -->
+<!-- 3. CAP. 03 — REDES Y PREGUNTAS FRECUENTES -->
 <app-franja-capitulo
   idAncla="cap-3"
-  titulo="CAP. 03 ✦ REDES Y PREGUNTAS FRECUENTES"
+  numero="CAP. 03"
+  titulo="REDES Y PREGUNTAS FRECUENTES"
   subtitulo="Sigue los nuevos ingresos en redes y resuelve las dudas más comunes."
 />
 

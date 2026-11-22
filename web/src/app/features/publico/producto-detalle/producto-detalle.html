@@ -65,12 +65,12 @@
             }
 
             @if (producto()!.stock === 0) {
-              <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-negro text-perla">
+              <span class="absolute top-3 left-0 etiqueta-vitrina etiqueta-agotado">
                 Agotado
               </span>
             } @else if (producto()!.stock <= pocasUnidades) {
-              <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-carmesi text-perla">
-                Pocas unidades
+              <span class="absolute top-3 left-0 etiqueta-vitrina etiqueta-ultimas">
+                Últimas unidades
               </span>
             }
           </div>
@@ -106,9 +106,7 @@
         <!-- Derecha: Ficha de producto -->
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-1.5">
-            <svg class="w-3 h-3 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-            </svg>
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi" />
             <span class="text-xs font-semibold uppercase tracking-widest text-malva">
               {{ producto()!.categoriaNombre }}
             </span>
@@ -125,15 +123,15 @@
             </span>
 
             @if (producto()!.stock === 0) {
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-negro text-perla">
+              <span class="etiqueta-vitrina etiqueta-agotado">
                 Agotado
               </span>
             } @else if (producto()!.stock <= pocasUnidades) {
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-perla text-carmesi border border-carmesi/30">
-                Pocas unidades
+              <span class="etiqueta-vitrina etiqueta-ultimas">
+                Últimas unidades
               </span>
             } @else {
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span class="badge-sello badge-exito">
                 Disponible
               </span>
             }

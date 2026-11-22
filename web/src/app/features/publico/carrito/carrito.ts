@@ -8,13 +8,14 @@ import { ConfiguracionService } from '../../../core/configuracion.service';
 import { ItemCarrito, PedidoCreadoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import { IconoShurikenComponent } from '../../../shared/ui/icono-shuriken/icono-shuriken';
 import { esNotaTallaVisible, rutaProducto } from '../../../shared/catalogo-ui.utils';
 import { environment } from '../../../../environments/environment';
 
 @Component({
     selector: 'app-carrito-publico',
     standalone: true,
-    imports: [RouterLink, ReactiveFormsModule, BsPipe, EstadoVacioComponent],
+    imports: [RouterLink, ReactiveFormsModule, BsPipe, EstadoVacioComponent, IconoShurikenComponent],
     templateUrl: './carrito.html',
 })
 export class CarritoComponent implements OnInit {

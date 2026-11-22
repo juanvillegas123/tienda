@@ -48,7 +48,8 @@ export const NEGOCIO_CONFIG = {
         closes: '20:00',
     } satisfies HorarioEstructurado,
     googleMapsUrl: 'https://maps.app.goo.gl/vD5J2k5nz5jXTPVb6',
-    googleMapsEmbedUrl: '',
+    googleMapsEmbedUrl:
+        'https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d235.7158547159913!2d-65.2600182!3d-19.0437808!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93fbcf003b6cc3db%3A0xa2c7c98ef0e35c50!2sONNI%20CHAN%20STORE!5e0!3m2!1ses!2sbo!4v1795318632150!5m2!1ses!2sbo',
     redes: {
         instagramUrl: 'https://www.instagram.com/onii.chan_store.bo',
         instagramUsuario: '@onii.chan_store.bo',

@@ -10,6 +10,8 @@ import { SeoService } from '../../../core/seo.service';
 import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import { IconoShurikenComponent } from '../../../shared/ui/icono-shuriken/icono-shuriken';
+import { ProgresoScrollDirective } from '../../../shared/directivas/progreso-scroll.directive';
 import { generarSlug } from '../../../shared/slug';
 import {
     POCAS_UNIDADES,
@@ -23,7 +25,7 @@ const MAX_LARGO_BUSQUEDA = 60;
 @Component({
     selector: 'app-catalogo-publico',
     standalone: true,
-    imports: [RouterLink, BsPipe, EstadoVacioComponent],
+    imports: [RouterLink, BsPipe, EstadoVacioComponent, IconoShurikenComponent, ProgresoScrollDirective],
     templateUrl: './catalogo.html',
 })
 export class CatalogoComponent implements OnInit {
