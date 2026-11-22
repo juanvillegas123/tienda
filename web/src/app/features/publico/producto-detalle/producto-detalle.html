@@ -89,7 +89,9 @@
                 >
                   <img
                     [src]="url"
-                    [alt]="producto()!.nombre"
+                    [alt]="'Vista ' + (i + 1) + ' de ' + producto()!.nombre"
+                    width="64"
+                    height="64"
                     loading="lazy"
                     decoding="async"
                     referrerpolicy="no-referrer"

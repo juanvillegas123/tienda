@@ -179,7 +179,9 @@
             @if (prod.imagenPrincipal) {
               <img
                 [src]="prod.imagenPrincipal"
-                [alt]="prod.nombre"
+                [alt]="'Producto ' + prod.nombre + ' de la colección ' + prod.categoriaNombre"
+                width="400"
+                height="500"
                 loading="lazy"
                 decoding="async"
                 referrerpolicy="no-referrer"
