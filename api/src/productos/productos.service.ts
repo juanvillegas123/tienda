@@ -53,7 +53,7 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class ProductosService {
-    constructor(private readonly almacenamientoService: AlmacenamientoService) {}
+    constructor(private readonly almacenamientoService: AlmacenamientoService) { }
     /**
      * Catálogo público: solo productos activos cuya categoría también esté activa, sin costos ni proveedores (RN-02 y 5.1).
      */
@@ -204,15 +204,15 @@ export class ProductosService {
         const ordenClausulas =
             ordenCampo === 'nombre'
                 ? [
-                      ordenDir === 'desc'
-                          ? desc(sql`lower(${productos.nombre})`)
-                          : asc(sql`lower(${productos.nombre})`),
-                      ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
-                  ]
+                    ordenDir === 'desc'
+                        ? desc(sql`lower(${productos.nombre})`)
+                        : asc(sql`lower(${productos.nombre})`),
+                    ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
+                ]
                 : [
-                      ordenDir === 'desc' ? desc(productos.fechaCreacion) : asc(productos.fechaCreacion),
-                      ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
-                  ];
+                    ordenDir === 'desc' ? desc(productos.fechaCreacion) : asc(productos.fechaCreacion),
+                    ordenDir === 'desc' ? desc(productos.id) : asc(productos.id),
+                ];
 
         const rows = await db
             .select({
