@@ -32,17 +32,28 @@
       </a>
 
       <!-- Navegación derecha -->
-      <nav class="flex items-center gap-2 sm:gap-3" aria-label="Navegación principal">
+      <nav class="flex items-center gap-1.5 sm:gap-2.5" aria-label="Navegación principal">
         <a
           routerLink="/"
           routerLinkActive
           #rlaCatalogo="routerLinkActive"
           [routerLinkActiveOptions]="{ exact: true }"
           [class]="rlaCatalogo.isActive
-            ? 'px-3 py-2 rounded-full text-sm font-semibold text-perla bg-vino border border-carmesi/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'
-            : 'px-3 py-2 rounded-full text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'"
+            ? 'px-3 py-2 rounded-full text-xs sm:text-sm font-semibold text-perla bg-vino border border-carmesi/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'
+            : 'px-3 py-2 rounded-full text-xs sm:text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'"
         >
           Catálogo
+        </a>
+
+        <a
+          routerLink="/tienda"
+          routerLinkActive
+          #rlaTienda="routerLinkActive"
+          [class]="rlaTienda.isActive
+            ? 'px-3 py-2 rounded-full text-xs sm:text-sm font-semibold text-perla bg-vino border border-carmesi/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'
+            : 'px-3 py-2 rounded-full text-xs sm:text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'"
+        >
+          La Tienda
         </a>
 
         <a
@@ -50,8 +61,8 @@
           routerLinkActive
           #rlaCarrito="routerLinkActive"
           [class]="rlaCarrito.isActive
-            ? 'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border bg-carmesi text-perla border-carmesi-claro transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2 focus-visible:ring-offset-negro'
-            : 'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold border bg-white/8 text-perla border-perla/20 hover:border-carmesi-claro hover:bg-vino-oscuro transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2 focus-visible:ring-offset-negro'"
+            ? 'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold border bg-carmesi text-perla border-carmesi-claro transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2 focus-visible:ring-offset-negro'
+            : 'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold border bg-white/8 text-perla border-perla/20 hover:border-carmesi-claro hover:bg-vino-oscuro transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2 focus-visible:ring-offset-negro'"
           aria-label="Ver carrito de compras"
         >
           <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -59,7 +70,7 @@
             <circle cx="20" cy="21" r="1" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
-          <span>Carrito</span>
+          <span class="hidden xs:inline sm:inline">Carrito</span>
           @if (carrito.cantidadTotal() > 0) {
             <span
               class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-bold tabular-nums rounded-full"
@@ -78,39 +89,113 @@
     <router-outlet />
   </main>
 
-  <!-- Pie de página (negro, logo, lema, sin enlace de administración) -->
-  <footer class="bg-negro text-perla border-t border-vino mt-12">
-    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-7 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        @if (!logoFallido()) {
-          <img
-            src="img/logo-96.png"
-            alt="Logo de Onii-Chan Store"
-            width="48"
-            height="48"
-            loading="lazy"
-            decoding="async"
-            (error)="onErrorLogo()"
-            class="h-12 w-12 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
-          />
-        } @else {
-          <div class="h-12 w-12 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-base tracking-wider shrink-0">
-            OS
+  <!-- Pie de página enriquecido (negro, 3 columnas, sin enlace de administración) -->
+  <footer class="bg-negro text-perla border-t-2 border-vino mt-12">
+    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Columna 1: Marca -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-3">
+          @if (!logoFallido()) {
+            <img
+              src="img/logo-96.png"
+              alt="Logo de Onii-Chan Store"
+              width="48"
+              height="48"
+              loading="lazy"
+              decoding="async"
+              (error)="onErrorLogo()"
+              class="h-12 w-12 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/20"
+            />
+          } @else {
+            <div class="h-12 w-12 rounded-full bg-carmesi text-perla flex items-center justify-center font-display text-base tracking-wider shrink-0">
+              OS
+            </div>
+          }
+          <div>
+            <p class="font-display text-xl uppercase tracking-wider text-perla leading-none">
+              Onii-Chan Store
+            </p>
+            <p class="text-[11px] uppercase tracking-[0.18em] text-carmesi-claro mt-0.5 font-semibold">
+              Calidad en figuras
+            </p>
           </div>
-        }
-        <div>
-          <p class="font-display text-lg uppercase tracking-wider text-perla leading-none">
-            Calidad en figuras
-          </p>
-          <p class="text-xs text-perla/65 mt-0.5">© Onii-Chan Store — Todos los derechos reservados.</p>
         </div>
+        <p class="text-xs text-perla/65 leading-relaxed max-w-xs">
+          {{ info().descripcion }}
+        </p>
       </div>
 
-      <div class="flex items-center gap-2 text-xs text-perla/60">
-        <svg class="w-3.5 h-3.5 text-carmesi-claro" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-        </svg>
-        <span>Vitrina de coleccionista</span>
+      <!-- Columna 2: Ubicación y horarios -->
+      <div class="space-y-2.5">
+        <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-perla/90 border-l-2 border-carmesi pl-2.5">
+          Visítanos
+        </h3>
+        <p class="text-sm font-semibold text-perla">{{ info().direccion }}</p>
+        <p class="text-xs text-perla/65">{{ info().ciudad }}</p>
+        <p class="text-xs text-perla/75 pt-1">
+          <strong class="text-perla">Horario:</strong> {{ info().horarios }}
+        </p>
+        @if (info().googleMapsUrl) {
+          <a
+            [href]="info().googleMapsUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-carmesi-claro hover:text-perla transition-colors pt-1"
+          >
+            Cómo llegar en Google Maps →
+          </a>
+        }
+      </div>
+
+      <!-- Columna 3: Redes sociales y enlaces -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-perla/90 border-l-2 border-carmesi pl-2.5">
+          Comunidad y enlaces
+        </h3>
+        <div class="flex flex-wrap gap-2">
+          @if (info().instagramUrl) {
+            <a
+              [href]="info().instagramUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+            >
+              Instagram
+            </a>
+          }
+          @if (info().tiktokUrl) {
+            <a
+              [href]="info().tiktokUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+            >
+              TikTok
+            </a>
+          }
+          @if (info().facebookUrl) {
+            <a
+              [href]="info().facebookUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+            >
+              Facebook
+            </a>
+          }
+        </div>
+        <div class="flex items-center gap-4 pt-1 text-xs text-perla/65">
+          <a routerLink="/" class="hover:text-perla transition-colors">Catálogo</a>
+          <a routerLink="/tienda" class="hover:text-perla transition-colors">La Tienda</a>
+          <a routerLink="/carrito" class="hover:text-perla transition-colors">Carrito</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-vino/60">
+      <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-perla/55">
+        <span>© Onii-Chan Store — Todos los derechos reservados.</span>
+        <span>Vitrina de coleccionista · {{ info().ciudad }}</span>
       </div>
     </div>
   </footer>

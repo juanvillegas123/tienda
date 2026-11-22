@@ -3,10 +3,10 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
       <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
-        Mi perfil y seguridad
+        Mi perfil y tienda
       </h1>
       <p class="text-sm text-negro/60 mt-1">
-        Administra tus credenciales de acceso y revisa el estado de seguridad de la cuenta
+        Administra tus credenciales de acceso y los datos públicos que ven tus clientes
       </p>
     </div>
 
@@ -19,188 +19,362 @@
     </button>
   </div>
 
-  <!-- Tarjeta resumen de cuenta -->
-  @if (sesion(); as admin) {
-    <div class="card-kpi p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-vino text-perla font-display text-2xl flex items-center justify-center shrink-0">
-          {{ admin.usuario.charAt(0).toUpperCase() }}
+  <!-- Pestañas -->
+  <div class="flex items-center gap-1.5 bg-tarjeta border border-black/10 p-1.5 rounded-xl w-fit">
+    <button
+      type="button"
+      (click)="pestana.set('seguridad')"
+      [class]="pestana() === 'seguridad'
+        ? 'px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-vino text-perla cursor-pointer'
+        : 'px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-negro/70 hover:text-negro cursor-pointer'"
+    >
+      Seguridad de cuenta
+    </button>
+    <button
+      type="button"
+      (click)="pestana.set('tienda')"
+      [class]="pestana() === 'tienda'
+        ? 'px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-vino text-perla cursor-pointer'
+        : 'px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-negro/70 hover:text-negro cursor-pointer'"
+    >
+      Información de la tienda
+    </button>
+  </div>
+
+  <!-- PESTAÑA 1: SEGURIDAD DE CUENTA -->
+  @if (pestana() === 'seguridad') {
+    @if (sesion(); as admin) {
+      <div class="card-kpi p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-vino text-perla font-display text-2xl flex items-center justify-center shrink-0">
+            {{ admin.usuario.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-negro/50">Administradora</p>
+            <p class="text-lg font-extrabold text-negro">{{ admin.usuario }}</p>
+            <p class="text-xs text-negro/55">
+              Cuenta activa desde {{ admin.fechaCreacion | date: 'dd/MM/yyyy' }}
+            </p>
+          </div>
         </div>
-        <div>
-          <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-negro/50">Administradora</p>
-          <p class="text-lg font-extrabold text-negro">{{ admin.usuario }}</p>
-          <p class="text-xs text-negro/55">
-            Cuenta activa desde {{ admin.fechaCreacion | date: 'dd/MM/yyyy' }}
-          </p>
+
+        <div class="flex flex-wrap gap-2">
+          <span class="badge-sello badge-exito">Sesión segura activa</span>
+          <span class="badge-sello badge-neutro">Bloqueo activo tras 5 intentos</span>
         </div>
       </div>
+    }
 
-      <div class="flex flex-wrap gap-2">
-        <span class="badge-sello badge-exito">
-          Sesión segura activa
-        </span>
-        <span class="badge-sello badge-neutro">
-          Bloqueo activo tras 5 intentos
-        </span>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Cambiar usuario -->
+      <div class="card-vitrina overflow-hidden">
+        <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
+          <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
+            Cambiar usuario de acceso
+          </h2>
+          <p class="text-xs text-negro/55 mt-1">
+            Usa un nombre de usuario distinto a "admin" para reforzar la seguridad del login.
+          </p>
+        </div>
+
+        <form [formGroup]="formUsuario" (ngSubmit)="guardarUsuario()" class="p-5 space-y-4">
+          @if (exitoUsuario()) {
+            <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
+              {{ exitoUsuario() }}
+            </div>
+          }
+          @if (errorUsuario()) {
+            <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
+              {{ errorUsuario() }}
+            </div>
+          }
+
+          <div>
+            <label for="nuevoUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Nuevo usuario *
+            </label>
+            <input
+              id="nuevoUsuario"
+              type="text"
+              formControlName="nuevoUsuario"
+              autocomplete="username"
+              placeholder="Ej: mariana.store"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+            @if (formUsuario.get('nuevoUsuario')?.invalid && formUsuario.get('nuevoUsuario')?.touched) {
+              <p class="text-xs text-peligro mt-1">
+                Mínimo 3 caracteres, sin espacios (letras, números, punto o guiones).
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="claveParaUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Contraseña actual (para confirmar) *
+            </label>
+            <input
+              id="claveParaUsuario"
+              type="password"
+              formControlName="contrasenaActual"
+              autocomplete="current-password"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="guardandoUsuario()"
+            class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {{ guardandoUsuario() ? 'Actualizando...' : 'Guardar nuevo usuario' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Cambiar contraseña -->
+      <div class="card-vitrina overflow-hidden">
+        <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
+          <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
+            Cambiar contraseña
+          </h2>
+          <p class="text-xs text-negro/55 mt-1">
+            Mínimo 8 caracteres incluyendo una mayúscula, una minúscula y un número.
+          </p>
+        </div>
+
+        <form [formGroup]="formContrasena" (ngSubmit)="guardarContrasena()" class="p-5 space-y-4">
+          @if (exitoContrasena()) {
+            <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
+              {{ exitoContrasena() }}
+            </div>
+          }
+          @if (errorContrasena()) {
+            <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
+              {{ errorContrasena() }}
+            </div>
+          }
+
+          <div>
+            <label for="claveActual" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Contraseña actual *
+            </label>
+            <input
+              id="claveActual"
+              type="password"
+              formControlName="contrasenaActual"
+              autocomplete="current-password"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+
+          <div>
+            <label for="claveNueva" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Nueva contraseña *
+            </label>
+            <input
+              id="claveNueva"
+              type="password"
+              formControlName="nuevaContrasena"
+              (input)="onInputNuevaContrasena($event)"
+              autocomplete="new-password"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+            @if (fortaleza().nivel > 0) {
+              <div class="mt-2 flex items-center gap-2">
+                <div class="flex-1 h-1.5 rounded-full bg-black/8 overflow-hidden flex gap-1">
+                  @for (n of [1, 2, 3, 4]; track n) {
+                    <div
+                      class="flex-1 rounded-full transition-colors"
+                      [class]="n <= fortaleza().nivel ? fortaleza().clase : 'bg-transparent'"
+                    ></div>
+                  }
+                </div>
+                <span class="text-[11px] font-semibold text-negro/65">{{ fortaleza().texto }}</span>
+              </div>
+            }
+          </div>
+
+          <div>
+            <label for="claveConfirmar" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Confirmar nueva contraseña *
+            </label>
+            <input
+              id="claveConfirmar"
+              type="password"
+              formControlName="confirmarContrasena"
+              autocomplete="new-password"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="guardandoContrasena()"
+            class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {{ guardandoContrasena() ? 'Actualizando...' : 'Actualizar contraseña' }}
+          </button>
+        </form>
       </div>
     </div>
   }
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Bloque 1: Cambiar usuario de login -->
+  <!-- PESTAÑA 2: INFORMACIÓN PÚBLICA DE LA TIENDA -->
+  @if (pestana() === 'tienda') {
     <div class="card-vitrina overflow-hidden">
       <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
         <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
-          Cambiar usuario de acceso
+          Datos visibles en el sitio público (/tienda y pie de página)
         </h2>
         <p class="text-xs text-negro/55 mt-1">
-          Usa un nombre de usuario distinto a "admin" para reforzar la seguridad del login.
+          Actualiza dirección, horarios, mapa de Google Maps y redes sociales sin tocar código.
         </p>
       </div>
 
-      <form [formGroup]="formUsuario" (ngSubmit)="guardarUsuario()" class="p-5 space-y-4">
-        @if (exitoUsuario()) {
+      <form [formGroup]="formTienda" (ngSubmit)="guardarInfoTienda()" class="p-5 space-y-5">
+        @if (exitoTienda()) {
           <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
-            {{ exitoUsuario() }}
+            {{ exitoTienda() }}
           </div>
         }
-        @if (errorUsuario()) {
+        @if (errorTienda()) {
           <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
-            {{ errorUsuario() }}
+            {{ errorTienda() }}
           </div>
         }
 
         <div>
-          <label for="nuevoUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
-            Nuevo usuario *
+          <label for="tiendaDesc" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Descripción de la tienda *
+          </label>
+          <textarea
+            id="tiendaDesc"
+            rows="2"
+            formControlName="descripcion"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="tiendaDir" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Dirección *
+            </label>
+            <input
+              id="tiendaDir"
+              type="text"
+              formControlName="direccion"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+          <div>
+            <label for="tiendaCiudad" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Ciudad / País *
+            </label>
+            <input
+              id="tiendaCiudad"
+              type="text"
+              formControlName="ciudad"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+          <div>
+            <label for="tiendaRef" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Referencia (opcional)
+            </label>
+            <input
+              id="tiendaRef"
+              type="text"
+              formControlName="referencia"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="tiendaHorarios" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Horarios de atención *
+            </label>
+            <input
+              id="tiendaHorarios"
+              type="text"
+              formControlName="horarios"
+              placeholder="Ej: Lunes a Sábado de 12:30 a 20:00"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+          <div>
+            <label for="tiendaMaps" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+              Enlace de Google Maps (https://...)
+            </label>
+            <input
+              id="tiendaMaps"
+              type="url"
+              formControlName="googleMapsUrl"
+              placeholder="https://maps.app.goo.gl/..."
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="tiendaMapsEmbed" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Mapa embebido de Google Maps (opcional)
           </label>
           <input
-            id="nuevoUsuario"
+            id="tiendaMapsEmbed"
             type="text"
-            formControlName="nuevoUsuario"
-            autocomplete="username"
-            placeholder="Ej: mariana.store"
+            formControlName="googleMapsEmbedUrl"
+            (input)="onPegarMapaEmbed($event)"
+            placeholder="Pega aquí la URL https://www.google.com/maps/embed?... o el código <iframe> completo"
             class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
           />
-          @if (formUsuario.get('nuevoUsuario')?.invalid && formUsuario.get('nuevoUsuario')?.touched) {
-            <p class="text-xs text-peligro mt-1">
-              Mínimo 3 caracteres, sin espacios (letras, números, punto o guiones).
-            </p>
-          }
+          <p class="text-[11px] text-negro/50 mt-1">
+            En Google Maps → Compartir → Incorporar un mapa → copiar HTML y pegar aquí (extraemos el enlace automáticamente).
+          </p>
         </div>
 
-        <div>
-          <label for="claveParaUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
-            Contraseña actual (para confirmar) *
-          </label>
-          <input
-            id="claveParaUsuario"
-            type="password"
-            formControlName="contrasenaActual"
-            autocomplete="current-password"
-            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
-          />
-        </div>
-
-        <button
-          type="submit"
-          [disabled]="guardandoUsuario()"
-          class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-        >
-          {{ guardandoUsuario() ? 'Actualizando...' : 'Guardar nuevo usuario' }}
-        </button>
-      </form>
-    </div>
-
-    <!-- Bloque 2: Cambiar contraseña -->
-    <div class="card-vitrina overflow-hidden">
-      <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
-        <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
-          Cambiar contraseña
-        </h2>
-        <p class="text-xs text-negro/55 mt-1">
-          Mínimo 8 caracteres incluyendo una mayúscula, una minúscula y un número.
-        </p>
-      </div>
-
-      <form [formGroup]="formContrasena" (ngSubmit)="guardarContrasena()" class="p-5 space-y-4">
-        @if (exitoContrasena()) {
-          <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
-            {{ exitoContrasena() }}
-          </div>
-        }
-        @if (errorContrasena()) {
-          <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
-            {{ errorContrasena() }}
-          </div>
-        }
-
-        <div>
-          <label for="claveActual" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
-            Contraseña actual *
-          </label>
-          <input
-            id="claveActual"
-            type="password"
-            formControlName="contrasenaActual"
-            autocomplete="current-password"
-            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
-          />
-        </div>
-
-        <div>
-          <label for="claveNueva" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
-            Nueva contraseña *
-          </label>
-          <input
-            id="claveNueva"
-            type="password"
-            formControlName="nuevaContrasena"
-            (input)="onInputNuevaContrasena($event)"
-            autocomplete="new-password"
-            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
-          />
-          @if (fortaleza().nivel > 0) {
-            <div class="mt-2 flex items-center gap-2">
-              <div class="flex-1 h-1.5 rounded-full bg-black/8 overflow-hidden flex gap-1">
-                @for (n of [1, 2, 3, 4]; track n) {
-                  <div
-                    class="flex-1 rounded-full transition-colors"
-                    [class]="n <= fortaleza().nivel ? fortaleza().clase : 'bg-transparent'"
-                  ></div>
-                }
-              </div>
-              <span class="text-[11px] font-semibold text-negro/65">{{ fortaleza().texto }}</span>
+        <div class="pt-2 border-t border-black/8 space-y-3">
+          <p class="text-xs font-bold uppercase tracking-wider text-vino">Redes sociales</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="igUrl" class="block text-xs font-semibold text-negro/70 mb-1">Instagram (URL)</label>
+              <input id="igUrl" type="url" formControlName="instagramUrl" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
             </div>
-          }
-          @if (formContrasena.get('nuevaContrasena')?.invalid && formContrasena.get('nuevaContrasena')?.touched) {
-            <p class="text-xs text-peligro mt-1">
-              Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
-            </p>
-          }
+            <div>
+              <label for="igUser" class="block text-xs font-semibold text-negro/70 mb-1">Instagram (&#64;usuario visible)</label>
+              <input id="igUser" type="text" formControlName="instagramUsuario" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label for="ttUrl" class="block text-xs font-semibold text-negro/70 mb-1">TikTok (URL)</label>
+              <input id="ttUrl" type="url" formControlName="tiktokUrl" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label for="ttUser" class="block text-xs font-semibold text-negro/70 mb-1">TikTok (&#64;usuario visible)</label>
+              <input id="ttUser" type="text" formControlName="tiktokUsuario" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label for="fbUrl" class="block text-xs font-semibold text-negro/70 mb-1">Facebook (URL)</label>
+              <input id="fbUrl" type="url" formControlName="facebookUrl" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
+            </div>
+            <div>
+              <label for="fbUser" class="block text-xs font-semibold text-negro/70 mb-1">Facebook (nombre visible)</label>
+              <input id="fbUser" type="text" formControlName="facebookUsuario" class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm" />
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label for="claveConfirmar" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
-            Confirmar nueva contraseña *
-          </label>
-          <input
-            id="claveConfirmar"
-            type="password"
-            formControlName="confirmarContrasena"
-            autocomplete="new-password"
-            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
-          />
+        <div class="flex justify-end pt-2">
+          <button
+            type="submit"
+            [disabled]="guardandoTienda()"
+            class="px-6 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {{ guardandoTienda() ? 'Guardando...' : 'Guardar información de la tienda' }}
+          </button>
         </div>
-
-        <button
-          type="submit"
-          [disabled]="guardandoContrasena()"
-          class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-        >
-          {{ guardandoContrasena() ? 'Actualizando...' : 'Actualizar contraseña' }}
-        </button>
       </form>
     </div>
-  </div>
+  }
 </div>

@@ -535,3 +535,22 @@ export interface ReporteInteligenciaStock {
         sugerenciaReposicion: number;
     }[];
 }
+
+export interface InfoTienda {
+    descripcion: string;
+    direccion: string;
+    referencia: string;
+    ciudad: string;
+    horarios: string;
+    googleMapsUrl: string;
+    googleMapsEmbedUrl: string;
+    instagramUrl: string;
+    instagramUsuario: string;
+    tiktokUrl: string;
+    tiktokUsuario: string;
+    facebookUrl: string;
+    facebookUsuario: string;
+    whatsappNumero: string | null;
+}
+
+export type ActualizarInfoTiendaPayload = Omit<InfoTienda, 'whatsappNumero'>;

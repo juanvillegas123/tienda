@@ -1,7 +1,13 @@
-import { Controller, Get, Patch, Body, UsePipes } from '@nestjs/common';
+import { Controller, Get, Patch, Body } from '@nestjs/common';
 import { ConfiguracionService } from './configuracion.service';
-import { actualizarWhatsappSchema } from './configuracion.schemas';
-import type { ActualizarWhatsappDto } from './configuracion.schemas';
+import {
+    actualizarWhatsappSchema,
+    actualizarInfoTiendaSchema,
+} from './configuracion.schemas';
+import type {
+    ActualizarWhatsappDto,
+    ActualizarInfoTiendaDto,
+} from './configuracion.schemas';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { Public } from '../auth/public.decorator';
 
@@ -16,8 +22,22 @@ export class ConfiguracionController {
     }
 
     @Patch('whatsapp')
-    @UsePipes(new ZodValidationPipe(actualizarWhatsappSchema))
-    actualizarWhatsapp(@Body() dto: ActualizarWhatsappDto) {
+    actualizarWhatsapp(
+        @Body(new ZodValidationPipe(actualizarWhatsappSchema)) dto: ActualizarWhatsappDto,
+    ) {
         return this.configuracionService.actualizarWhatsapp(dto.whatsappNumero);
+    }
+
+    @Public()
+    @Get('tienda')
+    obtenerInfoTienda() {
+        return this.configuracionService.obtenerInfoTienda();
+    }
+
+    @Patch('tienda')
+    actualizarInfoTienda(
+        @Body(new ZodValidationPipe(actualizarInfoTiendaSchema)) dto: ActualizarInfoTiendaDto,
+    ) {
+        return this.configuracionService.actualizarInfoTienda(dto);
     }
 }

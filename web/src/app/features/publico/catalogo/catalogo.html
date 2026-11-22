@@ -343,4 +343,36 @@
       }
     </div>
   }
+
+  <!-- Franja de confianza: tienda física y redes -->
+  <section class="mt-10 card-vitrina p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+    <div class="space-y-1.5">
+      <span class="badge-sello badge-vino">Tienda física · {{ infoTienda().ciudad }}</span>
+      <h2 class="font-display text-2xl sm:text-3xl uppercase tracking-wide text-negro leading-none pt-1">
+        {{ infoTienda().direccion }}
+      </h2>
+      <p class="text-xs sm:text-sm text-negro/65">
+        {{ infoTienda().horarios }} · Pago por QR o Efectivo
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+      @if (infoTienda().googleMapsUrl) {
+        <a
+          [href]="infoTienda().googleMapsUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="px-4 py-2 rounded-xl border border-black/15 bg-fondo hover:bg-perla text-negro text-xs font-semibold transition-colors"
+        >
+          Ver en Google Maps
+        </a>
+      }
+      <a
+        routerLink="/tienda"
+        class="px-4 py-2 rounded-xl bg-vino hover:bg-carmesi text-white text-xs font-semibold transition-colors"
+      >
+        Conoce la tienda y redes →
+      </a>
+    </div>
+  </section>
 </div>

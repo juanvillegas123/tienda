@@ -5,6 +5,7 @@ import { debounceTime, switchMap, tap, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
+import { ConfiguracionService } from '../../../core/configuracion.service';
 import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
@@ -27,7 +28,9 @@ export class CatalogoComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly catalogoService = inject(CatalogoService);
+    private readonly configService = inject(ConfiguracionService);
     readonly carrito = inject(CarritoService);
+    readonly infoTienda = this.configService.infoTienda;
     private readonly destroyRef = inject(DestroyRef);
 
     private readonly busquedaTexto$ = new Subject<void>();

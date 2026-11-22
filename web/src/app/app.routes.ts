@@ -113,6 +113,12 @@ export const routes: Routes = [
                 title: 'Detalle de producto — Onii-Chan Store',
             },
             {
+                path: 'tienda',
+                loadComponent: () =>
+                    import('./features/publico/tienda/tienda').then((m) => m.TiendaPublicaComponent),
+                title: 'La Tienda — Onii-Chan Store',
+            },
+            {
                 path: 'carrito',
                 loadComponent: () =>
                     import('./features/publico/carrito/carrito').then((m) => m.CarritoComponent),
