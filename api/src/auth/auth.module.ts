@@ -7,10 +7,16 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 @Module({
     imports: [
         JwtModule.registerAsync({
-            useFactory: () => ({
-                secret: process.env.JWT_SECRET,
-                signOptions: { expiresIn: '10h' },
-            }),
+            useFactory: () => {
+                const secret = process.env.JWT_SECRET?.trim();
+                if (process.env.NODE_ENV === 'production' && !secret) {
+                    throw new Error('JWT_SECRET es obligatorio en producción.');
+                }
+                return {
+                    secret: secret || 'dev-jwt-secret',
+                    signOptions: { expiresIn: '10h' },
+                };
+            },
         }),
     ],
     controllers: [AuthController],

@@ -1,11 +1,10 @@
-import { Component, inject, signal, computed, effect, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, merge, of } from 'rxjs';
 import { debounceTime, switchMap, tap, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
-import { ConfiguracionService } from '../../../core/configuracion.service';
 import { SeoService } from '../../../core/seo.service';
 import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
@@ -32,10 +31,8 @@ export class CatalogoComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly catalogoService = inject(CatalogoService);
-    private readonly configService = inject(ConfiguracionService);
     private readonly seo = inject(SeoService);
     readonly carrito = inject(CarritoService);
-    readonly infoTienda = this.configService.infoTienda;
     private readonly destroyRef = inject(DestroyRef);
 
     private readonly busquedaTexto$ = new Subject<void>();
@@ -51,7 +48,6 @@ export class CatalogoComponent implements OnInit {
     readonly categorias = signal<Categoria[]>([]);
     readonly categoriasCargadas = signal(false);
     readonly productos = signal<ProductoPublico[]>([]);
-    readonly productosBase = signal<ProductoPublico[]>([]);
     readonly cargando = signal(true);
     readonly errorCarga = signal<string | null>(null);
     readonly categoriaNoEncontrada = signal(false);
@@ -59,8 +55,6 @@ export class CatalogoComponent implements OnInit {
     readonly filtroTexto = signal('');
     readonly filtroCategoriaId = signal<number | null>(null);
     readonly slugCategoriaRuta = signal<string | null>(null);
-    readonly logoHeroFallido = signal(false);
-    readonly esRutaInicio = signal(false);
 
     readonly categoriaActiva = computed(() => {
         const id = this.filtroCategoriaId();
@@ -68,28 +62,11 @@ export class CatalogoComponent implements OnInit {
         return this.categorias().find((c) => c.id === id) ?? null;
     });
 
-    readonly destacados = computed(() => {
-        const lista = this.productosBase().length > 0 ? this.productosBase() : this.productos();
-        return lista.filter((p) => !!p.imagenPrincipal).slice(0, 8);
-    });
-
     readonly aviso = signal<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
     private avisoTimer: ReturnType<typeof setTimeout> | null = null;
     private categoriaIdLegacyPendiente: number | null = null;
 
-    constructor() {
-        // Actualizar JSON-LD Store reactivamente cuando lleguen datos de la API en la ruta de inicio
-        effect(() => {
-            const info = this.infoTienda();
-            if (this.esRutaInicio()) {
-                this.seo.establecerJsonLdTienda(info);
-            }
-        });
-    }
-
     ngOnInit(): void {
-        const rutaActual = this.router.url.split(/[?#]/)[0] || '/';
-        this.esRutaInicio.set(rutaActual === '/');
 
         this.catalogoService.listarCategorias().subscribe({
             next: (cats) => {
@@ -172,14 +149,6 @@ export class CatalogoComponent implements OnInit {
             )
             .subscribe((prods) => {
                 this.productos.set(prods);
-                if (
-                    this.productosBase().length === 0 &&
-                    !this.filtroTexto().trim() &&
-                    this.filtroCategoriaId() === null &&
-                    prods.length > 0
-                ) {
-                    this.productosBase.set(prods);
-                }
                 this.cargando.set(false);
             });
     }
@@ -242,17 +211,6 @@ export class CatalogoComponent implements OnInit {
     }
 
     private actualizarSeoCatalogoGeneral(): void {
-        if (this.esRutaInicio()) {
-            this.seo.actualizar({
-                titulo: 'Figuras de colección y merchandising anime en Sucre | Onii-Chan Store',
-                descripcion:
-                    'Figuras de colección, poleras, peluches, pines y accesorios anime en Sucre, Bolivia. Calidad en figuras — Onii-Chan Store.',
-                rutaCanonica: '/',
-            });
-            this.seo.establecerJsonLdTienda(this.infoTienda());
-            return;
-        }
-
         this.seo.limpiarJsonLd(['product', 'faq']);
         this.seo.actualizar({
             titulo: 'Catálogo de figuras y merchandising anime en Sucre | Onii-Chan Store',
@@ -307,17 +265,6 @@ export class CatalogoComponent implements OnInit {
     queryParamsBusqueda(): Record<string, string> | null {
         const q = this.filtroTexto().trim().slice(0, MAX_LARGO_BUSQUEDA);
         return q.length > 0 ? { q } : null;
-    }
-
-    onErrorLogoHero(): void {
-        this.logoHeroFallido.set(true);
-    }
-
-    irACatalogo(): void {
-        const el = document.getElementById('catalogo-grilla');
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
     }
 
     actualizarBusqueda(event: Event): void {

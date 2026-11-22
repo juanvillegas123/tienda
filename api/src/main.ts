@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
@@ -9,11 +10,29 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyMultipart from '@fastify/multipart';
 
 async function bootstrap() {
-    const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+    const logger = new Logger('Bootstrap');
+    const esProduccion = process.env.NODE_ENV === 'production';
 
-    // Helmet — cabeceras de seguridad
+    if (esProduccion && !process.env.JWT_SECRET?.trim()) {
+        throw new Error('JWT_SECRET es obligatorio en producción.');
+    }
+
+    const app = await NestFactory.create<NestFastifyApplication>(
+        AppModule,
+        new FastifyAdapter({
+            trustProxy: esProduccion,
+        }),
+    );
+
+    // Helmet — cabeceras de seguridad estrictas para API JSON
     await app.register(fastifyHelmet, {
-        contentSecurityPolicy: false, // se ajustará en F8
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'none'"],
+                frameAncestors: ["'none'"],
+            },
+        },
+        referrerPolicy: { policy: 'no-referrer' },
         crossOriginResourcePolicy: { policy: 'cross-origin' },
     });
 
@@ -30,11 +49,16 @@ async function bootstrap() {
         origin: frontendUrl,
         credentials: true,
         methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'X-Requested-With'],
     });
 
     // Cookie — necesario para leer cookies en los guards
+    const cookieSecret = process.env.COOKIE_SECRET ?? process.env.JWT_SECRET;
+    if (esProduccion && !cookieSecret?.trim()) {
+        throw new Error('COOKIE_SECRET o JWT_SECRET es obligatorio en producción.');
+    }
     await app.register(fastifyCookie, {
-        secret: process.env.COOKIE_SECRET ?? process.env.JWT_SECRET ?? 'dev-secret',
+        secret: cookieSecret ?? 'dev-secret',
     });
 
     // Rate limit global moderado y más estricto en endpoints públicos de escritura (5.2)
@@ -71,7 +95,7 @@ async function bootstrap() {
 
     const port = parseInt(process.env.PORT ?? '3000', 10);
     await app.listen(port, '0.0.0.0');
-    console.log(`API escuchando en puerto ${port}`);
+    logger.log(`API escuchando en puerto ${port}`);
 }
 
 void bootstrap();
