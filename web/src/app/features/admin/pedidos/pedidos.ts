@@ -11,6 +11,7 @@ import {
     MetodoPago,
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { PdfService } from '../../../shared/pdf.service';
 
 type PestanaEstado = EstadoPedido | 'TODOS';
 
@@ -23,6 +24,7 @@ type PestanaEstado = EstadoPedido | 'TODOS';
 export class PedidosAdminComponent implements OnInit {
     private readonly pedidosService = inject(PedidosService);
     private readonly configuracionService = inject(ConfiguracionService);
+    private readonly pdfService = inject(PdfService);
     private readonly fb = inject(FormBuilder);
     private readonly destroyRef = inject(DestroyRef);
 
@@ -168,6 +170,12 @@ export class PedidosAdminComponent implements OnInit {
                 this.cargando.set(false);
             },
         });
+    }
+
+    descargarPdfPedido(): void {
+        const pedido = this.pedidoSeleccionado();
+        if (!pedido) return;
+        void this.pdfService.descargarFichaPedido(pedido);
     }
 
     verDetalle(pedido: PedidoResumen): void {

@@ -10,8 +10,10 @@ import {
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CajasService } from '../../../core/cajas.service';
+import { ReportesService } from '../../../core/reportes.service';
 import { CajaResumen } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { PdfService } from '../../../shared/pdf.service';
 
 function parsearBsACentavos(valor: unknown): number | null {
     if (valor === null || valor === undefined || String(valor).trim() === '') return null;
@@ -36,12 +38,15 @@ function validadorMonto(control: AbstractControl): ValidationErrors | null {
 })
 export class CajaAdminComponent implements OnInit {
     private readonly cajasService = inject(CajasService);
+    private readonly reportesService = inject(ReportesService);
+    private readonly pdfService = inject(PdfService);
     private readonly fb = inject(FormBuilder);
 
     readonly cajaActual = signal<CajaResumen | null>(null);
     readonly historial = signal<CajaResumen[]>([]);
     readonly cargando = signal(true);
     readonly procesando = signal(false);
+    readonly descargandoPdfId = signal<number | null>(null);
 
     readonly modalCerrarAbierto = signal(false);
     readonly efectivoContadoTexto = signal('');
@@ -160,6 +165,23 @@ export class CajaAdminComponent implements OnInit {
             error: (err: unknown) => {
                 this.procesando.set(false);
                 this.manejarError(err, 'No se pudo cerrar la caja.');
+            },
+        });
+    }
+
+    descargarPdfCierre(cajaId: number): void {
+        if (this.descargandoPdfId() !== null) return;
+        this.descargandoPdfId.set(cajaId);
+        this.mensajeError.set(null);
+        this.reportesService.detalleCierre(cajaId).subscribe({
+            next: (detalle) => {
+                void this.pdfService
+                    .descargarCierreCaja(detalle)
+                    .finally(() => this.descargandoPdfId.set(null));
+            },
+            error: (err: unknown) => {
+                this.descargandoPdfId.set(null);
+                this.manejarError(err, 'No se pudo generar el PDF del cierre de caja.');
             },
         });
     }

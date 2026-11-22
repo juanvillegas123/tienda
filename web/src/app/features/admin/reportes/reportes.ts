@@ -20,6 +20,7 @@ import {
     formatearFechaIsoADmy,
     centavosADecimalCsv,
 } from '../../../shared/csv.utils';
+import { PdfService } from '../../../shared/pdf.service';
 
 function formatearFechaInput(fecha: Date): string {
     const y = fecha.getFullYear();
@@ -38,6 +39,7 @@ const DIAS_SEMANA_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 })
 export class ReportesAdminComponent implements OnInit {
     private readonly reportesService = inject(ReportesService);
+    private readonly pdfService = inject(PdfService);
 
     readonly umbralStockBajo = POCAS_UNIDADES;
     readonly formatearFechaIsoADmy = formatearFechaIsoADmy;
@@ -311,5 +313,27 @@ export class ReportesAdminComponent implements OnInit {
                 ]),
             ],
         );
+    }
+
+    descargarReporteEjecutivoPdf(): void {
+        void this.pdfService.descargarReporteEjecutivo({
+            desde: this.desde(),
+            hasta: this.hasta(),
+            ventasPorCanal: this.ventasPorCanal(),
+            masVendidos: this.masVendidos(),
+            margen: this.margen(),
+        });
+    }
+
+    descargarCierrePdf(): void {
+        const det = this.detalleCierre();
+        if (!det) return;
+        void this.pdfService.descargarCierreCaja(det);
+    }
+
+    descargarReposicionPdf(): void {
+        const rep = this.inteligenciaStock();
+        if (!rep) return;
+        void this.pdfService.descargarReposicionInventario(rep);
     }
 }

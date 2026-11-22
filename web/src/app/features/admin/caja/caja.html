@@ -12,7 +12,7 @@
       @if (cajaActual()) {
         <a
           routerLink="/admin/pos"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl shadow-sm transition-colors"
+          class="inline-flex items-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-medium rounded-xl shadow-sm transition-colors"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <circle cx="9" cy="21" r="1" />
@@ -51,7 +51,7 @@
 
   @if (cargando()) {
     <div class="bg-white rounded-2xl border border-gray-200/80 py-14 text-center text-sm text-gray-400">
-      <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-indigo-600" fill="none" viewBox="0 0 24 24">
+      <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-vino" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
@@ -86,7 +86,7 @@
             inputmode="decimal"
             formControlName="montoInicialBs"
             placeholder="Ej: 200,00"
-            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
             [class.border-red-400]="campoAbrirInvalido()"
           />
           @if (campoAbrirInvalido()) {
@@ -97,7 +97,7 @@
         <button
           type="submit"
           [disabled]="procesando()"
-          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-sm transition-colors cursor-pointer disabled:opacity-50"
         >
           {{ procesando() ? 'Abriendo caja...' : 'Abrir caja del día' }}
         </button>
@@ -144,12 +144,12 @@
           </p>
         </div>
 
-        <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-200/70">
-          <p class="text-xs font-medium text-indigo-700">Ventas por QR</p>
-          <p class="text-lg font-bold text-indigo-900 mt-1 tabular-nums">
+        <div class="p-4 rounded-xl bg-perla/60 border border-vino/20">
+          <p class="text-xs font-medium text-vino">Ventas por QR</p>
+          <p class="text-lg font-bold text-vino mt-1 tabular-nums">
             {{ cajaActual()!.ventasQrCentavos | bs }}
           </p>
-          <p class="text-[11px] text-indigo-700/80 mt-0.5">No suma al efectivo físico</p>
+          <p class="text-[11px] text-vino/75 mt-0.5">No suma al efectivo físico</p>
         </div>
 
         <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/70">
@@ -198,6 +198,7 @@
               <th class="py-3 px-4 text-right">Esperado</th>
               <th class="py-3 px-4 text-right">Contado</th>
               <th class="py-3 px-4 text-right">Diferencia</th>
+              <th class="py-3 px-4 text-right">Acta</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -212,7 +213,7 @@
                 </td>
                 <td class="py-3 px-4 text-right tabular-nums">{{ c.montoInicialCentavos | bs }}</td>
                 <td class="py-3 px-4 text-right tabular-nums text-emerald-700">{{ c.ventasEfectivoCentavos | bs }}</td>
-                <td class="py-3 px-4 text-right tabular-nums text-indigo-700">{{ c.ventasQrCentavos | bs }}</td>
+                <td class="py-3 px-4 text-right tabular-nums text-vino">{{ c.ventasQrCentavos | bs }}</td>
                 <td class="py-3 px-4 text-right tabular-nums text-rose-600">{{ c.devolucionesCentavos | bs }}</td>
                 <td class="py-3 px-4 text-right tabular-nums font-medium">{{ c.efectivoEsperadoCentavos | bs }}</td>
                 <td class="py-3 px-4 text-right tabular-nums font-semibold text-gray-900">
@@ -232,6 +233,16 @@
                       -{{ (c.diferenciaCentavos! * -1) | bs }}
                     </span>
                   }
+                </td>
+                <td class="py-3 px-4 text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    (click)="descargarPdfCierre(c.id)"
+                    [disabled]="descargandoPdfId() === c.id"
+                    class="px-2.5 py-1 text-xs font-semibold text-vino bg-perla/70 hover:bg-perla rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {{ descargandoPdfId() === c.id ? 'Generando...' : 'PDF' }}
+                  </button>
                 </td>
               </tr>
             }
@@ -287,7 +298,7 @@
           [value]="efectivoContadoTexto()"
           (input)="actualizarEfectivoContado($event)"
           placeholder="Ej: 450,00"
-          class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
         />
       </div>
 

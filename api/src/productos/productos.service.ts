@@ -19,6 +19,7 @@ import {
     FiltroProductosPublicoDto,
 } from './productos.schemas';
 import { AlmacenamientoService } from '../almacenamiento/almacenamiento.service';
+import { centavosABs } from '../common/dinero';
 
 export interface ProductoPublicoDto {
     id: number;
@@ -385,13 +386,19 @@ export class ProductosService {
 
             // Registrar movimiento de inventario si hay stock inicial
             if (stockInicial > 0) {
+                const costoCentavosInicial = dto.costoCentavos ?? 0;
+                const notaInicial =
+                    costoCentavosInicial > 0
+                        ? `Stock inicial al alta del producto (Costo unit.: Bs. ${centavosABs(costoCentavosInicial).toFixed(2).replace('.', ',')})`
+                        : 'Stock inicial registrado al dar de alta el producto';
+
                 await tx.insert(movimientosInventario).values({
                     productoId: insertado.id,
                     proveedorId: dto.proveedorId ?? null,
                     tipo: 'ENTRADA',
                     cantidad: stockInicial,
                     tipoReferencia: 'STOCK_INICIAL',
-                    nota: 'Stock inicial registrado al dar de alta el producto',
+                    nota: notaInicial,
                 });
             }
 

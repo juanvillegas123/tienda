@@ -1,12 +1,26 @@
 <div class="p-6 max-w-7xl mx-auto space-y-6" [class.no-imprimir]="!!detalleCierre()">
   <!-- Cabecera -->
-  <div>
-    <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
-      Reportes
-    </h1>
-    <p class="text-sm text-negro/60 mt-1">
-      Evolución diaria, ventas por canal y categoría, márgenes, cierres de caja y salud de stock (devoluciones descontadas)
-    </p>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
+        Reportes
+      </h1>
+      <p class="text-sm text-negro/60 mt-1">
+        Evolución diaria, ventas por canal y categoría, márgenes, cierres de caja y salud de stock (devoluciones descontadas)
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="descargarReporteEjecutivoPdf()"
+      [disabled]="cargando()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-xs font-semibold rounded-xl shadow-xs cursor-pointer transition-colors disabled:opacity-50 shrink-0"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0-3-3m3 3 3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Descargar reporte PDF
+    </button>
   </div>
 
   <!-- Selector de rango de fechas -->
@@ -724,13 +738,22 @@
               <h2 class="text-base font-bold text-negro">Días de cobertura y sugerencia de reposición</h2>
               <p class="text-xs text-negro/55">Basado en ventas netas de los últimos 30 días (objetivo: cubrir 30 días de demanda)</p>
             </div>
-            <button
-              type="button"
-              (click)="exportarInteligenciaStockCsv()"
-              class="px-3 py-1.5 text-xs font-semibold border border-black/15 rounded-lg hover:border-carmesi text-negro cursor-pointer"
-            >
-              Exportar CSV
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="descargarReposicionPdf()"
+                class="px-3 py-1.5 text-xs font-semibold bg-vino hover:bg-carmesi text-white rounded-lg cursor-pointer transition-colors"
+              >
+                Descargar PDF
+              </button>
+              <button
+                type="button"
+                (click)="exportarInteligenciaStockCsv()"
+                class="px-3 py-1.5 text-xs font-semibold border border-black/15 rounded-lg hover:border-carmesi text-negro cursor-pointer"
+              >
+                Exportar CSV
+              </button>
+            </div>
           </div>
 
           @if (stockRep.cobertura.length === 0) {
@@ -872,10 +895,17 @@
         <div class="no-imprimir flex items-center gap-2">
           <button
             type="button"
-            (click)="imprimirCierre()"
-            class="px-3.5 py-1.5 bg-carmesi hover:bg-carmesi-claro text-perla text-xs font-semibold rounded-lg cursor-pointer"
+            (click)="descargarCierrePdf()"
+            class="px-3.5 py-1.5 bg-vino hover:bg-carmesi text-white text-xs font-semibold rounded-lg cursor-pointer transition-colors"
           >
-            Imprimir cierre
+            Descargar PDF
+          </button>
+          <button
+            type="button"
+            (click)="imprimirCierre()"
+            class="px-3.5 py-1.5 border border-black/15 hover:border-carmesi text-negro text-xs font-semibold rounded-lg cursor-pointer transition-colors"
+          >
+            Imprimir
           </button>
           <button
             type="button"

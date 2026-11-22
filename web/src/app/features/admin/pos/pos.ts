@@ -28,6 +28,7 @@ import {
     Venta,
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { PdfService } from '../../../shared/pdf.service';
 
 interface ItemTicketPos {
     productoId: number;
@@ -49,6 +50,7 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
     private readonly productosService = inject(ProductosService);
     private readonly ventasService = inject(VentasService);
     private readonly devolucionesService = inject(DevolucionesService);
+    private readonly pdfService = inject(PdfService);
     private readonly destroyRef = inject(DestroyRef);
 
     private readonly inputBusquedaRef = viewChild<ElementRef<HTMLInputElement>>('inputBusqueda');
@@ -85,6 +87,7 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
     // Mensajes
     readonly mensajeExito = signal<string | null>(null);
     readonly mensajeError = signal<string | null>(null);
+    readonly ultimaVentaRegistrada = signal<Venta | null>(null);
 
     readonly totalTicketCentavos = computed(() =>
         this.ticket().reduce((acc, item) => acc + item.precioCentavos * item.cantidad, 0),
@@ -345,6 +348,7 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
                     this.cobrando.set(false);
                     this.ticket.set([]);
                     this.textoBusqueda.set('');
+                    this.ultimaVentaRegistrada.set(venta);
                     this.mensajeExito.set(
                         `Venta #${venta.id} cobrada (${venta.metodoPago}) por Bs. ${(venta.totalCentavos / 100).toFixed(2).replace('.', ',')}.`,
                     );
@@ -358,6 +362,10 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
                     this.busqueda$.next(this.textoBusqueda());
                 },
             });
+    }
+
+    descargarPdfVenta(venta: Venta): void {
+        void this.pdfService.descargarNotaVenta(venta);
     }
 
     // --- Historial de ventas y devoluciones ---

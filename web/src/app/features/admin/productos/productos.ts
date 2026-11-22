@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Subject, merge, of } from 'rxjs';
 import { debounceTime, switchMap, tap, catchError } from 'rxjs/operators';
@@ -37,7 +38,7 @@ function validadorDinero(control: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-productos-admin',
     standalone: true,
-    imports: [ReactiveFormsModule, BsPipe],
+    imports: [ReactiveFormsModule, RouterLink, BsPipe],
     templateUrl: './productos.html',
 })
 export class ProductosAdminComponent implements OnInit {
@@ -98,6 +99,8 @@ export class ProductosAdminComponent implements OnInit {
     readonly modalAbierto = signal(false);
     readonly productoEnEdicion = signal<ProductoAdmin | null>(null);
     readonly productoParaBaja = signal<ProductoAdmin | null>(null);
+    readonly requiereTalla = signal(false);
+    readonly atajosTalla = ['S, M, L', 'S, M, L, XL', 'M, L, XL', 'Talla única'];
 
     readonly mensajeExito = signal<string | null>(null);
     readonly mensajeError = signal<string | null>(null);
@@ -387,11 +390,37 @@ export class ProductosAdminComponent implements OnInit {
         this.imagenesAdicionalesArray.removeAt(index);
     }
 
+    alternarRequiereTalla(): void {
+        const nuevoEstado = !this.requiereTalla();
+        this.requiereTalla.set(nuevoEstado);
+        const ctrl = this.form.get('notaTalla');
+        if (!nuevoEstado) {
+            ctrl?.setValue('');
+            ctrl?.clearValidators();
+            ctrl?.updateValueAndValidity();
+        } else {
+            ctrl?.setValidators([Validators.required, Validators.maxLength(120)]);
+            ctrl?.updateValueAndValidity();
+        }
+    }
+
+    aplicarAtajoTalla(texto: string): void {
+        this.requiereTalla.set(true);
+        const ctrl = this.form.get('notaTalla');
+        ctrl?.setValidators([Validators.required, Validators.maxLength(120)]);
+        ctrl?.setValue(texto);
+        ctrl?.markAsDirty();
+        ctrl?.updateValueAndValidity();
+    }
+
     abrirModalCrear(): void {
         this.productoEnEdicion.set(null);
         this.mensajeError.set(null);
         this.arrastrandoPrincipal.set(false);
         this.arrastrandoAdicional.set(false);
+        this.requiereTalla.set(false);
+        this.form.get('notaTalla')?.clearValidators();
+        this.form.get('notaTalla')?.updateValueAndValidity();
         this.form.reset({
             categoriaId: this.categoriasActivas().length > 0 ? this.categoriasActivas()[0].id : null,
             proveedorId: null,
@@ -415,6 +444,16 @@ export class ProductosAdminComponent implements OnInit {
         this.arrastrandoPrincipal.set(false);
         this.arrastrandoAdicional.set(false);
         this.imagenesAdicionalesArray.clear();
+
+        const tieneTalla = Boolean(prod.notaTalla && prod.notaTalla.trim().length > 0);
+        this.requiereTalla.set(tieneTalla);
+        const ctrlTalla = this.form.get('notaTalla');
+        if (tieneTalla) {
+            ctrlTalla?.setValidators([Validators.required, Validators.maxLength(120)]);
+        } else {
+            ctrlTalla?.clearValidators();
+        }
+        ctrlTalla?.updateValueAndValidity();
 
         this.form.reset({
             categoriaId: prod.categoriaId,
@@ -442,6 +481,7 @@ export class ProductosAdminComponent implements OnInit {
     cerrarModal(): void {
         this.modalAbierto.set(false);
         this.productoEnEdicion.set(null);
+        this.requiereTalla.set(false);
         this.mensajeError.set(null);
         this.form.reset();
         this.imagenesAdicionalesArray.clear();
@@ -463,6 +503,7 @@ export class ProductosAdminComponent implements OnInit {
         const precioCentavos = convertirBsACentavos(v.precioBs);
         const costoCentavos = convertirBsACentavos(v.costoBs);
         const stock = Math.trunc(Number(v.stock) || 0);
+        const notaTallaFinal = this.requiereTalla() ? v.notaTalla?.trim() || null : null;
 
         const imagenesFiltradas = (v.imagenesAdicionales as string[])
             .map((url) => (url ? url.trim() : ''))
@@ -479,9 +520,8 @@ export class ProductosAdminComponent implements OnInit {
                     descripcion: v.descripcion?.trim() || null,
                     precioCentavos,
                     costoCentavos,
-                    stock,
                     escala: v.escala?.trim() || null,
-                    notaTalla: v.notaTalla?.trim() || null,
+                    notaTalla: notaTallaFinal,
                     imagenPrincipal: v.imagenPrincipal?.trim() || null,
                     imagenesAdicionales: imagenesFiltradas,
                     activo: Boolean(v.activo),
@@ -509,7 +549,7 @@ export class ProductosAdminComponent implements OnInit {
                     costoCentavos,
                     stockInicial: stock,
                     escala: v.escala?.trim() || null,
-                    notaTalla: v.notaTalla?.trim() || null,
+                    notaTalla: notaTallaFinal,
                     imagenPrincipal: v.imagenPrincipal?.trim() || null,
                     imagenesAdicionales: imagenesFiltradas,
                 })
