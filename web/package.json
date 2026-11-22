@@ -6,7 +6,8 @@
     "start": "npm run ng -- serve",
     "build": "npm run ng -- build",
     "watch": "npm run ng -- build --watch --configuration development",
-    "test": "npm run ng -- test"
+    "test": "npm run ng -- test",
+    "sitemap": "node scripts/generar-sitemap.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

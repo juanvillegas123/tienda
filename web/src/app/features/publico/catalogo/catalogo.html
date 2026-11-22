@@ -1,98 +1,19 @@
-<!-- Hero compacto "Vitrina de coleccionista" -->
-<section class="bg-hero-vitrina text-perla border-b border-vino overflow-hidden">
-  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-5 sm:py-7">
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-5 min-w-0">
-      <!-- Izquierda: lema, frase corta y CTA -->
-      <div class="w-full sm:w-auto min-w-0 flex-1 text-center sm:text-left max-w-xl">
-        <div class="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-perla/75 mb-1">
-          <svg class="w-3 h-3 text-perla shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-          </svg>
-          <span class="truncate">Onii-Chan Store</span>
-        </div>
-        <h1 class="font-display text-4xl sm:text-5xl uppercase tracking-wider text-perla leading-none break-words">
-          Calidad en figuras
-        </h1>
-        <p class="text-xs sm:text-sm text-perla/80 mt-2">
-          Piezas seleccionadas de colección, poleras, peluches y accesorios anime para tu vitrina.
-        </p>
-        <div class="mt-4">
-          <button
-            type="button"
-            (click)="irACatalogo()"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-2 rounded-full bg-carmesi hover:bg-carmesi-claro text-perla text-xs sm:text-sm font-semibold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
-          >
-            <span>Ver catálogo</span>
-            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Derecha: logo oficial fijo en el hero (oculto en < 640px) -->
-      <div class="hidden sm:block shrink-0 min-w-0">
-        <div class="w-36 h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-white shadow-lg ring-2 ring-perla/25 flex items-center justify-center">
-          @if (!logoHeroFallido()) {
-            <img
-              src="img/logo-512.png"
-              alt="Logo de Onii-Chan Store"
-              width="160"
-              height="160"
-              decoding="async"
-              (error)="onErrorLogoHero()"
-              class="w-full h-full object-cover"
-            />
-          } @else {
-            <div class="w-full h-full bg-carmesi text-perla flex items-center justify-center font-display text-4xl tracking-wider">
-              OS
-            </div>
-          }
-        </div>
-      </div>
-    </div>
+@if (categoriaNoEncontrada()) {
+  <div class="mx-auto w-full max-w-5xl px-4 sm:px-6 py-12 sm:py-16">
+    <app-estado-vacio
+      tipo="error"
+      titulo="Página no encontrada"
+      descripcion="La categoría que buscas no está disponible o cambió de dirección."
+    >
+      <a
+        routerLink="/catalogo"
+        class="inline-flex items-center justify-center px-6 py-2.5 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2"
+      >
+        Ir al catálogo
+      </a>
+    </app-estado-vacio>
   </div>
-</section>
-
-<!-- Franja Destacados (solo si hay al menos 3 productos con imagen) -->
-@if (destacados().length >= 3) {
-  <section class="border-b border-black/8 bg-tarjeta/60 overflow-hidden">
-    <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-4">
-      <div class="flex items-center gap-2 mb-3">
-        <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-        </svg>
-        <h2 class="font-display text-xl uppercase tracking-wider text-negro leading-none">
-          Destacados
-        </h2>
-      </div>
-
-      <div class="flex items-start gap-4 overflow-x-auto scrollbar-oculto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-        @for (item of destacados(); track item.id) {
-          <a
-            [routerLink]="['/producto', rutaProducto(item.id, item.nombre)]"
-            class="group flex flex-col items-center w-20 sm:w-24 shrink-0 text-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-          >
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-tarjeta border border-[#00000014] shadow-2xs group-hover:border-carmesi transition-colors flex items-center justify-center">
-              <img
-                [src]="item.imagenPrincipal!"
-                [alt]="item.nombre"
-                loading="lazy"
-                decoding="async"
-                referrerpolicy="no-referrer"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-              />
-            </div>
-            <span class="mt-1.5 text-[11px] font-medium text-negro/85 group-hover:text-carmesi line-clamp-1 w-full">
-              {{ item.nombre }}
-            </span>
-          </a>
-        }
-      </div>
-    </div>
-  </section>
-}
-
+} @else {
 <!-- Barra sticky de búsqueda y chips -->
 <div id="catalogo-grilla" class="sticky top-[66px] z-30 bg-fondo/95 backdrop-blur-sm border-b border-black/8">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 space-y-2.5">
@@ -101,9 +22,9 @@
         <svg class="w-3.5 h-3.5 text-carmesi shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
         </svg>
-        <h2 class="font-display text-2xl uppercase tracking-wider text-negro leading-none">
-          Catálogo
-        </h2>
+        <h1 class="font-display text-2xl sm:text-3xl uppercase tracking-wider text-negro leading-none">
+          {{ categoriaActiva() ? categoriaActiva()!.nombre : 'Catálogo' }}
+        </h1>
         <span class="hidden md:inline text-xs text-negro/60 truncate">
           — Explora nuestra vitrina disponible
         </span>
@@ -141,31 +62,37 @@
       </div>
     </div>
 
-    <!-- Chips de categoría en cápsula -->
+    <!-- Chips de categoría como enlaces navegables para SEO -->
     @if (categorias().length > 0) {
-      <div class="flex items-center gap-2 overflow-x-auto scrollbar-oculto pb-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <button
-          type="button"
-          (click)="seleccionarCategoria(null)"
+      <nav aria-label="Categorías del catálogo" class="flex items-center gap-2 overflow-x-auto scrollbar-oculto pb-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <a
+          routerLink="/catalogo"
+          [queryParams]="queryParamsBusqueda()"
           [class]="filtroCategoriaId() === null
-            ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
-            : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
+            ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
+            : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
         >
           Todas
-        </button>
+        </a>
 
         @for (cat of categorias(); track cat.id) {
-          <button
-            type="button"
-            (click)="seleccionarCategoria(cat.id)"
+          <a
+            [routerLink]="['/catalogo', slugCategoria(cat.nombre)]"
+            [queryParams]="queryParamsBusqueda()"
             [class]="filtroCategoriaId() === cat.id
-              ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
-              : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
+              ? 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border bg-carmesi text-perla border-carmesi transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'
+              : 'shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border bg-tarjeta text-negro border-black/15 hover:border-carmesi hover:text-carmesi transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-1'"
           >
             {{ cat.nombre }}
-          </button>
+          </a>
         }
-      </div>
+      </nav>
+    }
+
+    @if (categoriaActiva(); as catActiva) {
+      <p class="text-xs sm:text-sm text-negro/70">
+        Explora nuestra colección de <strong>{{ catActiva.nombre }}</strong> disponibles en Onii-Chan Store, Sucre. Haz tu pedido en línea y coordina por WhatsApp.
+      </p>
     }
   </div>
 </div>
@@ -368,7 +295,8 @@
         </a>
       }
       <a
-        routerLink="/tienda"
+        routerLink="/"
+        fragment="cap-2"
         class="px-4 py-2 rounded-xl bg-vino hover:bg-carmesi text-white text-xs font-semibold transition-colors"
       >
         Conoce la tienda y redes →
@@ -376,3 +304,4 @@
     </div>
   </section>
 </div>
+}

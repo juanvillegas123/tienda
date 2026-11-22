@@ -34,10 +34,9 @@
       <!-- Navegación derecha -->
       <nav class="flex items-center gap-1.5 sm:gap-2.5" aria-label="Navegación principal">
         <a
-          routerLink="/"
+          routerLink="/catalogo"
           routerLinkActive
           #rlaCatalogo="routerLinkActive"
-          [routerLinkActiveOptions]="{ exact: true }"
           [class]="rlaCatalogo.isActive
             ? 'px-3 py-2 rounded-full text-xs sm:text-sm font-semibold text-perla bg-vino border border-carmesi/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'
             : 'px-3 py-2 rounded-full text-xs sm:text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'"
@@ -46,12 +45,9 @@
         </a>
 
         <a
-          routerLink="/tienda"
-          routerLinkActive
-          #rlaTienda="routerLinkActive"
-          [class]="rlaTienda.isActive
-            ? 'px-3 py-2 rounded-full text-xs sm:text-sm font-semibold text-perla bg-vino border border-carmesi/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'
-            : 'px-3 py-2 rounded-full text-xs sm:text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi'"
+          routerLink="/"
+          fragment="cap-2"
+          class="px-3 py-2 rounded-full text-xs sm:text-sm font-medium text-perla/85 hover:text-perla hover:bg-white/8 border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
         >
           La Tienda
         </a>
@@ -185,8 +181,8 @@
           }
         </div>
         <div class="flex items-center gap-4 pt-1 text-xs text-perla/65">
-          <a routerLink="/" class="hover:text-perla transition-colors">Catálogo</a>
-          <a routerLink="/tienda" class="hover:text-perla transition-colors">La Tienda</a>
+          <a routerLink="/catalogo" class="hover:text-perla transition-colors">Catálogo</a>
+          <a routerLink="/" fragment="cap-2" class="hover:text-perla transition-colors">La Tienda</a>
           <a routerLink="/carrito" class="hover:text-perla transition-colors">Carrito</a>
         </div>
       </div>

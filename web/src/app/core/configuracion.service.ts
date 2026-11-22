@@ -3,23 +3,24 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ActualizarInfoTiendaPayload, InfoTienda } from './modelos';
+import { NEGOCIO_CONFIG } from '../shared/negocio.config';
 
 export const INFO_TIENDA_RESPALDO: InfoTienda = {
-    descripcion:
-        'Tienda especializada en figuras de colección, poleras, peluches, pines y accesorios anime seleccionados para tu vitrina.',
-    direccion: 'Calle Loa #406',
-    referencia: 'Zona céntrica — Sucre',
-    ciudad: 'Sucre, Bolivia',
-    horarios: 'Lunes a Sábado de 12:30 a 20:00',
-    googleMapsUrl: 'https://maps.app.goo.gl/vD5J2k5nz5jXTPVb6',
-    googleMapsEmbedUrl: '',
-    instagramUrl: 'https://www.instagram.com/onii.chan_store.bo',
-    instagramUsuario: '@onii.chan_store.bo',
-    tiktokUrl: 'https://www.tiktok.com/@onii.chan.store',
-    tiktokUsuario: '@onii.chan.store',
-    facebookUrl: 'https://www.facebook.com/profile.php?id=61553764629367',
-    facebookUsuario: 'Onii-Chan Store',
-    whatsappNumero: environment.whatsappNumero,
+    descripcion: NEGOCIO_CONFIG.descripcion,
+    direccion: NEGOCIO_CONFIG.direccion,
+    referencia: NEGOCIO_CONFIG.referencia,
+    ciudad: NEGOCIO_CONFIG.ciudad,
+    horarios: NEGOCIO_CONFIG.horarios,
+    googleMapsUrl: NEGOCIO_CONFIG.googleMapsUrl,
+    googleMapsEmbedUrl: NEGOCIO_CONFIG.googleMapsEmbedUrl,
+    instagramUrl: NEGOCIO_CONFIG.redes.instagramUrl,
+    instagramUsuario: NEGOCIO_CONFIG.redes.instagramUsuario,
+    tiktokUrl: NEGOCIO_CONFIG.redes.tiktokUrl,
+    tiktokUsuario: NEGOCIO_CONFIG.redes.tiktokUsuario,
+    facebookUrl: NEGOCIO_CONFIG.redes.facebookUrl,
+    facebookUsuario: NEGOCIO_CONFIG.redes.facebookUsuario,
+    // Nunca enlazar a un número de respaldo falso en botones públicos de WhatsApp
+    whatsappNumero: null,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -51,7 +52,8 @@ export class ConfiguracionService {
             map((res) => ({
                 ...INFO_TIENDA_RESPALDO,
                 ...res,
-                whatsappNumero: res.whatsappNumero || environment.whatsappNumero,
+                // Solo usar el número real devuelto por la API
+                whatsappNumero: res.whatsappNumero?.trim() || null,
             })),
             tap((info) => {
                 this.infoTienda.set(info);
@@ -66,7 +68,7 @@ export class ConfiguracionService {
             map((res) => ({
                 ...INFO_TIENDA_RESPALDO,
                 ...res,
-                whatsappNumero: res.whatsappNumero || environment.whatsappNumero,
+                whatsappNumero: res.whatsappNumero?.trim() || null,
             })),
             tap((info) => {
                 this.infoTienda.set(info);

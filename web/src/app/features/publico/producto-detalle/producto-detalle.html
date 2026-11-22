@@ -2,7 +2,7 @@
   <!-- Volver al catálogo -->
   <div class="mb-5">
     <a
-      routerLink="/"
+      routerLink="/catalogo"
       class="inline-flex items-center gap-1.5 text-sm font-medium text-negro/70 hover:text-carmesi transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -31,7 +31,7 @@
         descripcion="Lo que buscas no está disponible o cambió de dirección."
       >
         <a
-          routerLink="/"
+          routerLink="/catalogo"
           class="inline-flex items-center justify-center px-6 py-2.5 bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi focus-visible:ring-offset-2"
         >
           Ir al catálogo
@@ -47,8 +47,9 @@
             @if (imagenSeleccionada()) {
               <img
                 [src]="imagenSeleccionada()"
-                [alt]="producto()!.nombre"
-                loading="lazy"
+                [alt]="'Producto ' + producto()!.nombre + ' de la colección ' + producto()!.categoriaNombre"
+                width="800"
+                height="1000"
                 decoding="async"
                 referrerpolicy="no-referrer"
                 class="w-full h-full object-contain"

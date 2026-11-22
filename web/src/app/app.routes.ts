@@ -1,24 +1,53 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
-export const routes: Routes = [
-    // Compatibilidad con ruta antigua /catalogo
-    { path: 'catalogo', pathMatch: 'full', redirectTo: '' },
+/**
+ * Compatibilidad F3.3: redirige /?categoria=ID o /?q=texto a /catalogo conservando parámetros.
+ */
+const redirigirFiltrosInicioGuard: CanActivateFn = (route) => {
+    const hasCategoria = route.queryParamMap.has('categoria');
+    const hasQ = route.queryParamMap.has('q');
+    if (hasCategoria || hasQ) {
+        return inject(Router).createUrlTree(['/catalogo'], {
+            queryParams: route.queryParams,
+        });
+    }
+    return true;
+};
 
-    // Login de administración
+const redirigirTiendaGuard: CanActivateFn = () =>
+    inject(Router).createUrlTree(['/'], { fragment: 'cap-2' });
+
+export const routes: Routes = [
+    // Login de administración (noindex)
     {
         path: 'admin/login',
         loadComponent: () =>
             import('./features/admin/login/login').then((m) => m.LoginComponent),
         title: 'Iniciar sesión',
+        data: {
+            seo: {
+                titulo: 'Iniciar sesión | Onii-Chan Store',
+                descripcion: 'Acceso privado al panel de administración.',
+                robots: 'noindex, nofollow',
+            },
+        },
     },
 
-    // Panel admin — protegido por guard
+    // Panel admin — protegido por guard (noindex en todas las rutas hijas)
     {
         path: 'admin',
         loadComponent: () =>
             import('./features/admin/layout/admin-layout').then((m) => m.AdminLayoutComponent),
         canActivate: [authGuard],
+        data: {
+            seo: {
+                titulo: 'Panel de administración | Onii-Chan Store',
+                descripcion: 'Panel privado de administración.',
+                robots: 'noindex, nofollow',
+            },
+        },
         children: [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             {
@@ -92,7 +121,7 @@ export const routes: Routes = [
         ],
     },
 
-    // Tienda pública (F3)
+    // Tienda pública
     {
         path: '',
         loadComponent: () =>
@@ -100,9 +129,39 @@ export const routes: Routes = [
         children: [
             {
                 path: '',
+                canActivate: [redirigirFiltrosInicioGuard],
+                // En Etapa B se reemplaza por InicioComponent (inicio por capítulos)
                 loadComponent: () =>
                     import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
-                title: 'Catálogo — Onii-Chan Store',
+                title: 'Figuras de colección y merchandising anime en Sucre | Onii-Chan Store',
+                data: {
+                    seo: {
+                        titulo: 'Figuras de colección y merchandising anime en Sucre | Onii-Chan Store',
+                        descripcion:
+                            'Descubre figuras de colección, poleras, peluches, pines y accesorios anime en Sucre, Bolivia. Calidad en figuras — Onii-Chan Store.',
+                        robots: 'index, follow',
+                    },
+                },
+            },
+            {
+                path: 'catalogo',
+                loadComponent: () =>
+                    import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
+                title: 'Catálogo de figuras y merchandising anime | Onii-Chan Store',
+                data: {
+                    seo: {
+                        titulo: 'Catálogo de figuras y merchandising anime en Sucre | Onii-Chan Store',
+                        descripcion:
+                            'Explora todo el catálogo disponible de figuras anime, poleras, peluches y accesorios en Onii-Chan Store, Sucre.',
+                        robots: 'index, follow',
+                    },
+                },
+            },
+            {
+                path: 'catalogo/:categoria',
+                loadComponent: () =>
+                    import('./features/publico/catalogo/catalogo').then((m) => m.CatalogoComponent),
+                title: 'Catálogo por categoría | Onii-Chan Store',
             },
             {
                 path: 'producto/:ruta',
@@ -110,19 +169,28 @@ export const routes: Routes = [
                     import('./features/publico/producto-detalle/producto-detalle').then(
                         (m) => m.ProductoDetalleComponent,
                     ),
-                title: 'Detalle de producto — Onii-Chan Store',
+                title: 'Detalle de producto | Onii-Chan Store',
             },
             {
                 path: 'tienda',
+                canActivate: [redirigirTiendaGuard],
                 loadComponent: () =>
-                    import('./features/publico/tienda/tienda').then((m) => m.TiendaPublicaComponent),
-                title: 'La Tienda — Onii-Chan Store',
+                    import('./features/publico/no-encontrado/no-encontrado').then(
+                        (m) => m.NoEncontradoComponent,
+                    ),
             },
             {
                 path: 'carrito',
                 loadComponent: () =>
                     import('./features/publico/carrito/carrito').then((m) => m.CarritoComponent),
-                title: 'Carrito — Onii-Chan Store',
+                title: 'Tu carrito | Onii-Chan Store',
+                data: {
+                    seo: {
+                        titulo: 'Tu carrito | Onii-Chan Store',
+                        descripcion: 'Revisa tu carrito y envía tu pedido por WhatsApp.',
+                        robots: 'noindex, nofollow',
+                    },
+                },
             },
             {
                 path: '**',
@@ -130,7 +198,14 @@ export const routes: Routes = [
                     import('./features/publico/no-encontrado/no-encontrado').then(
                         (m) => m.NoEncontradoComponent,
                     ),
-                title: 'Página no encontrada — Onii-Chan Store',
+                title: 'Página no encontrada | Onii-Chan Store',
+                data: {
+                    seo: {
+                        titulo: 'Página no encontrada | Onii-Chan Store',
+                        descripcion: 'La página que buscas no está disponible.',
+                        robots: 'noindex, nofollow',
+                    },
+                },
             },
         ],
     },

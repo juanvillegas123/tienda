@@ -3,9 +3,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
+import { SeoService } from '../../../core/seo.service';
 import { ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { EstadoVacioComponent } from '../../../shared/estado-vacio';
+import { generarSlug } from '../../../shared/slug';
 import {
     POCAS_UNIDADES,
     esNotaTallaVisible,
@@ -25,6 +27,7 @@ export class ProductoDetalleComponent implements OnInit {
     private readonly router = inject(Router);
     private readonly destroyRef = inject(DestroyRef);
     private readonly catalogoService = inject(CatalogoService);
+    private readonly seo = inject(SeoService);
     readonly carrito = inject(CarritoService);
 
     readonly pocasUnidades = POCAS_UNIDADES;
@@ -80,6 +83,7 @@ export class ProductoDetalleComponent implements OnInit {
                     this.producto.set(null);
                     this.noEncontrado.set(true);
                     this.cargando.set(false);
+                    this.aplicarSeoNoEncontrado();
                     return;
                 }
 
@@ -107,16 +111,51 @@ export class ProductoDetalleComponent implements OnInit {
                 this.cargando.set(false);
 
                 const canonica = rutaProducto(prod.id, prod.nombre);
+                const rutaCanonicaCompleta = `/producto/${canonica}`;
                 if (rutaActual !== canonica) {
                     void this.router.navigate(['/producto', canonica], { replaceUrl: true });
                 }
+
+                const precioTexto = (prod.precioCentavos / 100).toFixed(2).replace('.', ',');
+                const descLimpia = prod.descripcion?.trim()
+                    ? prod.descripcion.trim().slice(0, 155)
+                    : `${prod.nombre} (${prod.categoriaNombre}) disponible en Onii-Chan Store, Sucre.`;
+
+                this.seo.limpiarJsonLd(['store', 'faq']);
+                this.seo.actualizar({
+                    titulo: `${prod.nombre} – Bs. ${precioTexto} | Onii-Chan Store`,
+                    descripcion: descLimpia,
+                    rutaCanonica: rutaCanonicaCompleta,
+                    imagen: prod.imagenPrincipal || '/img/logo-512.png',
+                    tipoOg: 'product',
+                });
+                this.seo.establecerJsonLdProducto(prod, rutaCanonicaCompleta);
+                this.seo.establecerJsonLdMigas([
+                    { nombre: 'Inicio', ruta: '/' },
+                    { nombre: 'Catálogo', ruta: '/catalogo' },
+                    {
+                        nombre: prod.categoriaNombre,
+                        ruta: `/catalogo/${generarSlug(prod.categoriaNombre)}`,
+                    },
+                    { nombre: prod.nombre, ruta: rutaCanonicaCompleta },
+                ]);
             },
             error: () => {
                 this.ultimoIdCargado = null;
                 this.producto.set(null);
                 this.noEncontrado.set(true);
                 this.cargando.set(false);
+                this.aplicarSeoNoEncontrado();
             },
+        });
+    }
+
+    private aplicarSeoNoEncontrado(): void {
+        this.seo.limpiarJsonLd();
+        this.seo.actualizar({
+            titulo: 'Página no encontrada | Onii-Chan Store',
+            descripcion: 'El producto que buscas no está disponible.',
+            robots: 'noindex, nofollow',
         });
     }
 
