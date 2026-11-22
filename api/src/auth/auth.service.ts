@@ -1,6 +1,8 @@
 import {
     Injectable,
     UnauthorizedException,
+    BadRequestException,
+    ConflictException,
     InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -8,7 +10,7 @@ import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/db';
 import { administradora } from '../db/schema';
-import { LoginDto } from './auth.schemas';
+import { LoginDto, CambiarUsuarioDto, CambiarContrasenaDto } from './auth.schemas';
 
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
@@ -93,5 +95,80 @@ export class AuthService {
         }
 
         return admin;
+    }
+
+    async cambiarUsuario(
+        adminId: number,
+        dto: CambiarUsuarioDto,
+    ): Promise<{ usuario: string; token: string }> {
+        const [admin] = await db
+            .select()
+            .from(administradora)
+            .where(eq(administradora.id, adminId))
+            .limit(1);
+
+        if (!admin) {
+            throw new UnauthorizedException('Sesión inválida');
+        }
+
+        const claveValida = await argon2.verify(admin.contrasenaCifrada, dto.contrasenaActual);
+        if (!claveValida) {
+            throw new UnauthorizedException('La contraseña actual es incorrecta');
+        }
+
+        if (dto.nuevoUsuario === admin.usuario) {
+            throw new BadRequestException('El nuevo usuario es igual al actual');
+        }
+
+        const [existente] = await db
+            .select({ id: administradora.id })
+            .from(administradora)
+            .where(eq(administradora.usuario, dto.nuevoUsuario))
+            .limit(1);
+
+        if (existente && existente.id !== adminId) {
+            throw new ConflictException('Ese nombre de usuario ya está en uso');
+        }
+
+        await db
+            .update(administradora)
+            .set({ usuario: dto.nuevoUsuario })
+            .where(eq(administradora.id, adminId));
+
+        const token = this.jwtService.sign({ sub: admin.id, usuario: dto.nuevoUsuario });
+        return { usuario: dto.nuevoUsuario, token };
+    }
+
+    async cambiarContrasena(adminId: number, dto: CambiarContrasenaDto): Promise<void> {
+        const [admin] = await db
+            .select()
+            .from(administradora)
+            .where(eq(administradora.id, adminId))
+            .limit(1);
+
+        if (!admin) {
+            throw new UnauthorizedException('Sesión inválida');
+        }
+
+        const claveValida = await argon2.verify(admin.contrasenaCifrada, dto.contrasenaActual);
+        if (!claveValida) {
+            throw new UnauthorizedException('La contraseña actual es incorrecta');
+        }
+
+        const esMisma = await argon2.verify(admin.contrasenaCifrada, dto.nuevaContrasena);
+        if (esMisma) {
+            throw new BadRequestException(
+                'La nueva contraseña debe ser diferente a la actual',
+            );
+        }
+
+        const nuevaCifrada = await argon2.hash(dto.nuevaContrasena, {
+            type: argon2.argon2id,
+        });
+
+        await db
+            .update(administradora)
+            .set({ contrasenaCifrada: nuevaCifrada, intentosFallidos: 0, bloqueadaHasta: null })
+            .where(eq(administradora.id, adminId));
     }
 }

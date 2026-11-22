@@ -3,7 +3,7 @@ import {
     BadRequestException,
     NotFoundException,
 } from '@nestjs/common';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, asc, desc, like, sql } from 'drizzle-orm';
 import { db } from '../db/db';
 import { productos, proveedores, movimientosInventario } from '../db/schema';
 import {
@@ -153,9 +153,17 @@ export class InventarioService {
         if (filtro?.tipo) {
             condiciones.push(eq(movimientosInventario.tipo, filtro.tipo));
         }
+        if (filtro?.q && filtro.q.trim().length > 0) {
+            const termino = `%${filtro.q.trim().toLowerCase()}%`;
+            condiciones.push(like(sql`lower(${productos.nombre})`, termino));
+        }
 
         const whereClause = condiciones.length > 0 ? and(...condiciones) : undefined;
         const limite = filtro?.limite ?? 100;
+        const ordenamiento =
+            filtro?.orden === 'fecha-asc'
+                ? [asc(movimientosInventario.fecha), asc(movimientosInventario.id)]
+                : [desc(movimientosInventario.fecha), desc(movimientosInventario.id)];
 
         return db
             .select({
@@ -175,7 +183,7 @@ export class InventarioService {
             .innerJoin(productos, eq(movimientosInventario.productoId, productos.id))
             .leftJoin(proveedores, eq(movimientosInventario.proveedorId, proveedores.id))
             .where(whereClause)
-            .orderBy(desc(movimientosInventario.id))
+            .orderBy(...ordenamiento)
             .limit(limite);
     }
 

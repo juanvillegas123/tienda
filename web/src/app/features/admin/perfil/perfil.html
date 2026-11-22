@@ -1,0 +1,203 @@
+<div class="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
+  <!-- Cabecera unificada -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
+        Mi perfil y seguridad
+      </h1>
+      <p class="text-sm text-negro/60 mt-1">
+        Administra tus credenciales de acceso y revisa el estado de seguridad de la cuenta
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="cerrarSesion()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold border border-peligro-borde bg-peligro-suave text-peligro hover:bg-peligro hover:text-white rounded-xl transition-colors cursor-pointer self-start sm:self-auto"
+    >
+      Cerrar sesión ahora
+    </button>
+  </div>
+
+  <!-- Tarjeta resumen de cuenta -->
+  @if (sesion(); as admin) {
+    <div class="bg-tarjeta rounded-2xl border border-black/10 border-t-2 border-t-vino p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-vino text-perla font-display text-2xl flex items-center justify-center shrink-0">
+          {{ admin.usuario.charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-negro/50">Administradora</p>
+          <p class="text-lg font-bold text-negro">{{ admin.usuario }}</p>
+          <p class="text-xs text-negro/55">
+            Cuenta activa desde {{ admin.fechaCreacion | date: 'dd/MM/yyyy' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde/70">
+          <span class="w-1.5 h-1.5 rounded-full bg-exito"></span>
+          Sesión protegida (Cookie HttpOnly)
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-fondo text-negro/70 border border-black/10">
+          Bloqueo activo tras 5 intentos fallidos
+        </span>
+      </div>
+    </div>
+  }
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Bloque 1: Cambiar usuario de login -->
+    <div class="bg-tarjeta rounded-2xl border border-black/10 shadow-xs overflow-hidden">
+      <div class="px-5 py-4 border-b border-black/8 bg-fondo/60">
+        <h2 class="text-base font-bold text-negro">Cambiar usuario de acceso</h2>
+        <p class="text-xs text-negro/55 mt-0.5">
+          Usa un nombre de usuario distinto a "admin" para reforzar la seguridad del login.
+        </p>
+      </div>
+
+      <form [formGroup]="formUsuario" (ngSubmit)="guardarUsuario()" class="p-5 space-y-4">
+        @if (exitoUsuario()) {
+          <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
+            {{ exitoUsuario() }}
+          </div>
+        }
+        @if (errorUsuario()) {
+          <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
+            {{ errorUsuario() }}
+          </div>
+        }
+
+        <div>
+          <label for="nuevoUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Nuevo usuario *
+          </label>
+          <input
+            id="nuevoUsuario"
+            type="text"
+            formControlName="nuevoUsuario"
+            autocomplete="username"
+            placeholder="Ej: mariana.store"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          />
+          @if (formUsuario.get('nuevoUsuario')?.invalid && formUsuario.get('nuevoUsuario')?.touched) {
+            <p class="text-xs text-peligro mt-1">
+              Mínimo 3 caracteres, sin espacios (letras, números, punto o guiones).
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="claveParaUsuario" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Contraseña actual (para confirmar) *
+          </label>
+          <input
+            id="claveParaUsuario"
+            type="password"
+            formControlName="contrasenaActual"
+            autocomplete="current-password"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="guardandoUsuario()"
+          class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {{ guardandoUsuario() ? 'Actualizando...' : 'Guardar nuevo usuario' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Bloque 2: Cambiar contraseña -->
+    <div class="bg-tarjeta rounded-2xl border border-black/10 shadow-xs overflow-hidden">
+      <div class="px-5 py-4 border-b border-black/8 bg-fondo/60">
+        <h2 class="text-base font-bold text-negro">Cambiar contraseña</h2>
+        <p class="text-xs text-negro/55 mt-0.5">
+          Mínimo 8 caracteres incluyendo una mayúscula, una minúscula y un número.
+        </p>
+      </div>
+
+      <form [formGroup]="formContrasena" (ngSubmit)="guardarContrasena()" class="p-5 space-y-4">
+        @if (exitoContrasena()) {
+          <div class="p-3 rounded-xl bg-exito-suave border border-exito-borde text-exito text-xs font-medium">
+            {{ exitoContrasena() }}
+          </div>
+        }
+        @if (errorContrasena()) {
+          <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs font-medium">
+            {{ errorContrasena() }}
+          </div>
+        }
+
+        <div>
+          <label for="claveActual" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Contraseña actual *
+          </label>
+          <input
+            id="claveActual"
+            type="password"
+            formControlName="contrasenaActual"
+            autocomplete="current-password"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          />
+        </div>
+
+        <div>
+          <label for="claveNueva" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Nueva contraseña *
+          </label>
+          <input
+            id="claveNueva"
+            type="password"
+            formControlName="nuevaContrasena"
+            (input)="onInputNuevaContrasena($event)"
+            autocomplete="new-password"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          />
+          @if (fortaleza().nivel > 0) {
+            <div class="mt-2 flex items-center gap-2">
+              <div class="flex-1 h-1.5 rounded-full bg-black/8 overflow-hidden flex gap-1">
+                @for (n of [1, 2, 3, 4]; track n) {
+                  <div
+                    class="flex-1 rounded-full transition-colors"
+                    [class]="n <= fortaleza().nivel ? fortaleza().clase : 'bg-transparent'"
+                  ></div>
+                }
+              </div>
+              <span class="text-[11px] font-semibold text-negro/65">{{ fortaleza().texto }}</span>
+            </div>
+          }
+          @if (formContrasena.get('nuevaContrasena')?.invalid && formContrasena.get('nuevaContrasena')?.touched) {
+            <p class="text-xs text-peligro mt-1">
+              Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="claveConfirmar" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
+            Confirmar nueva contraseña *
+          </label>
+          <input
+            id="claveConfirmar"
+            type="password"
+            formControlName="confirmarContrasena"
+            autocomplete="new-password"
+            class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm text-negro focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="guardandoContrasena()"
+          class="w-full py-2.5 px-4 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {{ guardandoContrasena() ? 'Actualizando...' : 'Actualizar contraseña' }}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -20,7 +20,7 @@
       <h2 class="text-base font-bold text-negro mb-5">Iniciar sesión</h2>
 
       @if (error()) {
-        <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+        <div class="mb-4 p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-sm">
           {{ error() }}
         </div>
       }
@@ -40,7 +40,7 @@
             placeholder="Nombre de usuario"
           />
           @if (campoInvalido('usuario')) {
-            <p class="mt-1 text-xs text-red-600">El usuario es requerido</p>
+            <p class="mt-1 text-xs text-peligro">El usuario es requerido</p>
           }
         </div>
 
@@ -58,7 +58,7 @@
             placeholder="Contraseña"
           />
           @if (campoInvalido('contrasena')) {
-            <p class="mt-1 text-xs text-red-600">La contraseña es requerida</p>
+            <p class="mt-1 text-xs text-peligro">La contraseña es requerida</p>
           }
         </div>
 

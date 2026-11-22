@@ -25,6 +25,8 @@ export class InventarioService {
     listarMovimientos(filtro?: {
         productoId?: number;
         tipo?: TipoMovimientoInventario;
+        q?: string;
+        orden?: 'fecha-desc' | 'fecha-asc';
         limite?: number;
     }): Observable<MovimientoInventario[]> {
         let params = new HttpParams();
@@ -33,6 +35,12 @@ export class InventarioService {
         }
         if (filtro?.tipo) {
             params = params.set('tipo', filtro.tipo);
+        }
+        if (filtro?.q && filtro.q.trim().length > 0) {
+            params = params.set('q', filtro.q.trim());
+        }
+        if (filtro?.orden) {
+            params = params.set('orden', filtro.orden);
         }
         if (filtro?.limite) {
             params = params.set('limite', filtro.limite.toString());

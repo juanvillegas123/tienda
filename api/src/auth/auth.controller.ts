@@ -2,6 +2,7 @@ import {
     Controller,
     Post,
     Get,
+    Patch,
     Body,
     Res,
     HttpCode,
@@ -10,8 +11,8 @@ import {
 } from '@nestjs/common';
 import type { FastifyReply } from 'fastify';
 import { AuthService } from './auth.service';
-import { loginSchema } from './auth.schemas';
-import type { LoginDto } from './auth.schemas';
+import { loginSchema, cambiarUsuarioSchema, cambiarContrasenaSchema } from './auth.schemas';
+import type { LoginDto, CambiarUsuarioDto, CambiarContrasenaDto } from './auth.schemas';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { Public } from './public.decorator';
 import { SesionActual } from './sesion-actual.decorator';
@@ -53,5 +54,36 @@ export class AuthController {
     @Get('me')
     async me(@SesionActual() sesion: JwtPayload) {
         return this.authService.me(sesion.sub);
+    }
+
+    @Patch('perfil/usuario')
+    @HttpCode(HttpStatus.OK)
+    async cambiarUsuario(
+        @SesionActual() sesion: JwtPayload,
+        @Body(new ZodValidationPipe(cambiarUsuarioSchema)) dto: CambiarUsuarioDto,
+        @Res({ passthrough: true }) reply: FastifyReply,
+    ) {
+        const { usuario, token } = await this.authService.cambiarUsuario(sesion.sub, dto);
+
+        const isProduction = process.env.NODE_ENV === 'production';
+        void reply.setCookie(COOKIE_NOMBRE, token, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: (process.env.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') ?? 'lax',
+            path: '/',
+            maxAge: COOKIE_MAX_AGE,
+        });
+
+        return { usuario, mensaje: 'Usuario actualizado correctamente' };
+    }
+
+    @Patch('perfil/contrasena')
+    @HttpCode(HttpStatus.OK)
+    async cambiarContrasena(
+        @SesionActual() sesion: JwtPayload,
+        @Body(new ZodValidationPipe(cambiarContrasenaSchema)) dto: CambiarContrasenaDto,
+    ) {
+        await this.authService.cambiarContrasena(sesion.sub, dto);
+        return { mensaje: 'Contraseña actualizada correctamente' };
     }
 }

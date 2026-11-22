@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import type { jsPDF } from 'jspdf';
 import type { UserOptions } from 'jspdf-autotable';
 import {
@@ -11,6 +11,13 @@ import {
     Venta,
 } from '../core/modelos';
 import { formatearFechaIsoADmy } from './csv.utils';
+
+export interface VistaPreviaPdf {
+    blobUrl: string;
+    nombreArchivo: string;
+    titulo: string;
+    formatoDescripcion: string;
+}
 
 const COLOR_VINO: [number, number, number] = [86, 21, 48]; // #561530
 const COLOR_NEGRO: [number, number, number] = [12, 16, 20]; // #0c1014
@@ -52,6 +59,43 @@ function hoyDmy(): string {
 })
 export class PdfService {
     private logoDataUrlCache: string | null | undefined = undefined;
+    readonly vistaPrevia = signal<VistaPreviaPdf | null>(null);
+
+    cerrarVistaPrevia(): void {
+        const actual = this.vistaPrevia();
+        if (actual) {
+            URL.revokeObjectURL(actual.blobUrl);
+            this.vistaPrevia.set(null);
+        }
+    }
+
+    descargarVistaPrevia(): void {
+        const actual = this.vistaPrevia();
+        if (!actual) return;
+        const a = document.createElement('a');
+        a.href = actual.blobUrl;
+        a.download = actual.nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    private abrirVistaPrevia(
+        doc: jsPDF,
+        nombreArchivo: string,
+        titulo: string,
+        formatoDescripcion: string,
+    ): void {
+        this.cerrarVistaPrevia();
+        const blob = doc.output('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        this.vistaPrevia.set({
+            blobUrl,
+            nombreArchivo,
+            titulo,
+            formatoDescripcion,
+        });
+    }
 
     private async cargarDependencias(): Promise<{
         jsPDF: typeof jsPDF;
@@ -99,51 +143,69 @@ export class PdfService {
         subtitulo: string,
     ): Promise<number> {
         const ancho = doc.internal.pageSize.getWidth();
+        const compacto = ancho < 160;
+        const altoBarra = compacto ? 22 : 26;
+
         doc.setFillColor(...COLOR_VINO);
-        doc.rect(0, 0, ancho, 26, 'F');
+        doc.rect(0, 0, ancho, altoBarra, 'F');
 
         const logo = await this.obtenerLogoDataUrl();
-        let xTexto = 14;
+        const margenX = compacto ? 10 : 14;
+        let xTexto = margenX;
         if (logo) {
+            const radio = compacto ? 6.5 : 8;
             doc.setFillColor(255, 255, 255);
-            doc.circle(21, 13, 8, 'F');
-            doc.addImage(logo, 'PNG', 14, 6, 14, 14);
-            xTexto = 33;
+            doc.circle(margenX + radio, altoBarra / 2, radio, 'F');
+            const imgSize = compacto ? 11 : 14;
+            doc.addImage(
+                logo,
+                'PNG',
+                margenX + radio - imgSize / 2,
+                altoBarra / 2 - imgSize / 2,
+                imgSize,
+                imgSize,
+            );
+            xTexto = margenX + radio * 2 + 4;
         }
 
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.text('ONII-CHAN STORE', xTexto, 11.5);
+        doc.setFontSize(compacto ? 12 : 14);
+        doc.text('ONII-CHAN STORE', xTexto, compacto ? 9.5 : 11.5);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.text(titulo, xTexto, 17.5);
+        doc.setFontSize(compacto ? 8.5 : 9.5);
+        doc.text(titulo, xTexto, compacto ? 15.5 : 17.5);
 
-        doc.setFontSize(8.5);
-        doc.text(`Emitido: ${hoyDmy()}`, ancho - 14, 11.5, { align: 'right' });
-        doc.text(subtitulo, ancho - 14, 17.5, { align: 'right' });
+        doc.setFontSize(compacto ? 7.5 : 8.5);
+        doc.text(`Emitido: ${hoyDmy()}`, ancho - margenX, compacto ? 9.5 : 11.5, {
+            align: 'right',
+        });
+        doc.text(subtitulo, ancho - margenX, compacto ? 15.5 : 17.5, { align: 'right' });
 
         doc.setTextColor(...COLOR_NEGRO);
-        return 34;
+        return altoBarra + 7;
     }
 
     private dibujarPiePaginas(doc: jsPDF, notaPie: string): void {
         const totalPaginas = doc.getNumberOfPages();
         const ancho = doc.internal.pageSize.getWidth();
         const alto = doc.internal.pageSize.getHeight();
+        const margenX = ancho < 160 ? 10 : 14;
 
         for (let i = 1; i <= totalPaginas; i++) {
             doc.setPage(i);
             doc.setDrawColor(226, 232, 240);
-            doc.line(14, alto - 14, ancho - 14, alto - 14);
+            doc.line(margenX, alto - 13, ancho - margenX, alto - 13);
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setTextColor(...COLOR_GRIS);
-            doc.text(notaPie, 14, alto - 9);
-            doc.text(`Página ${i} de ${totalPaginas}`, ancho - 14, alto - 9, {
-                align: 'right',
-            });
+            doc.text(notaPie, margenX, alto - 8);
+            if (totalPaginas > 1) {
+                doc.text(`Página ${i} de ${totalPaginas}`, ancho - margenX, alto - 8, {
+                    align: 'right',
+                });
+            }
         }
     }
 
@@ -152,8 +214,17 @@ export class PdfService {
         return docConTabla.lastAutoTable?.finalY ?? fallback;
     }
 
+    private asegurarEspacio(doc: jsPDF, yActual: number, espacioNecesario: number): number {
+        const alto = doc.internal.pageSize.getHeight();
+        if (yActual + espacioNecesario > alto - 18) {
+            doc.addPage();
+            return 20;
+        }
+        return yActual;
+    }
+
     /**
-     * 1. Acta / Comprobante de Cierre de Caja
+     * 1. Acta / Comprobante de Cierre de Caja (A4 con saltos inteligentes + vista previa)
      */
     async descargarCierreCaja(detalle: DetalleCierreCaja): Promise<void> {
         const { jsPDF: JsPDF, autoTable } = await this.cargarDependencias();
@@ -211,7 +282,7 @@ export class PdfService {
             margin: { left: 14, right: 14 },
         });
 
-        y = this.ultimoY(doc, y + 40) + 8;
+        y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 40) + 8, 28);
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10.5);
@@ -240,7 +311,7 @@ export class PdfService {
             margin: { left: 14, right: 14 },
         });
 
-        y = this.ultimoY(doc, y + 20) + 8;
+        y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 20) + 8, 28);
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10.5);
@@ -268,11 +339,7 @@ export class PdfService {
             margin: { left: 14, right: 14 },
         });
 
-        y = this.ultimoY(doc, y + 20) + 18;
-        if (y > doc.internal.pageSize.getHeight() - 32) {
-            doc.addPage();
-            y = 30;
-        }
+        y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 20) + 18, 18);
         doc.setDrawColor(148, 163, 184);
         doc.line(14, y, 86, y);
         doc.setFont('helvetica', 'normal');
@@ -281,75 +348,153 @@ export class PdfService {
         doc.text('Firma Administradora / Propietaria', 14, y + 5);
 
         this.dibujarPiePaginas(doc, 'Onii-Chan Store — Acta de cierre de caja (control interno)');
-        doc.save(`onii-chan-cierre-caja-${caja.id}.pdf`);
+        this.abrirVistaPrevia(
+            doc,
+            `onii-chan-cierre-caja-${caja.id}.pdf`,
+            `Acta de Cierre de Caja #${caja.id}`,
+            'A4 vertical',
+        );
     }
 
     /**
-     * 2. Nota / Comprobante de Venta (no fiscal)
+     * 2. Recibo / Nota de Venta en formato Ticket Térmico 80 mm (altura adaptable al contenido)
      */
     async descargarNotaVenta(venta: Venta): Promise<void> {
-        const { jsPDF: JsPDF, autoTable } = await this.cargarDependencias();
-        const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const { jsPDF: JsPDF } = await this.cargarDependencias();
+        const ancho = 80;
+        const margen = 5;
+        const anchoUtil = ancho - margen * 2;
 
-        let y = await this.dibujarMembrete(
-            doc,
-            `Nota de Venta #${venta.id}`,
-            venta.canal === 'ONLINE' ? 'Canal Online' : 'Venta de Mostrador',
-        );
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.text(`Fecha y hora: ${fechaHora(venta.fecha)}`, 14, y);
-        doc.text(`Método de pago: ${venta.metodoPago}`, 115, y);
-        y += 6;
-        if (venta.cajaId) {
-            doc.text(`Caja asociada: #${venta.cajaId}`, 14, y);
-            y += 6;
+        // Calcular altura dinámica exacta según cantidad y largo de líneas de productos
+        const docTemp = new JsPDF({ orientation: 'portrait', unit: 'mm', format: [ancho, 200] });
+        docTemp.setFont('helvetica', 'normal');
+        docTemp.setFontSize(8);
+        let altoItems = 0;
+        for (const item of venta.items) {
+            const lineas = docTemp.splitTextToSize(item.nombreProducto, anchoUtil - 22) as string[];
+            altoItems += Math.max(1, lineas.length) * 3.8 + 3.5;
         }
+        const altoEstimado = Math.max(92, 58 + altoItems + (venta.cajaId ? 4 : 0) + 22);
 
-        autoTable(doc, {
-            startY: y,
-            head: [['Producto', 'Cant.', 'Precio unit.', 'Subtotal']],
-            body: venta.items.map((item) => [
-                item.nombreProducto,
-                String(item.cantidad),
-                bs(item.precioCentavos),
-                bs(item.precioCentavos * item.cantidad),
-            ]),
-            foot: [['', '', 'TOTAL', bs(venta.totalCentavos)]],
-            theme: 'grid',
-            headStyles: { fillColor: COLOR_VINO, textColor: 255, fontSize: 9 },
-            footStyles: {
-                fillColor: COLOR_PERLA,
-                textColor: COLOR_NEGRO,
-                fontStyle: 'bold',
-                fontSize: 10,
-            },
-            bodyStyles: { fontSize: 9, textColor: COLOR_NEGRO },
-            columnStyles: {
-                1: { halign: 'center' },
-                2: { halign: 'right' },
-                3: { halign: 'right', fontStyle: 'bold' },
-            },
-            margin: { left: 14, right: 14 },
+        const doc = new JsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [ancho, altoEstimado],
         });
 
-        y = this.ultimoY(doc, y + 30) + 10;
-        doc.setFont('helvetica', 'italic');
-        doc.setFontSize(8.5);
+        const centro = ancho / 2;
+        let y = 7;
+
+        const logo = await this.obtenerLogoDataUrl();
+        if (logo) {
+            doc.addImage(logo, 'PNG', centro - 6, y, 12, 12);
+            y += 15;
+        }
+
+        doc.setTextColor(...COLOR_NEGRO);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('ONII-CHAN STORE', centro, y, { align: 'center' });
+        y += 4.2;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
         doc.setTextColor(...COLOR_GRIS);
+        doc.text('COMPROBANTE DE VENTA', centro, y, { align: 'center' });
+        y += 4;
+
+        // Separador punteado
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineDashPattern([1, 1], 0);
+        doc.line(margen, y, ancho - margen, y);
+        y += 4.5;
+
+        // Metadatos
+        doc.setTextColor(...COLOR_NEGRO);
+        doc.setFontSize(7.8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Nota #${venta.id}`, margen, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(fechaHora(venta.fecha), ancho - margen, y, { align: 'right' });
+        y += 4;
+
         doc.text(
-            'Comprobante de control interno — Documento no válido para crédito fiscal.',
-            14,
+            `Canal: ${venta.canal === 'ONLINE' ? 'Online' : 'Mostrador'}`,
+            margen,
             y,
         );
+        doc.text(`Pago: ${venta.metodoPago}`, ancho - margen, y, { align: 'right' });
+        y += 4;
 
-        this.dibujarPiePaginas(doc, 'Onii-Chan Store — Gracias por tu compra');
-        doc.save(`onii-chan-venta-${venta.id}.pdf`);
+        if (venta.cajaId) {
+            doc.text(`Caja: #${venta.cajaId}`, margen, y);
+            y += 4;
+        }
+
+        doc.line(margen, y, ancho - margen, y);
+        y += 4;
+
+        // Encabezado de ítems
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.text('CANT / PRODUCTO', margen, y);
+        doc.text('SUBTOTAL', ancho - margen, y, { align: 'right' });
+        y += 3.5;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.8);
+        for (const item of venta.items) {
+            const titulo = `${item.cantidad}x ${item.nombreProducto}`;
+            const lineas = doc.splitTextToSize(titulo, anchoUtil - 20) as string[];
+            doc.text(lineas, margen, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(bs(item.precioCentavos * item.cantidad), ancho - margen, y, {
+                align: 'right',
+            });
+            y += lineas.length * 3.6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.8);
+            doc.setTextColor(...COLOR_GRIS);
+            doc.text(`  (${bs(item.precioCentavos)} c/u)`, margen, y);
+            doc.setTextColor(...COLOR_NEGRO);
+            doc.setFontSize(7.8);
+            y += 3.6;
+        }
+
+        doc.line(margen, y, ancho - margen, y);
+        y += 5;
+
+        // Total destacado
+        doc.setFillColor(...COLOR_PERLA);
+        doc.rect(margen, y - 4, anchoUtil, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...COLOR_VINO);
+        doc.text('TOTAL', margen + 2, y + 1.2);
+        doc.text(bs(venta.totalCentavos), ancho - margen - 2, y + 1.2, { align: 'right' });
+        y += 9;
+
+        // Pie del ticket
+        doc.setLineDashPattern([], 0);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...COLOR_GRIS);
+        doc.text('Gracias por tu compra en Onii-Chan Store', centro, y, { align: 'center' });
+        y += 3.6;
+        doc.text('Control interno — No válido para crédito fiscal', centro, y, {
+            align: 'center',
+        });
+
+        this.abrirVistaPrevia(
+            doc,
+            `onii-chan-ticket-venta-${venta.id}.pdf`,
+            `Recibo de Venta #${venta.id}`,
+            `Ticket térmico 80 mm × ${Math.round(altoEstimado)} mm`,
+        );
     }
 
     /**
-     * 3. Reporte Ejecutivo del Periodo
+     * 3. Reporte Ejecutivo del Periodo (A4 con saltos inteligentes + vista previa)
      */
     async descargarReporteEjecutivo(params: {
         desde: string;
@@ -413,7 +558,7 @@ export class PdfService {
                 },
                 margin: { left: 14, right: 14 },
             });
-            y = this.ultimoY(doc, y + 40) + 8;
+            y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 40) + 8, 30);
         }
 
         if (params.masVendidos && params.masVendidos.items.length > 0) {
@@ -443,7 +588,7 @@ export class PdfService {
                 },
                 margin: { left: 14, right: 14 },
             });
-            y = this.ultimoY(doc, y + 25) + 8;
+            y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 25) + 8, 30);
         }
 
         if (params.margen && params.margen.items.length > 0) {
@@ -479,36 +624,51 @@ export class PdfService {
         }
 
         this.dibujarPiePaginas(doc, `Onii-Chan Store — Reporte ejecutivo (${rangoTexto})`);
-        doc.save(`onii-chan-reporte-${params.desde}-a-${params.hasta}.pdf`);
+        this.abrirVistaPrevia(
+            doc,
+            `onii-chan-reporte-${params.desde}-a-${params.hasta}.pdf`,
+            `Reporte Ejecutivo (${rangoTexto})`,
+            'A4 vertical',
+        );
     }
 
     /**
-     * 4. Ficha de Pedido Online (para despacho / armado)
+     * 4. Ficha de Pedido Online (A5 compacto con altura adaptable al contenido + vista previa)
      */
     async descargarFichaPedido(pedido: PedidoDetalle): Promise<void> {
         const { jsPDF: JsPDF, autoTable } = await this.cargarDependencias();
-        const doc = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const ancho = 148; // A5 ancho
+        const altoDinamico = Math.max(125, Math.min(297, 82 + pedido.items.length * 11));
+        const doc = new JsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [ancho, altoDinamico],
+        });
 
         let y = await this.dibujarMembrete(
             doc,
-            `Ficha de Pedido Online ${pedido.codigo}`,
+            `Ficha de Pedido ${pedido.codigo}`,
             `Estado: ${pedido.estado}`,
         );
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9.5);
-        doc.text(`Cliente: ${pedido.nombreCliente || 'Sin nombre'}`, 14, y);
-        doc.text(`Teléfono: ${pedido.telefonoCliente || 'No registrado'}`, 115, y);
-        y += 6;
-        doc.text(`Fecha de pedido: ${fechaHora(pedido.fechaCreacion)}`, 14, y);
+        doc.setFontSize(8.8);
+        doc.text(`Cliente: ${pedido.nombreCliente || 'Sin nombre'}`, 10, y);
+        doc.text(`Tel: ${pedido.telefonoCliente || 'No registrado'}`, ancho - 10, y, {
+            align: 'right',
+        });
+        y += 5;
+        doc.text(`Fecha: ${fechaHora(pedido.fechaCreacion)}`, 10, y);
         if (pedido.fechaConfirmacion) {
-            doc.text(`Confirmado: ${fechaHora(pedido.fechaConfirmacion)}`, 115, y);
+            doc.text(`Confirmado: ${fechaHora(pedido.fechaConfirmacion)}`, ancho - 10, y, {
+                align: 'right',
+            });
         }
-        y += 7;
+        y += 6;
 
         autoTable(doc, {
             startY: y,
-            head: [['Producto', 'Cant.', 'Nota / Talla del cliente', 'Precio unit.', 'Subtotal']],
+            head: [['Producto', 'Cant.', 'Nota / Talla', 'P. Unit.', 'Subtotal']],
             body: pedido.items.map((item) => [
                 item.nombreProducto,
                 String(item.cantidad),
@@ -518,34 +678,39 @@ export class PdfService {
             ]),
             foot: [['', '', '', 'TOTAL', bs(pedido.totalCentavos)]],
             theme: 'grid',
-            headStyles: { fillColor: COLOR_VINO, textColor: 255, fontSize: 9 },
+            headStyles: { fillColor: COLOR_VINO, textColor: 255, fontSize: 8 },
             footStyles: {
                 fillColor: COLOR_PERLA,
                 textColor: COLOR_NEGRO,
                 fontStyle: 'bold',
-                fontSize: 10,
+                fontSize: 9,
             },
-            bodyStyles: { fontSize: 8.5, textColor: COLOR_NEGRO },
+            bodyStyles: { fontSize: 8, textColor: COLOR_NEGRO },
             columnStyles: {
                 1: { halign: 'center' },
                 3: { halign: 'right' },
                 4: { halign: 'right', fontStyle: 'bold' },
             },
-            margin: { left: 14, right: 14 },
+            margin: { left: 10, right: 10 },
         });
 
-        y = this.ultimoY(doc, y + 30) + 10;
+        y = this.ultimoY(doc, y + 30) + 8;
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         doc.setTextColor(...COLOR_GRIS);
-        doc.text('Verificación de armado y tallas antes de entrega:  [   ] Revisado', 14, y);
+        doc.text('Verificación de armado y tallas antes de entrega:   [   ] Revisado', 10, y);
 
         this.dibujarPiePaginas(doc, `Onii-Chan Store — Pedido ${pedido.codigo}`);
-        doc.save(`onii-chan-pedido-${pedido.codigo}.pdf`);
+        this.abrirVistaPrevia(
+            doc,
+            `onii-chan-pedido-${pedido.codigo}.pdf`,
+            `Ficha de Pedido ${pedido.codigo}`,
+            `A5 compacto (148 mm × ${Math.round(altoDinamico)} mm)`,
+        );
     }
 
     /**
-     * 5. Lista de Reposición e Inventario Inmovilizado
+     * 5. Lista de Reposición e Inventario Inmovilizado (A4 + vista previa)
      */
     async descargarReposicionInventario(inteligencia: ReporteInteligenciaStock): Promise<void> {
         const { jsPDF: JsPDF, autoTable } = await this.cargarDependencias();
@@ -561,9 +726,18 @@ export class PdfService {
             startY: y,
             head: [['Indicador de inventario', 'Valor']],
             body: [
-                ['Productos para reponer pronto (≤ 14 días)', String(inteligencia.resumen.productosParaReponer)],
-                ['Productos sin ventas en los últimos 30 días', String(inteligencia.resumen.totalSinRotacion)],
-                ['Capital inmovilizado (productos sin ventas 30d)', bs(inteligencia.resumen.valorInmovilizadoCentavos)],
+                [
+                    'Productos para reponer pronto (≤ 14 días)',
+                    String(inteligencia.resumen.productosParaReponer),
+                ],
+                [
+                    'Productos sin ventas en los últimos 30 días',
+                    String(inteligencia.resumen.totalSinRotacion),
+                ],
+                [
+                    'Capital inmovilizado (productos sin ventas 30d)',
+                    bs(inteligencia.resumen.valorInmovilizadoCentavos),
+                ],
             ],
             theme: 'grid',
             headStyles: { fillColor: COLOR_VINO, textColor: 255, fontSize: 9 },
@@ -572,7 +746,7 @@ export class PdfService {
             margin: { left: 14, right: 14 },
         });
 
-        y = this.ultimoY(doc, y + 30) + 8;
+        y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 30) + 8, 28);
 
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10.5);
@@ -606,9 +780,8 @@ export class PdfService {
             margin: { left: 14, right: 14 },
         });
 
-        y = this.ultimoY(doc, y + 25) + 8;
-
         if (inteligencia.sinRotacion30d.length > 0) {
+            y = this.asegurarEspacio(doc, this.ultimoY(doc, y + 25) + 8, 28);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(10.5);
             doc.setTextColor(...COLOR_VINO);
@@ -638,6 +811,11 @@ export class PdfService {
         }
 
         this.dibujarPiePaginas(doc, 'Onii-Chan Store — Lista de reposición e inventario');
-        doc.save('onii-chan-reposicion-stock.pdf');
+        this.abrirVistaPrevia(
+            doc,
+            'onii-chan-reposicion-stock.pdf',
+            'Lista de Reposición y Salud de Stock',
+            'A4 vertical',
+        );
     }
 }

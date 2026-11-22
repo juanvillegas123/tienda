@@ -18,8 +18,23 @@
   --color-perla: #f9ebed;
   --color-fondo: #fbf5f6;
   --color-tarjeta: #ffffff;
+  --color-exito: #1b6b4a;
+  --color-exito-suave: #ebf6f0;
+  --color-exito-borde: #b7e0cc;
+  --color-alerta: #92560c;
+  --color-alerta-suave: #fdf5e6;
+  --color-alerta-borde: #eed29c;
+  --color-peligro: #b4232c;
+  --color-peligro-suave: #fdf0f1;
+  --color-peligro-borde: #f3c1c5;
   --font-display: "Bebas Neue", system-ui, sans-serif;
   --font-sans: "DM Sans", system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .bg-hero-vitrina {

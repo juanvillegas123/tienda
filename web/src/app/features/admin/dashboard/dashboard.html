@@ -1,4 +1,4 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
   <!-- Cabecera -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
@@ -37,8 +37,8 @@
       }
     </div>
   } @else if (errorCarga() || !resumen()) {
-    <div class="bg-tarjeta rounded-2xl border border-red-200 p-8 text-center">
-      <p class="text-sm text-red-700 mb-3">{{ errorCarga() }}</p>
+    <div class="bg-tarjeta rounded-2xl border border-peligro-borde p-8 text-center">
+      <p class="text-sm text-peligro mb-3">{{ errorCarga() }}</p>
       <button
         type="button"
         (click)="cargar()"
@@ -59,10 +59,10 @@
           <p class="text-xs font-semibold uppercase tracking-wide text-perla/70">Ventas netas del mes</p>
           @if (resumen()!.mesActual.variacionVsMesAnteriorPct !== null) {
             <span
-              class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums"
+              class="px-2 py-0.5 rounded-md text-[11px] font-bold tabular-nums"
               [class]="resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0
-                ? 'bg-emerald-500/20 text-emerald-300'
-                : 'bg-red-500/25 text-red-300'"
+                ? 'bg-exito-suave0/20 text-emerald-300'
+                : 'bg-peligro-suave0/25 text-red-300'"
             >
               {{ resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0 ? '▲' : '▼' }}
               {{ resumen()!.mesActual.variacionVsMesAnteriorPct! >= 0 ? '+' : '' }}{{ resumen()!.mesActual.variacionVsMesAnteriorPct }}%
@@ -81,17 +81,18 @@
       <!-- Ganancia neta del mes -->
       <a
         routerLink="/admin/reportes"
-        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+        class="bg-tarjeta rounded-2xl border border-black/10 border-t-2 border-t-exito p-5 shadow-xs hover:shadow-md hover:border-carmesi/40 transition-all block"
       >
         <div class="flex items-center justify-between gap-2">
           <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ganancia del mes</p>
-          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 tabular-nums">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde/70 tabular-nums">
+            <span class="w-1.5 h-1.5 rounded-full bg-exito"></span>
             Margen {{ resumen()!.mesActual.margenPorcentaje }}%
           </span>
         </div>
         <p
           class="text-2xl font-bold mt-1.5 tabular-nums"
-          [class]="resumen()!.mesActual.gananciaNetaCentavos >= 0 ? 'text-emerald-700' : 'text-red-600'"
+          [class]="resumen()!.mesActual.gananciaNetaCentavos >= 0 ? 'text-exito' : 'text-peligro'"
         >
           @if (resumen()!.mesActual.gananciaNetaCentavos < 0) {
             −{{ (resumen()!.mesActual.gananciaNetaCentavos * -1) | bs }}
@@ -105,7 +106,7 @@
       <!-- Valor del inventario actual -->
       <a
         routerLink="/admin/inventario"
-        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+        class="bg-tarjeta rounded-2xl border border-black/10 border-t-2 border-t-vino p-5 shadow-xs hover:shadow-md hover:border-carmesi/40 transition-all block"
       >
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Valor del inventario</p>
         <p class="text-2xl font-bold text-negro mt-1.5 tabular-nums">
@@ -123,16 +124,16 @@
       <a
         routerLink="/admin/pos"
         [queryParams]="{ tab: 'historial' }"
-        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:border-carmesi/50 transition-colors block"
+        class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs hover:shadow-md hover:border-carmesi/40 transition-all block"
       >
         <div class="flex items-center justify-between gap-2">
           <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ventas netas hoy</p>
           @if (resumen()!.ventasHoy.variacionVsAyerPct !== null) {
             <span
-              class="px-2 py-0.5 rounded-full text-[11px] font-bold tabular-nums"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold tabular-nums"
               [class]="resumen()!.ventasHoy.variacionVsAyerPct! >= 0
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-red-50 text-red-700'"
+                ? 'bg-exito-suave text-exito border border-exito-borde/70'
+                : 'bg-peligro-suave text-peligro border border-peligro-borde/70'"
             >
               {{ resumen()!.ventasHoy.variacionVsAyerPct! >= 0 ? '▲' : '▼' }}
               {{ resumen()!.ventasHoy.variacionVsAyerPct! >= 0 ? '+' : '' }}{{ resumen()!.ventasHoy.variacionVsAyerPct }}%
@@ -145,7 +146,7 @@
         <p class="text-xs text-negro/55 mt-1 tabular-nums">
           Ayer: {{ resumen()!.ventasHoy.ayerNetasCentavos | bs }}
           @if (resumen()!.ventasHoy.devolucionesCentavos > 0) {
-            <span class="text-red-600 font-medium ml-1">
+            <span class="text-peligro font-medium ml-1">
               (−{{ resumen()!.ventasHoy.devolucionesCentavos | bs }} dev.)
             </span>
           }
@@ -155,30 +156,30 @@
       <!-- Caja del día -->
       <a
         routerLink="/admin/caja"
-        class="bg-tarjeta rounded-2xl border p-5 shadow-xs transition-colors block"
-        [class]="resumen()!.cajaActual ? 'border-emerald-300 hover:border-emerald-500' : 'border-amber-300 hover:border-amber-500'"
+        class="bg-tarjeta rounded-2xl border border-t-2 p-5 shadow-xs hover:shadow-md transition-all block"
+        [class]="resumen()!.cajaActual ? 'border-exito-borde border-t-exito' : 'border-alerta-borde border-t-alerta'"
       >
         <div class="flex items-center justify-between">
           <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Caja del día</p>
           @if (resumen()!.cajaActual) {
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito">
               Abierta
             </span>
           } @else {
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta">
               Cerrada
             </span>
           }
         </div>
         @if (resumen()!.cajaActual; as caja) {
-          <p class="text-2xl font-bold text-emerald-700 mt-1.5 tabular-nums">
+          <p class="text-2xl font-bold text-exito mt-1.5 tabular-nums">
             {{ caja.efectivoEsperadoCentavos | bs }}
           </p>
           <p class="text-xs text-negro/55 mt-1">
             Efectivo esperado • Caja #{{ caja.id }} ({{ caja.fechaApertura | date: 'HH:mm' }})
           </p>
         } @else {
-          <p class="text-lg font-bold text-amber-800 mt-2">Sin caja abierta</p>
+          <p class="text-lg font-bold text-alerta mt-2">Sin caja abierta</p>
           <p class="text-xs text-carmesi font-semibold mt-1">Abrir caja para vender →</p>
         }
       </a>
@@ -193,7 +194,7 @@
           {{ resumen()!.pedidosPendientes.total }}
         </p>
         @if (resumen()!.pedidosPendientes.vencidos > 0) {
-          <p class="text-xs font-semibold text-red-600 mt-1">
+          <p class="text-xs font-semibold text-peligro mt-1">
             ⚠ {{ resumen()!.pedidosPendientes.vencidos }} con más de 24 h sin confirmar
           </p>
         } @else {
@@ -212,9 +213,9 @@
           <span class="text-sm font-medium text-negro/45">productos</span>
         </p>
         <p class="text-xs text-negro/60 mt-1">
-          <span class="text-amber-700 font-semibold">{{ resumen()!.catalogo.stockBajo }} stock bajo (≤ {{ resumen()!.catalogo.umbralStockBajo }})</span>
+          <span class="text-alerta font-semibold">{{ resumen()!.catalogo.stockBajo }} stock bajo (≤ {{ resumen()!.catalogo.umbralStockBajo }})</span>
           •
-          <span class="text-red-600 font-semibold">{{ resumen()!.catalogo.agotados }} agotados</span>
+          <span class="text-peligro font-semibold">{{ resumen()!.catalogo.agotados }} agotados</span>
         </p>
       </a>
     </div>
@@ -245,7 +246,7 @@
                     <span
                       class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                       [class]="v.canal === 'MOSTRADOR'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'bg-exito-suave text-exito border border-exito-borde'
                         : 'bg-perla text-vino border border-carmesi/25'"
                     >
                       {{ v.canal }}
@@ -285,15 +286,15 @@
                     <span
                       class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
                       [class]="p.estado === 'CONFIRMADO'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        ? 'bg-exito-suave text-exito border border-exito-borde'
                         : p.estado === 'CANCELADO'
                           ? 'bg-gray-100 text-gray-500 border border-gray-200'
-                          : 'bg-amber-50 text-amber-800 border border-amber-200'"
+                          : 'bg-alerta-suave text-alerta border border-alerta-borde'"
                     >
                       {{ p.estado }}
                     </span>
                     @if (p.vencido) {
-                      <span class="text-[10px] font-bold text-red-600">⚠ Vencido</span>
+                      <span class="text-[10px] font-bold text-peligro">⚠ Vencido</span>
                     }
                   </div>
                   <p class="text-xs text-negro/50 mt-0.5 truncate">
@@ -324,7 +325,7 @@
       </div>
 
       @if (resumen()!.alertasStock.length === 0) {
-        <div class="py-8 text-center text-sm text-emerald-700">
+        <div class="py-8 text-center text-sm text-exito">
           Todo el catálogo activo tiene más de {{ resumen()!.catalogo.umbralStockBajo }} unidades disponibles.
         </div>
       } @else {
@@ -344,11 +345,11 @@
                   <td class="py-3 px-4 text-negro/65">{{ item.categoriaNombre }}</td>
                   <td class="py-3 px-4 text-center">
                     @if (item.stock === 0) {
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                      <span class="inline-flex px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-peligro-suave text-peligro border border-peligro-borde">
                         Agotado (0)
                       </span>
                     } @else {
-                      <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 tabular-nums">
+                      <span class="inline-flex px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta border border-alerta-borde tabular-nums">
                         Stock bajo: {{ item.stock }} {{ item.stock === 1 ? 'unidad' : 'unidades' }}
                       </span>
                     }

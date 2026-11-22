@@ -1,6 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { PdfPreviewModalComponent } from '../../../shared/ui/pdf-preview-modal/pdf-preview-modal';
 
 interface NavItem {
     nombre: string;
@@ -23,7 +24,7 @@ interface NavItem {
 @Component({
     selector: 'app-admin-layout',
     standalone: true,
-    imports: [RouterOutlet, RouterLink, RouterLinkActive],
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, PdfPreviewModalComponent],
     templateUrl: './admin-layout.html',
 })
 export class AdminLayoutComponent implements OnInit {
@@ -31,6 +32,7 @@ export class AdminLayoutComponent implements OnInit {
     private readonly router = inject(Router);
 
     readonly sesion = this.authService.sesion;
+    readonly menuMovilAbierto = signal(false);
 
     readonly navItems: NavItem[] = [
         { nombre: 'Inicio', ruta: '/admin/dashboard', id: 'dashboard' },
@@ -50,6 +52,13 @@ export class AdminLayoutComponent implements OnInit {
         { nombre: 'Reportes', ruta: '/admin/reportes', id: 'reportes' },
     ];
 
+    @HostListener('document:keydown.escape')
+    onEscape(): void {
+        if (this.menuMovilAbierto()) {
+            this.menuMovilAbierto.set(false);
+        }
+    }
+
     ngOnInit(): void {
         if (!this.authService.estaAutenticada()) {
             this.authService.cargarSesion().subscribe({
@@ -58,7 +67,16 @@ export class AdminLayoutComponent implements OnInit {
         }
     }
 
+    alternarMenuMovil(): void {
+        this.menuMovilAbierto.update((v) => !v);
+    }
+
+    cerrarMenuMovil(): void {
+        this.menuMovilAbierto.set(false);
+    }
+
     cerrarSesion(): void {
+        this.menuMovilAbierto.set(false);
         this.authService.logout().subscribe({
             next: () => void this.router.navigate(['/admin/login']),
             error: () => void this.router.navigate(['/admin/login']),

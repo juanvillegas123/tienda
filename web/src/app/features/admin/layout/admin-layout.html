@@ -1,21 +1,80 @@
-<div class="flex h-screen bg-fondo overflow-hidden font-sans">
-  <!-- Sidebar oscuro con identidad Onii-Chan Store (Bloque 1) -->
-  <aside class="no-imprimir w-64 bg-negro text-perla border-r border-vino flex flex-col shrink-0">
-    <!-- Logo real -->
-    <div class="px-5 py-4 border-b border-vino/70 flex items-center gap-3">
+<div class="flex flex-col lg:flex-row h-dvh bg-fondo overflow-hidden font-sans">
+  <!-- Barra superior móvil / tablet (< lg) -->
+  <header class="no-imprimir lg:hidden h-14 px-4 bg-negro text-perla border-b border-vino flex items-center justify-between gap-3 shrink-0 z-30">
+    <div class="flex items-center gap-3 min-w-0">
+      <button
+        type="button"
+        (click)="alternarMenuMovil()"
+        class="p-2 -ml-1.5 rounded-xl text-perla/85 hover:bg-vino-oscuro hover:text-perla transition-colors cursor-pointer"
+        aria-label="Abrir menú de administración"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       <img
         src="img/logo-96.png"
         alt="Logo de Onii-Chan Store"
-        width="40"
-        height="40"
-        class="h-10 w-10 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/25"
+        width="32"
+        height="32"
+        class="h-8 w-8 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/25"
       />
-      <div class="min-w-0">
-        <h1 class="font-display text-lg uppercase tracking-wider text-perla leading-none truncate">
-          Onii-Chan Store
-        </h1>
-        <p class="text-[11px] text-perla/60 font-medium mt-0.5">Panel de administración</p>
+      <span class="font-display text-lg uppercase tracking-wider text-perla leading-none truncate">
+        Onii-Chan Store
+      </span>
+    </div>
+
+    <a
+      routerLink="/admin/perfil"
+      (click)="cerrarMenuMovil()"
+      class="w-8 h-8 rounded-full bg-carmesi text-perla flex items-center justify-center text-xs font-bold shrink-0"
+      title="Mi perfil y seguridad"
+    >
+      {{ sesion()?.usuario?.charAt(0)?.toUpperCase() || 'A' }}
+    </a>
+  </header>
+
+  <!-- Backdrop móvil cuando el drawer está abierto -->
+  @if (menuMovilAbierto()) {
+    <div
+      class="no-imprimir fixed inset-0 z-40 bg-negro/60 backdrop-blur-xs lg:hidden"
+      (click)="cerrarMenuMovil()"
+    ></div>
+  }
+
+  <!-- Sidebar oscuro con identidad Onii-Chan Store (Drawer en móvil/tablet, fijo en lg+) -->
+  <aside
+    class="no-imprimir fixed inset-y-0 left-0 z-50 w-64 bg-negro text-perla border-r border-vino flex flex-col shrink-0 transition-transform duration-200 ease-out lg:static lg:translate-x-0"
+    [class.translate-x-0]="menuMovilAbierto()"
+    [class.-translate-x-full]="!menuMovilAbierto()"
+  >
+    <!-- Logo real -->
+    <div class="px-5 py-4 border-b border-vino/70 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <img
+          src="img/logo-96.png"
+          alt="Logo de Onii-Chan Store"
+          width="40"
+          height="40"
+          class="h-10 w-10 rounded-full object-cover bg-white shrink-0 ring-1 ring-perla/25"
+        />
+        <div class="min-w-0">
+          <p class="font-display text-lg uppercase tracking-wider text-perla leading-none truncate">
+            Onii-Chan Store
+          </p>
+          <p class="text-[11px] text-perla/60 font-medium mt-0.5">Panel de administración</p>
+        </div>
       </div>
+
+      <button
+        type="button"
+        (click)="cerrarMenuMovil()"
+        class="lg:hidden p-1.5 text-perla/65 hover:text-perla hover:bg-vino-oscuro rounded-lg cursor-pointer"
+        aria-label="Cerrar menú"
+      >
+        ✕
+      </button>
     </div>
 
     <!-- Navegación -->
@@ -26,6 +85,7 @@
             <a
               [routerLink]="item.ruta"
               [queryParams]="item.queryParams ?? null"
+              (click)="cerrarMenuMovil()"
               routerLinkActive="bg-vino text-perla font-semibold border-l-2 border-carmesi-claro"
               [routerLinkActiveOptions]="{
                 paths: item.exacto ? 'exact' : 'subset',
@@ -117,19 +177,35 @@
       </ul>
     </nav>
 
-    <!-- Usuario + Logout -->
+    <!-- Usuario (acceso a Mi Perfil) + Logout -->
     <div class="p-3 border-t border-vino/70 bg-vino-oscuro/40">
-      @if (sesion()) {
-        <div class="px-2 py-1.5 mb-1.5 flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full bg-carmesi text-perla flex items-center justify-center text-xs font-bold">
-            {{ sesion()!.usuario.charAt(0).toUpperCase() }}
+      <a
+        routerLink="/admin/perfil"
+        (click)="cerrarMenuMovil()"
+        routerLinkActive="bg-vino text-perla"
+        class="flex items-center justify-between gap-2 px-3 py-2 mb-1.5 rounded-xl hover:bg-vino-oscuro/80 transition-colors cursor-pointer"
+        title="Configurar perfil y seguridad"
+      >
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-7 h-7 rounded-full bg-carmesi text-perla flex items-center justify-center text-xs font-bold shrink-0">
+            {{ sesion()?.usuario?.charAt(0)?.toUpperCase() || 'A' }}
           </div>
-          <span class="text-xs font-medium text-perla/85 truncate flex-1">{{ sesion()!.usuario }}</span>
+          <div class="min-w-0">
+            <span class="block text-sm font-medium text-perla truncate leading-tight">
+              {{ sesion()?.usuario || 'Admin' }}
+            </span>
+            <span class="block text-[10px] text-perla/55">Perfil y seguridad</span>
+          </div>
         </div>
-      }
+        <svg class="w-4 h-4 text-perla/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+
       <button
+        type="button"
         (click)="cerrarSesion()"
-        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-perla/75 hover:bg-red-600/20 hover:text-red-300 transition-colors cursor-pointer"
+        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-perla/75 hover:bg-red-950/60 hover:text-red-200 transition-colors cursor-pointer"
       >
         <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -142,7 +218,10 @@
   </aside>
 
   <!-- Contenido principal -->
-  <main class="flex-1 overflow-y-auto">
+  <main class="flex-1 min-w-0 overflow-y-auto">
     <router-outlet />
   </main>
+
+  <!-- Visor global de vista previa de PDFs -->
+  <app-pdf-preview-modal />
 </div>

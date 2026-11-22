@@ -40,6 +40,8 @@ export const listarMovimientosQuerySchema = z
     .object({
         productoId: z.coerce.number().int().positive().optional(),
         tipo: z.enum(['ENTRADA', 'SALIDA', 'AJUSTE', 'DEVOLUCION']).optional(),
+        q: z.string().trim().max(120).optional(),
+        orden: z.enum(['fecha-desc', 'fecha-asc']).default('fecha-desc'),
         limite: z.coerce.number().int().min(1).max(300).default(100),
     })
     .strict();

@@ -3,11 +3,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProveedoresService } from '../../../core/proveedores.service';
 import { Proveedor } from '../../../core/modelos';
+import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
 
 @Component({
     selector: 'app-proveedores-admin',
     standalone: true,
-    imports: [ReactiveFormsModule],
+    imports: [ReactiveFormsModule, AppSelectComponent],
     templateUrl: './proveedores.html',
 })
 export class ProveedoresAdminComponent implements OnInit {
@@ -22,6 +23,11 @@ export class ProveedoresAdminComponent implements OnInit {
 
     readonly filtroTexto = signal('');
     readonly filtroEstado = signal<'activos' | 'inactivos' | 'todos'>('activos');
+    readonly opcionesEstado: OpcionSelect[] = [
+        { valor: 'activos', etiqueta: 'Solo activos' },
+        { valor: 'inactivos', etiqueta: 'Solo dados de baja' },
+        { valor: 'todos', etiqueta: 'Todos los estados' },
+    ];
 
     readonly modalAbierto = signal(false);
     readonly proveedorEnEdicion = signal<Proveedor | null>(null);

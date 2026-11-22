@@ -83,6 +83,12 @@ export const routes: Routes = [
                     ),
                 title: 'Reportes',
             },
+            {
+                path: 'perfil',
+                loadComponent: () =>
+                    import('./features/admin/perfil/perfil').then((m) => m.PerfilAdminComponent),
+                title: 'Mi perfil y seguridad',
+            },
         ],
     },
 

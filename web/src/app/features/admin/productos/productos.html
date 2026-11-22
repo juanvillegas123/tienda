@@ -1,14 +1,12 @@
-<div class="p-6 max-w-7xl mx-auto">
+<div class="p-4 sm:p-6 max-w-7xl mx-auto">
   <!-- Cabecera -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Productos</h1>
-      <p class="text-sm text-gray-500 mt-0.5">Gestión de catálogo, stock, costos y precios de venta</p>
+      <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">Productos</h1>
+      <p class="text-sm text-negro/60 mt-1">Gestión de catálogo, stock, costos y precios de venta</p>
     </div>
-    <button
-      (click)="abrirModalCrear()"
-      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-medium rounded-xl shadow-sm shadow-vino/20 transition-colors cursor-pointer"
-    >
+    <button (click)="abrirModalCrear()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-xs transition-colors cursor-pointer">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
@@ -17,858 +15,720 @@
   </div>
 
   <!-- Filtros y ordenamiento -->
-  <div class="bg-white rounded-2xl border border-gray-200/80 p-4 mb-6 shadow-xs flex flex-col lg:flex-row gap-3">
+  <div class="bg-tarjeta rounded-2xl border border-black/10 p-4 mb-6 shadow-xs flex flex-col lg:flex-row gap-3">
     <!-- Buscador de texto -->
     <div class="relative flex-1">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/40">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8" />
           <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
         </svg>
       </div>
-      <input
-        type="text"
-        [value]="filtroTexto()"
-        (input)="actualizarBusqueda($event)"
+      <input type="text" [value]="filtroTexto()" (input)="actualizarBusqueda($event)"
         placeholder="Buscar por nombre del producto..."
-        class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino focus:border-transparent"
-      />
+        class="w-full pl-9 pr-3 py-2 border border-black/15 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino" />
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:flex lg:items-center">
       <!-- Filtro por categoría -->
       <div class="lg:w-48">
-        <select
-          [value]="filtroCategoriaId() ?? ''"
-          (change)="actualizarCategoria($event)"
-          class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-        >
-          <option value="">Todas las categorías</option>
-          @for (cat of categorias(); track cat.id) {
-            <option [value]="cat.id">{{ cat.nombre }}</option>
-          }
-        </select>
+        <app-select
+          [opciones]="opcionesCategoriasFiltro()"
+          [valor]="filtroCategoriaId()"
+          (valorChange)="actualizarCategoriaValor($event)"
+          [buscable]="true"
+          placeholder="Todas las categorías"
+          ariaLabel="Filtrar por categoría"
+        />
       </div>
 
       <!-- Filtro por estado (por defecto: Solo activos) -->
       <div class="lg:w-48">
-        <select
-          [value]="filtroEstado()"
-          (change)="actualizarEstado($event)"
-          class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-        >
-          <option value="true">Solo activos</option>
-          <option value="agotados">Solo agotados (stock 0)</option>
-          <option value="false">Solo dados de baja</option>
-          <option value="todos">Todos los estados</option>
-        </select>
+        <app-select
+          [opciones]="opcionesEstado"
+          [valor]="filtroEstado()"
+          (valorChange)="actualizarEstadoValor($event)"
+          ariaLabel="Filtrar por estado"
+        />
       </div>
 
       <!-- Ordenamiento -->
       <div class="lg:w-44">
-        <select
-          [value]="filtroOrden()"
-          (change)="actualizarOrden($event)"
-          aria-label="Ordenar productos"
-          class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-        >
-          <option value="fecha-desc">Más recientes</option>
-          <option value="fecha-asc">Más antiguos</option>
-          <option value="nombre-asc">Nombre (A - Z)</option>
-          <option value="nombre-desc">Nombre (Z - A)</option>
-        </select>
+        <app-select
+          [opciones]="opcionesOrden"
+          [valor]="filtroOrden()"
+          (valorChange)="actualizarOrdenValor($event)"
+          ariaLabel="Ordenar productos"
+        />
       </div>
     </div>
   </div>
 
   <!-- Mensajes de alerta globales -->
   @if (mensajeExito()) {
-    <div class="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm flex items-center justify-between shadow-xs">
-      <div class="flex items-center gap-2">
-        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-        <span>{{ mensajeExito() }}</span>
-      </div>
-      <button (click)="mensajeExito.set(null)" class="text-emerald-500 hover:text-emerald-700 p-1 cursor-pointer">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+  <div
+    class="mb-4 p-3.5 bg-exito-suave border border-exito-borde text-exito rounded-xl text-sm flex items-center justify-between shadow-xs">
+    <div class="flex items-center gap-2">
+      <svg class="w-4 h-4 text-exito shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+      <span>{{ mensajeExito() }}</span>
     </div>
+    <button (click)="mensajeExito.set(null)" class="text-emerald-500 hover:text-exito p-1 cursor-pointer">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
   }
   @if (mensajeError() && !modalAbierto()) {
-    <div class="mb-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm flex items-center justify-between shadow-xs">
-      <div class="flex items-center gap-2">
-        <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <span>{{ mensajeError() }}</span>
-      </div>
-      <button (click)="mensajeError.set(null)" class="text-rose-500 hover:text-rose-700 p-1 cursor-pointer">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+  <div
+    class="mb-4 p-3.5 bg-peligro-suave border border-peligro-borde text-peligro rounded-xl text-sm flex items-center justify-between shadow-xs">
+    <div class="flex items-center gap-2">
+      <svg class="w-4 h-4 text-peligro shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{{ mensajeError() }}</span>
     </div>
+    <button (click)="mensajeError.set(null)" class="text-rose-500 hover:text-peligro p-1 cursor-pointer">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
   }
 
   <!-- Lista de productos -->
-  <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
+  <div class="bg-white rounded-2xl border border-black/10 overflow-hidden shadow-xs">
     @if (cargando()) {
-      <div class="py-16 text-center text-gray-400 text-sm">
-        <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-vino" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Cargando catálogo...
-      </div>
+    <div class="py-16 text-center text-gray-400 text-sm">
+      <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-vino" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      Cargando catálogo...
+    </div>
     } @else if (productos().length === 0) {
-      <div class="py-16 text-center text-gray-500 text-sm">
-        <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
-          <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
-        </svg>
-        No se encontraron productos con los filtros seleccionados.
-      </div>
+    <div class="py-16 text-center text-gray-500 text-sm">
+      <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+        <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+      </svg>
+      No se encontraron productos con los filtros seleccionados.
+    </div>
     } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-              <th class="py-3.5 px-4">
-                <button
-                  type="button"
-                  (click)="alternarOrdenNombre()"
-                  class="inline-flex items-center gap-1.5 hover:text-carmesi transition-colors cursor-pointer uppercase tracking-wider font-semibold"
-                  title="Ordenar alfabéticamente"
-                >
-                  <span>Producto</span>
-                  @if (filtroOrden() === 'nombre-asc') {
-                    <svg class="w-3.5 h-3.5 text-vino" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
-                    </svg>
-                  } @else if (filtroOrden() === 'nombre-desc') {
-                    <svg class="w-3.5 h-3.5 text-vino" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  } @else {
-                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                    </svg>
-                  }
-                </button>
-              </th>
-              <th class="py-3.5 px-4">Categoría</th>
-              <th class="py-3.5 px-4 text-right">Precio venta</th>
-              <th class="py-3.5 px-4 text-right">Costo</th>
-              <th class="py-3.5 px-4 text-center">Stock</th>
-              <th class="py-3.5 px-4 text-center">Estado</th>
-              <th class="py-3.5 px-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
-            @for (prod of productos(); track prod.id) {
-              <tr class="hover:bg-gray-50/80 transition-colors">
-                <!-- Info principal -->
-                <td class="py-3 px-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
-                      @if (prod.imagenPrincipal) {
-                        <img [src]="prod.imagenPrincipal" [alt]="prod.nombre" class="w-full h-full object-cover" />
-                      } @else {
-                        <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                          <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                          <circle cx="9" cy="9" r="2" />
-                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                        </svg>
-                      }
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-900 leading-tight">{{ prod.nombre }}</p>
-                      <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
-                        <span>#{{ prod.id }}</span>
-                        @if (prod.escala) {
-                          <span>• Escala: {{ prod.escala }}</span>
-                        }
-                        @if (prod.notaTalla) {
-                          <span>• Talla: {{ prod.notaTalla }}</span>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                <!-- Categoría -->
-                <td class="py-3 px-4 text-gray-600 font-medium">
-                  {{ prod.categoriaNombre || 'Sin categoría' }}
-                </td>
-
-                <!-- Precio -->
-                <td class="py-3 px-4 text-right font-bold text-gray-900 font-mono">
-                  {{ prod.precioCentavos | bs }}
-                </td>
-
-                <!-- Costo -->
-                <td class="py-3 px-4 text-right text-gray-500 font-mono text-xs">
-                  {{ prod.costoCentavos | bs }}
-                </td>
-
-                <!-- Stock -->
-                <td class="py-3 px-4 text-center">
-                  @if (prod.stock > 0) {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {{ prod.stock }} unid.
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                      0 unid. (Agotado)
-                    </span>
-                  }
-                </td>
-
-                <!-- Estado -->
-                <td class="py-3 px-4 text-center">
-                  @if (!prod.activo) {
-                    <span class="inline-flex items-center text-xs font-medium text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
-                      Dado de baja
-                    </span>
-                  } @else if (prod.stock === 0) {
-                    <span class="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                      Agotado (En vitrina)
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                      Activo
-                    </span>
-                  }
-                </td>
-
-                <!-- Acciones -->
-                <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-                  <button
-                    (click)="abrirModalEditar(prod)"
-                    class="text-vino hover:text-carmesi font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-perla/70 transition-colors cursor-pointer"
-                  >
-                    Editar
-                  </button>
-                  @if (prod.activo) {
-                    <button
-                      (click)="confirmarDarDeBaja(prod)"
-                      class="text-rose-600 hover:text-rose-900 font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                    >
-                      Dar de baja
-                    </button>
-                  } @else {
-                    <button
-                      (click)="reactivarProducto(prod)"
-                      [disabled]="reactivandoId() === prod.id"
-                      class="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      {{ reactivandoId() === prod.id ? 'Reactivando...' : 'Reactivar' }}
-                    </button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Barra de paginación -->
-      <div class="px-4 py-3.5 border-t border-gray-200/80 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p class="text-xs text-gray-500">
-          Mostrando <span class="font-semibold text-gray-700">{{ rangoInicio() }}</span> a
-          <span class="font-semibold text-gray-700">{{ rangoFin() }}</span> de
-          <span class="font-semibold text-gray-700">{{ totalProductos() }}</span>
-          {{ totalProductos() === 1 ? 'producto' : 'productos' }}
-        </p>
-
-        @if (totalPaginas() > 1) {
-          <nav class="flex items-center gap-1" aria-label="Paginación de productos">
-            <button
-              type="button"
-              (click)="irAPagina(pagina() - 1)"
-              [disabled]="pagina() <= 1"
-              class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              Anterior
-            </button>
-
-            @for (num of paginasVisibles(); track num) {
-              <button
-                type="button"
-                (click)="irAPagina(num)"
-                [class]="num === pagina()
-                  ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-vino text-white border border-vino cursor-default'
-                  : 'px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors'"
-              >
-                {{ num }}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr
+            class="bg-fondo border-b border-black/8 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <th class="py-3.5 px-4">
+              <button type="button" (click)="alternarOrdenNombre()"
+                class="inline-flex items-center gap-1.5 hover:text-carmesi transition-colors cursor-pointer uppercase tracking-wider font-semibold"
+                title="Ordenar alfabéticamente">
+                <span>Producto</span>
+                @if (filtroOrden() === 'nombre-asc') {
+                <svg class="w-3.5 h-3.5 text-vino" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
+                } @else if (filtroOrden() === 'nombre-desc') {
+                <svg class="w-3.5 h-3.5 text-vino" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+                } @else {
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                </svg>
+                }
               </button>
-            }
+            </th>
+            <th class="py-3.5 px-4">Categoría</th>
+            <th class="py-3.5 px-4 text-right">Precio venta</th>
+            <th class="py-3.5 px-4 text-right">Costo</th>
+            <th class="py-3.5 px-4 text-center">Stock</th>
+            <th class="py-3.5 px-4 text-center">Estado</th>
+            <th class="py-3.5 px-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+          @for (prod of productos(); track prod.id) {
+          <tr class="hover:bg-gray-50/80 transition-colors">
+            <!-- Info principal -->
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                  @if (prod.imagenPrincipal) {
+                  <img [src]="prod.imagenPrincipal" [alt]="prod.nombre" class="w-full h-full object-cover" />
+                  } @else {
+                  <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="1.5">
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                    <circle cx="9" cy="9" r="2" />
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                  </svg>
+                  }
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 leading-tight">{{ prod.nombre }}</p>
+                  <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                    <span>#{{ prod.id }}</span>
+                    @if (prod.escala) {
+                    <span>• Escala: {{ prod.escala }}</span>
+                    }
+                    @if (prod.notaTalla) {
+                    <span>• Talla: {{ prod.notaTalla }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
 
-            <button
-              type="button"
-              (click)="irAPagina(pagina() + 1)"
-              [disabled]="pagina() >= totalPaginas()"
-              class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
-            >
-              Siguiente
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </nav>
+            <!-- Categoría -->
+            <td class="py-3 px-4 text-gray-600 font-medium">
+              {{ prod.categoriaNombre || 'Sin categoría' }}
+            </td>
+
+            <!-- Precio -->
+            <td class="py-3 px-4 text-right font-bold text-gray-900 font-mono">
+              {{ prod.precioCentavos | bs }}
+            </td>
+
+            <!-- Costo -->
+            <td class="py-3 px-4 text-right text-gray-500 font-mono text-xs">
+              {{ prod.costoCentavos | bs }}
+            </td>
+
+            <!-- Stock -->
+            <td class="py-3 px-4 text-center">
+              @if (prod.stock > 0) {
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde">
+                {{ prod.stock }} unid.
+              </span>
+              } @else {
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta border border-alerta-borde">
+                0 unid. (Agotado)
+              </span>
+              }
+            </td>
+
+            <!-- Estado -->
+            <td class="py-3 px-4 text-center">
+              @if (!prod.activo) {
+              <span
+                class="inline-flex items-center text-xs font-medium text-peligro bg-peligro-suave px-2.5 py-0.5 rounded-full border border-peligro-borde">
+                Dado de baja
+              </span>
+              } @else if (prod.stock === 0) {
+              <span
+                class="inline-flex items-center text-xs font-medium text-alerta bg-alerta-suave px-2.5 py-0.5 rounded-full border border-alerta-borde">
+                Agotado (En vitrina)
+              </span>
+              } @else {
+              <span
+                class="inline-flex items-center text-xs font-medium text-exito bg-exito-suave px-2.5 py-0.5 rounded-full border border-exito-borde">
+                Activo
+              </span>
+              }
+            </td>
+
+            <!-- Acciones -->
+            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+              <button (click)="abrirModalEditar(prod)"
+                class="text-vino hover:text-carmesi font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-perla/70 transition-colors cursor-pointer">
+                Editar
+              </button>
+              @if (prod.activo) {
+              <button (click)="confirmarDarDeBaja(prod)"
+                class="text-peligro hover:text-peligro font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-peligro-suave transition-colors cursor-pointer">
+                Dar de baja
+              </button>
+              } @else {
+              <button (click)="reactivarProducto(prod)" [disabled]="reactivandoId() === prod.id"
+                class="inline-flex items-center gap-1 text-exito hover:text-exito font-medium text-xs py-1 px-2.5 rounded-lg hover:bg-exito-suave transition-colors cursor-pointer disabled:opacity-50">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ reactivandoId() === prod.id ? 'Reactivando...' : 'Reactivar' }}
+              </button>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Barra de paginación -->
+    <div
+      class="px-4 py-3.5 border-t border-black/10 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <p class="text-xs text-gray-500">
+        Mostrando <span class="font-semibold text-gray-700">{{ rangoInicio() }}</span> a
+        <span class="font-semibold text-gray-700">{{ rangoFin() }}</span> de
+        <span class="font-semibold text-gray-700">{{ totalProductos() }}</span>
+        {{ totalProductos() === 1 ? 'producto' : 'productos' }}
+      </p>
+
+      @if (totalPaginas() > 1) {
+      <nav class="flex items-center gap-1" aria-label="Paginación de productos">
+        <button type="button" (click)="irAPagina(pagina() - 1)" [disabled]="pagina() <= 1"
+          class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Anterior
+        </button>
+
+        @for (num of paginasVisibles(); track num) {
+        <button type="button" (click)="irAPagina(num)"
+          [class]="num === pagina()
+                  ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-vino text-white border border-vino cursor-default'
+                  : 'px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors'">
+          {{ num }}
+        </button>
         }
-      </div>
+
+        <button type="button" (click)="irAPagina(pagina() + 1)" [disabled]="pagina() >= totalPaginas()"
+          class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors">
+          Siguiente
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </nav>
+      }
+    </div>
     }
   </div>
 </div>
 
 <!-- Modal Formulario (Alta / Edición) -->
 @if (modalAbierto()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs overflow-y-auto"
+  (click)="cerrarModal()">
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs overflow-y-auto"
-    (click)="cerrarModal()"
-  >
+    class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 flex flex-col max-h-[92vh] overflow-hidden"
+    (click)="$event.stopPropagation()">
+    <!-- Header fijo -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+      <h2 class="text-lg font-bold text-gray-900">
+        {{ productoEnEdicion() ? 'Editar producto' : 'Nuevo producto' }}
+      </h2>
+      <button type="button" (click)="cerrarModal()"
+        class="p-1.5 -mr-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+        title="Cerrar (Esc)">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Alerta de error DENTRO del modal -->
+    @if (mensajeError()) {
     <div
-      class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 flex flex-col max-h-[92vh] overflow-hidden"
-      (click)="$event.stopPropagation()"
-    >
-      <!-- Header fijo -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-        <h2 class="text-lg font-bold text-gray-900">
-          {{ productoEnEdicion() ? 'Editar producto' : 'Nuevo producto' }}
-        </h2>
-        <button
-          type="button"
-          (click)="cerrarModal()"
-          class="p-1.5 -mr-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-          title="Cerrar (Esc)"
-        >
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      class="mx-6 mt-4 p-3.5 bg-peligro-suave border border-peligro-borde text-peligro rounded-xl text-xs flex items-center justify-between flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-peligro shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span>{{ mensajeError() }}</span>
       </div>
+      <button type="button" (click)="mensajeError.set(null)"
+        class="text-rose-500 hover:text-peligro font-bold ml-2">✕</button>
+    </div>
+    }
 
-      <!-- Alerta de error DENTRO del modal -->
-      @if (mensajeError()) {
-        <div class="mx-6 mt-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center justify-between flex-shrink-0">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span>{{ mensajeError() }}</span>
-          </div>
-          <button type="button" (click)="mensajeError.set(null)" class="text-rose-500 hover:text-rose-700 font-bold ml-2">✕</button>
-        </div>
-      }
-
-      <form [formGroup]="form" (ngSubmit)="guardar()" class="flex flex-col flex-1 overflow-hidden">
-        <!-- Cuerpo scrolleable -->
-        <div class="p-6 overflow-y-auto space-y-4 flex-1">
-          <!-- Fila 1: Categoría y Proveedor -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="prodCat" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                Categoría *
-              </label>
-              <select
-                id="prodCat"
-                formControlName="categoriaId"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-                [class.border-red-400]="campoInvalido('categoriaId')"
-              >
-                <option [ngValue]="null">Selecciona una categoría</option>
-                @for (cat of categoriasActivas(); track cat.id) {
-                  <option [value]="cat.id">{{ cat.nombre }}</option>
-                }
-              </select>
-              @if (campoInvalido('categoriaId')) {
-                <p class="text-xs text-red-600 mt-1">La categoría es requerida.</p>
-              }
-            </div>
-
-            <div>
-              <label for="prodProv" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                Proveedor (opcional)
-              </label>
-              <select
-                id="prodProv"
-                formControlName="proveedorId"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-              >
-                <option [ngValue]="null">Sin proveedor asignado</option>
-                @for (prov of proveedores(); track prov.id) {
-                  <option [value]="prov.id">{{ prov.nombre }}</option>
-                }
-              </select>
-            </div>
-          </div>
-
-          <!-- Fila 2: Nombre -->
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="flex flex-col flex-1 overflow-hidden">
+      <!-- Cuerpo scrolleable -->
+      <div class="p-6 overflow-y-auto space-y-4 flex-1">
+        <!-- Fila 1: Categoría y Proveedor -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="prodNombre" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-              Nombre del producto *
+            <label class="block text-xs font-semibold text-negro/70 uppercase tracking-wide mb-1">
+              Categoría *
             </label>
-            <input
-              id="prodNombre"
-              type="text"
-              formControlName="nombre"
-              placeholder="Ej: Polera Demon Slayer Tanjiro"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-              [class.border-red-400]="campoInvalido('nombre')"
+            <app-select
+              formControlName="categoriaId"
+              [opciones]="opcionesCategoriasModal()"
+              [buscable]="true"
+              [invalido]="campoInvalido('categoriaId')"
+              placeholder="Selecciona una categoría"
             />
-            @if (campoInvalido('nombre')) {
-              <p class="text-xs text-red-600 mt-1">El nombre es requerido.</p>
+            @if (campoInvalido('categoriaId')) {
+            <p class="text-xs text-peligro mt-1">La categoría es requerida.</p>
             }
           </div>
 
-          <!-- Fila 3: Descripción -->
           <div>
-            <label for="prodDesc" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-              Descripción
+            <label class="block text-xs font-semibold text-negro/70 uppercase tracking-wide mb-1">
+              Proveedor (opcional)
             </label>
-            <textarea
-              id="prodDesc"
-              formControlName="descripcion"
-              rows="2"
-              placeholder="Detalles sobre el material, presentación, origen..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-            ></textarea>
+            <app-select
+              formControlName="proveedorId"
+              [opciones]="opcionesProveedoresModal()"
+              [buscable]="true"
+              placeholder="Sin proveedor asignado"
+            />
           </div>
+        </div>
 
-          <!-- Fila 4: Precios y Stock (Con explicación clara de costos y stock en solo lectura al editar) -->
-          <div class="bg-gray-50/80 p-4 rounded-xl border border-gray-200/80 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <!-- Precio Venta -->
-              <div>
-                <label for="prodPrecio" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
-                  Precio venta (Bs.) *
-                </label>
-                <input
-                  id="prodPrecio"
-                  type="text"
-                  inputmode="decimal"
-                  formControlName="precioBs"
-                  placeholder="Ej: 185,50"
-                  class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                  [class.border-red-400]="campoInvalido('precioBs')"
-                />
-                @if (campoInvalido('precioBs')) {
-                  <p class="text-xs text-red-600 mt-1">Ingresa un precio válido (≥ 0).</p>
-                }
-              </div>
-
-              <!-- Costo de compra -->
-              <div>
-                <label for="prodCosto" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                  {{ productoEnEdicion() ? 'Costo vigente (Bs.)' : 'Costo inicial (Bs.)' }}
-                </label>
-                <input
-                  id="prodCosto"
-                  type="text"
-                  inputmode="decimal"
-                  formControlName="costoBs"
-                  placeholder="Ej: 110,00"
-                  class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                  [class.border-red-400]="campoInvalido('costoBs')"
-                />
-                @if (campoInvalido('costoBs')) {
-                  <p class="text-xs text-red-600 mt-1">Ingresa un costo válido (≥ 0).</p>
-                }
-              </div>
-
-              <!-- Stock: editable solo al crear; solo lectura al editar -->
-              <div>
-                <label for="prodStock" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                  {{ productoEnEdicion() ? 'Stock actual' : 'Stock inicial *' }}
-                </label>
-                @if (productoEnEdicion()) {
-                  <div class="flex items-center justify-between px-3 py-2 border border-gray-200 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 tabular-nums">
-                    <span>{{ productoEnEdicion()!.stock }} unid.</span>
-                    <a
-                      routerLink="/admin/inventario"
-                      (click)="cerrarModal()"
-                      class="text-[11px] font-semibold text-vino hover:text-carmesi hover:underline"
-                    >
-                      Ajustar / Ingresar →
-                    </a>
-                  </div>
-                } @else {
-                  <input
-                    id="prodStock"
-                    type="number"
-                    step="1"
-                    min="0"
-                    formControlName="stock"
-                    placeholder="0"
-                    class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                    [class.border-red-400]="campoInvalido('stock')"
-                  />
-                  @if (campoInvalido('stock')) {
-                    <p class="text-xs text-red-600 mt-1">El stock debe ser ≥ 0.</p>
-                  }
-                }
-              </div>
-            </div>
-
-            <p class="text-[11px] text-gray-500 leading-relaxed">
-              @if (productoEnEdicion()) {
-                El <strong>stock</strong> y las compras nuevas se registran desde
-                <a routerLink="/admin/inventario" (click)="cerrarModal()" class="text-vino font-semibold hover:underline">Inventario</a>
-                para mantener el kardex y actualizar el costo vigente. Edita el costo aquí solo si necesitas corregir un error.
-              } @else {
-                Usa <strong>Costo inicial</strong> y <strong>Stock inicial</strong> solo al dar de alta el producto. Las reposiciones futuras se registran en <strong>Inventario</strong>.
-              }
-            </p>
-          </div>
-
-          <!-- Fila 5: Escala y Control inteligente de Talla -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            <div>
-              <label for="prodEscala" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                Escala (opcional)
-              </label>
-              <input
-                id="prodEscala"
-                type="text"
-                formControlName="escala"
-                placeholder="Ej: 1/7, 1/12, Nendoroid"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-              />
-            </div>
-
-            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3 space-y-2.5">
-              <div class="flex items-center justify-between gap-2">
-                <div>
-                  <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                    ¿Requiere talla?
-                  </p>
-                  <p class="text-[11px] text-gray-500">
-                    {{ requiereTalla() ? 'Indica las tallas disponibles' : 'No aplica (figuras, pines, peluches)' }}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  [attr.aria-checked]="requiereTalla()"
-                  (click)="alternarRequiereTalla()"
-                  class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-vino/40"
-                  [class.bg-vino]="requiereTalla()"
-                  [class.bg-gray-300]="!requiereTalla()"
-                >
-                  <span
-                    class="inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition-transform"
-                    [class.translate-x-6]="requiereTalla()"
-                    [class.translate-x-1]="!requiereTalla()"
-                  ></span>
-                </button>
-              </div>
-
-              @if (requiereTalla()) {
-                <div class="space-y-2 pt-1">
-                  <input
-                    id="prodTalla"
-                    type="text"
-                    formControlName="notaTalla"
-                    placeholder="Ej: Tallas S, M, L disponibles"
-                    class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                    [class.border-red-400]="campoInvalido('notaTalla')"
-                  />
-                  <div class="flex flex-wrap gap-1.5">
-                    @for (atajo of atajosTalla; track atajo) {
-                      <button
-                        type="button"
-                        (click)="aplicarAtajoTalla(atajo)"
-                        class="px-2 py-0.5 text-[11px] font-medium rounded-md border border-vino/25 bg-perla/70 text-vino hover:bg-perla transition-colors cursor-pointer"
-                      >
-                        {{ atajo }}
-                      </button>
-                    }
-                  </div>
-                  @if (campoInvalido('notaTalla')) {
-                    <p class="text-xs text-red-600">Indica las tallas disponibles o desactiva la opción.</p>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Fila 6: Imagen Principal (Solo subida segura + Drag & Drop, optimizada a 4:5 en R2) -->
-          <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
-                Imagen principal del producto
-              </label>
-              <span class="text-[11px] text-gray-500">Se ajusta automáticamente a 4:5 (WebP)</span>
-            </div>
-
-            @if (form.get('imagenPrincipal')?.value) {
-              <!-- Vista previa con soporte para soltar nueva foto encima -->
-              <div
-                (dragover)="onDragOverPrincipal($event)"
-                (dragleave)="onDragLeavePrincipal($event)"
-                (drop)="onDropPrincipal($event)"
-                [class]="arrastrandoPrincipal()
-                  ? 'flex items-center gap-4 bg-perla/70 p-3 rounded-xl border-2 border-dashed border-vino transition-colors'
-                  : 'flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200 transition-colors'"
-              >
-                <div class="w-16 h-20 rounded-lg overflow-hidden bg-white border border-gray-200 shrink-0 p-1">
-                  <img
-                    [src]="form.get('imagenPrincipal')?.value"
-                    alt="Vista previa"
-                    referrerpolicy="no-referrer"
-                    class="w-full h-full object-contain"
-                  />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Imagen optimizada y guardada
-                  </p>
-                  <p class="text-[11px] text-gray-400 mt-0.5">
-                    Puedes arrastrar otra imagen aquí o usar el botón Cambiar.
-                  </p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <label
-                    class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors"
-                  >
-                    {{ subiendoImagen() ? 'Subiendo...' : 'Cambiar' }}
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp, image/gif"
-                      class="hidden"
-                      [disabled]="subiendoImagen()"
-                      (change)="subirArchivoPrincipal($event)"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    (click)="eliminarImagenPrincipal()"
-                    class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
-                    title="Eliminar imagen"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <!-- Dropzone con Drag & Drop funcional -->
-              <label
-                (dragover)="onDragOverPrincipal($event)"
-                (dragleave)="onDragLeavePrincipal($event)"
-                (drop)="onDropPrincipal($event)"
-                [class]="arrastrandoPrincipal()
-                  ? 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-vino bg-perla/70 rounded-xl cursor-pointer transition-colors group'
-                  : 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-gray-300 hover:border-vino/60 bg-white rounded-xl cursor-pointer transition-colors group'"
-              >
-                <div class="flex flex-col items-center justify-center text-center pointer-events-none">
-                  @if (subiendoImagen()) {
-                    <svg class="animate-spin h-6 w-6 text-vino mb-2" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    <span class="text-xs text-vino font-medium">Optimizando y subiendo imagen...</span>
-                  } @else {
-                    <svg class="w-8 h-8 text-gray-400 group-hover:text-carmesi transition-colors mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                    </svg>
-                    <p class="text-xs font-semibold text-gray-700 group-hover:text-carmesi">
-                      {{ arrastrandoPrincipal() ? 'Suelta la imagen aquí' : 'Arrastra una imagen aquí o haz clic para seleccionarla' }}
-                    </p>
-                    <p class="text-xs text-gray-400 mt-0.5">JPG, PNG, WEBP o GIF (máx. 5 MB)</p>
-                  }
-                </div>
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/webp, image/gif"
-                  class="hidden"
-                  [disabled]="subiendoImagen()"
-                  (change)="subirArchivoPrincipal($event)"
-                />
-              </label>
-            }
-          </div>
-
-          <!-- Fila 7: Imágenes adicionales (Solo subida segura + Drag & Drop) -->
-          <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
-                Imágenes adicionales ({{ imagenesAdicionalesArray.length }}/10)
-              </label>
-              @if (imagenesAdicionalesArray.length < 10) {
-                <label
-                  class="inline-flex items-center gap-1.5 text-xs text-vino hover:text-carmesi font-semibold cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  Subir foto
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/webp, image/gif"
-                    class="hidden"
-                    [disabled]="subiendoImagenAdicional()"
-                    (change)="subirArchivoAdicional($event)"
-                  />
-                </label>
-              }
-            </div>
-
-            @if (imagenesAdicionalesArray.length < 10) {
-              <label
-                (dragover)="onDragOverAdicional($event)"
-                (dragleave)="onDragLeaveAdicional($event)"
-                (drop)="onDropAdicional($event)"
-                [class]="arrastrandoAdicional()
-                  ? 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-vino bg-perla/70 rounded-xl cursor-pointer transition-colors text-xs font-medium text-vino'
-                  : 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 hover:border-vino/60 bg-white rounded-xl cursor-pointer transition-colors text-xs text-gray-500 hover:text-carmesi'"
-              >
-                @if (subiendoImagenAdicional()) {
-                  <svg class="animate-spin h-4 w-4 text-vino" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  <span>Optimizando y subiendo imagen adicional...</span>
-                } @else {
-                  <span class="pointer-events-none">
-                    {{ arrastrandoAdicional() ? 'Suelta la foto aquí para agregarla' : 'Arrastra una foto aquí o haz clic para añadir a la galería' }}
-                  </span>
-                }
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/webp, image/gif"
-                  class="hidden"
-                  [disabled]="subiendoImagenAdicional()"
-                  (change)="subirArchivoAdicional($event)"
-                />
-              </label>
-            }
-
-            @if (imagenesAdicionalesArray.length > 0) {
-              <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
-                @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
-                  <div class="relative group aspect-[4/5] rounded-xl overflow-hidden bg-white border border-gray-200 p-1">
-                    <img
-                      [src]="ctrl.value"
-                      [alt]="'Imagen adicional ' + ($index + 1)"
-                      referrerpolicy="no-referrer"
-                      class="w-full h-full object-contain"
-                    />
-                    <button
-                      type="button"
-                      (click)="eliminarImagenAdicional($index)"
-                      class="absolute top-1 right-1 p-1 bg-white/90 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg shadow-xs transition-colors cursor-pointer"
-                      title="Eliminar imagen"
-                      aria-label="Eliminar imagen adicional"
-                    >
-                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Fila 8: Estado activo (solo en edición) -->
-          @if (productoEnEdicion()) {
-            <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50">
-              <label class="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  formControlName="activo"
-                  class="w-4 h-4 rounded border-gray-300 text-vino focus:ring-vino/30 focus:border-vino cursor-pointer"
-                />
-                <div>
-                  <span class="block text-sm font-semibold text-gray-800">
-                    Producto activo (visible para venta)
-                  </span>
-                  <span class="block text-xs text-gray-500">
-                    Desmarca esta opción para retirar el producto del catálogo público y del punto de venta.
-                  </span>
-                </div>
-              </label>
-            </div>
+        <!-- Fila 2: Nombre -->
+        <div>
+          <label for="prodNombre" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Nombre del producto *
+          </label>
+          <input id="prodNombre" type="text" formControlName="nombre" placeholder="Ej: Polera Demon Slayer Tanjiro"
+            class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+            [class.border-red-400]="campoInvalido('nombre')" />
+          @if (campoInvalido('nombre')) {
+          <p class="text-xs text-peligro mt-1">El nombre es requerido.</p>
           }
         </div>
 
-        <!-- Footer fijo -->
-        <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex-shrink-0">
-          <button
-            type="button"
-            (click)="cerrarModal()"
-            class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-white transition-colors cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            [disabled]="guardando()"
-            class="px-5 py-2 bg-vino hover:bg-carmesi text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50 cursor-pointer shadow-sm shadow-vino/20"
-          >
-            {{ guardando() ? 'Guardando...' : (productoEnEdicion() ? 'Actualizar producto' : 'Guardar producto') }}
-          </button>
+        <!-- Fila 3: Descripción -->
+        <div>
+          <label for="prodDesc" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+            Descripción
+          </label>
+          <textarea id="prodDesc" formControlName="descripcion" rows="2"
+            placeholder="Detalles sobre el material, presentación, origen..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"></textarea>
         </div>
-      </form>
-    </div>
+
+        <!-- Fila 4: Precios y Stock (Con explicación clara de costos y stock en solo lectura al editar) -->
+        <div class="bg-gray-50/80 p-4 rounded-xl border border-black/10 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Precio Venta -->
+            <div>
+              <label for="prodPrecio" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
+                Precio venta (Bs.) *
+              </label>
+              <input id="prodPrecio" type="text" inputmode="decimal" formControlName="precioBs" placeholder="Ej: 185,50"
+                class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+                [class.border-red-400]="campoInvalido('precioBs')" />
+              @if (campoInvalido('precioBs')) {
+              <p class="text-xs text-peligro mt-1">Ingresa un precio válido (≥ 0).</p>
+              }
+            </div>
+
+            <!-- Costo de compra -->
+            <div>
+              <label for="prodCosto" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                {{ productoEnEdicion() ? 'Costo vigente (Bs.)' : 'Costo inicial (Bs.)' }}
+              </label>
+              <input id="prodCosto" type="text" inputmode="decimal" formControlName="costoBs" placeholder="Ej: 110,00"
+                class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+                [class.border-red-400]="campoInvalido('costoBs')" />
+              @if (campoInvalido('costoBs')) {
+              <p class="text-xs text-peligro mt-1">Ingresa un costo válido (≥ 0).</p>
+              }
+            </div>
+
+            <!-- Stock: editable solo al crear; solo lectura al editar -->
+            <div>
+              <label for="prodStock" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                {{ productoEnEdicion() ? 'Stock actual' : 'Stock inicial *' }}
+              </label>
+              @if (productoEnEdicion()) {
+              <div
+                class="flex items-center justify-between px-3 py-2 border border-gray-200 bg-gray-100 rounded-xl text-sm font-bold text-gray-700 tabular-nums">
+                <span>{{ productoEnEdicion()!.stock }} unid.</span>
+                <a routerLink="/admin/inventario" (click)="cerrarModal()"
+                  class="text-[11px] font-semibold text-vino hover:text-carmesi hover:underline">
+                  Ajustar / Ingresar →
+                </a>
+              </div>
+              } @else {
+              <input id="prodStock" type="number" step="1" min="0" formControlName="stock" placeholder="0"
+                class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+                [class.border-red-400]="campoInvalido('stock')" />
+              @if (campoInvalido('stock')) {
+              <p class="text-xs text-peligro mt-1">El stock debe ser ≥ 0.</p>
+              }
+              }
+            </div>
+          </div>
+
+          <p class="text-[11px] text-gray-500 leading-relaxed">
+            @if (productoEnEdicion()) {
+            El <strong>stock</strong> y las compras nuevas se registran desde
+            <a routerLink="/admin/inventario" (click)="cerrarModal()"
+              class="text-vino font-semibold hover:underline">Inventario</a>
+            para mantener el kardex y actualizar el costo vigente. Edita el costo aquí solo si necesitas corregir un
+            error.
+            } @else {
+            Usa <strong>Costo inicial</strong> y <strong>Stock inicial</strong> solo al dar de alta el producto. Las
+            reposiciones futuras se registran en <strong>Inventario</strong>.
+            }
+          </p>
+        </div>
+
+        <!-- Fila 5: Escala y Control inteligente de Talla -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+          <div>
+            <label for="prodEscala" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1">
+              Escala (opcional)
+            </label>
+            <input id="prodEscala" type="text" formControlName="escala" placeholder="Ej: 1/7, 1/12, Nendoroid"
+              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino" />
+          </div>
+
+          <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-3 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                  ¿Requiere talla?
+                </p>
+                <p class="text-[11px] text-gray-500">
+                  {{ requiereTalla() ? 'Indica las tallas disponibles' : 'No aplica (figuras, pines, peluches)' }}
+                </p>
+              </div>
+              <button type="button" role="switch" [attr.aria-checked]="requiereTalla()"
+                (click)="alternarRequiereTalla()"
+                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-vino/40"
+                [class.bg-vino]="requiereTalla()" [class.bg-gray-300]="!requiereTalla()">
+                <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition-transform"
+                  [class.translate-x-6]="requiereTalla()" [class.translate-x-1]="!requiereTalla()"></span>
+              </button>
+            </div>
+
+            @if (requiereTalla()) {
+            <div class="space-y-2 pt-1">
+              <input id="prodTalla" type="text" formControlName="notaTalla" placeholder="Ej: Tallas S, M, L disponibles"
+                class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+                [class.border-red-400]="campoInvalido('notaTalla')" />
+              <div class="flex flex-wrap gap-1.5">
+                @for (atajo of atajosTalla; track atajo) {
+                <button type="button" (click)="aplicarAtajoTalla(atajo)"
+                  class="px-2 py-0.5 text-[11px] font-medium rounded-md border border-vino/25 bg-perla/70 text-vino hover:bg-perla transition-colors cursor-pointer">
+                  {{ atajo }}
+                </button>
+                }
+              </div>
+              @if (campoInvalido('notaTalla')) {
+              <p class="text-xs text-peligro">Indica las tallas disponibles o desactiva la opción.</p>
+              }
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Fila 6: Imagen Principal (Solo subida segura + Drag & Drop, optimizada a 4:5 en R2) -->
+        <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
+              Imagen principal del producto
+            </label>
+            <span class="text-[11px] text-gray-500">Se ajusta automáticamente a 4:5 (WebP)</span>
+          </div>
+
+          @if (form.get('imagenPrincipal')?.value) {
+          <!-- Vista previa con soporte para soltar nueva foto encima -->
+          <div (dragover)="onDragOverPrincipal($event)" (dragleave)="onDragLeavePrincipal($event)"
+            (drop)="onDropPrincipal($event)" [class]="arrastrandoPrincipal()
+                  ? 'flex items-center gap-4 bg-perla/70 p-3 rounded-xl border-2 border-dashed border-vino transition-colors'
+                  : 'flex items-center gap-4 bg-white p-3 rounded-xl border border-gray-200 transition-colors'">
+            <div class="w-16 h-20 rounded-lg overflow-hidden bg-white border border-gray-200 shrink-0 p-1">
+              <img [src]="form.get('imagenPrincipal')?.value" alt="Vista previa" referrerpolicy="no-referrer"
+                class="w-full h-full object-contain" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-exito flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Imagen optimizada y guardada
+              </p>
+              <p class="text-[11px] text-gray-400 mt-0.5">
+                Puedes arrastrar otra imagen aquí o usar el botón Cambiar.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label
+                class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors">
+                {{ subiendoImagen() ? 'Subiendo...' : 'Cambiar' }}
+                <input type="file" accept="image/png, image/jpeg, image/webp, image/gif" class="hidden"
+                  [disabled]="subiendoImagen()" (change)="subirArchivoPrincipal($event)" />
+              </label>
+              <button type="button" (click)="eliminarImagenPrincipal()"
+                class="p-1.5 text-peligro hover:bg-peligro-suave rounded-lg cursor-pointer transition-colors"
+                title="Eliminar imagen">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          } @else {
+          <!-- Dropzone con Drag & Drop funcional -->
+          <label (dragover)="onDragOverPrincipal($event)" (dragleave)="onDragLeavePrincipal($event)"
+            (drop)="onDropPrincipal($event)"
+            [class]="arrastrandoPrincipal()
+                  ? 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-vino bg-perla/70 rounded-xl cursor-pointer transition-colors group'
+                  : 'flex flex-col items-center justify-center p-5 border-2 border-dashed border-gray-300 hover:border-vino/60 bg-white rounded-xl cursor-pointer transition-colors group'">
+            <div class="flex flex-col items-center justify-center text-center pointer-events-none">
+              @if (subiendoImagen()) {
+              <svg class="animate-spin h-6 w-6 text-vino mb-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <span class="text-xs text-vino font-medium">Optimizando y subiendo imagen...</span>
+              } @else {
+              <svg class="w-8 h-8 text-gray-400 group-hover:text-carmesi transition-colors mb-2" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+              </svg>
+              <p class="text-xs font-semibold text-gray-700 group-hover:text-carmesi">
+                {{ arrastrandoPrincipal() ? 'Suelta la imagen aquí' : 'Arrastra una imagen aquí o haz clic para
+                seleccionarla' }}
+              </p>
+              <p class="text-xs text-gray-400 mt-0.5">JPG, PNG, WEBP o GIF (máx. 5 MB)</p>
+              }
+            </div>
+            <input type="file" accept="image/png, image/jpeg, image/webp, image/gif" class="hidden"
+              [disabled]="subiendoImagen()" (change)="subirArchivoPrincipal($event)" />
+          </label>
+          }
+        </div>
+
+        <!-- Fila 7: Imágenes adicionales (Solo subida segura + Drag & Drop) -->
+        <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wide">
+              Imágenes adicionales ({{ imagenesAdicionalesArray.length }}/10)
+            </label>
+            @if (imagenesAdicionalesArray.length < 10) { <label
+              class="inline-flex items-center gap-1.5 text-xs text-vino hover:text-carmesi font-semibold cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Subir foto
+              <input type="file" accept="image/png, image/jpeg, image/webp, image/gif" class="hidden"
+                [disabled]="subiendoImagenAdicional()" (change)="subirArchivoAdicional($event)" />
+              </label>
+              }
+          </div>
+
+          @if (imagenesAdicionalesArray.length < 10) { <label (dragover)="onDragOverAdicional($event)"
+            (dragleave)="onDragLeaveAdicional($event)" (drop)="onDropAdicional($event)"
+            [class]="arrastrandoAdicional()
+                  ? 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-vino bg-perla/70 rounded-xl cursor-pointer transition-colors text-xs font-medium text-vino'
+                  : 'flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 hover:border-vino/60 bg-white rounded-xl cursor-pointer transition-colors text-xs text-gray-500 hover:text-carmesi'">
+            @if (subiendoImagenAdicional()) {
+            <svg class="animate-spin h-4 w-4 text-vino" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <span>Optimizando y subiendo imagen adicional...</span>
+            } @else {
+            <span class="pointer-events-none">
+              {{ arrastrandoAdicional() ? 'Suelta la foto aquí para agregarla' : 'Arrastra una foto aquí o haz clic para
+              añadir a la galería' }}
+            </span>
+            }
+            <input type="file" accept="image/png, image/jpeg, image/webp, image/gif" class="hidden"
+              [disabled]="subiendoImagenAdicional()" (change)="subirArchivoAdicional($event)" />
+            </label>
+            }
+
+            @if (imagenesAdicionalesArray.length > 0) {
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+              @for (ctrl of imagenesAdicionalesArray.controls; track $index) {
+              <div class="relative group aspect-[4/5] rounded-xl overflow-hidden bg-white border border-gray-200 p-1">
+                <img [src]="ctrl.value" [alt]="'Imagen adicional ' + ($index + 1)" referrerpolicy="no-referrer"
+                  class="w-full h-full object-contain" />
+                <button type="button" (click)="eliminarImagenAdicional($index)"
+                  class="absolute top-1 right-1 p-1 bg-white/90 text-gray-500 hover:text-peligro hover:bg-peligro-suave rounded-lg shadow-xs transition-colors cursor-pointer"
+                  title="Eliminar imagen" aria-label="Eliminar imagen adicional">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              }
+            </div>
+            }
+        </div>
+
+        <!-- Fila 8: Estado activo (solo en edición) -->
+        @if (productoEnEdicion()) {
+        <div class="border border-gray-200 rounded-2xl p-4 bg-gray-50/50">
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" formControlName="activo"
+              class="w-4 h-4 rounded border-gray-300 text-vino focus:ring-vino/30 focus:border-vino cursor-pointer" />
+            <div>
+              <span class="block text-sm font-semibold text-gray-800">
+                Producto activo (visible para venta)
+              </span>
+              <span class="block text-xs text-gray-500">
+                Desmarca esta opción para retirar el producto del catálogo público y del punto de venta.
+              </span>
+            </div>
+          </label>
+        </div>
+        }
+      </div>
+
+      <!-- Footer fijo -->
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/80 flex-shrink-0">
+        <button type="button" (click)="cerrarModal()"
+          class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-white transition-colors cursor-pointer">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="guardando()"
+          class="px-5 py-2 bg-vino hover:bg-carmesi text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50 cursor-pointer shadow-sm shadow-vino/20">
+          {{ guardando() ? 'Guardando...' : (productoEnEdicion() ? 'Actualizar producto' : 'Guardar producto') }}
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 }
 
 <!-- Modal Confirmación de Baja (Limpio sin código RN-07) -->
 @if (productoParaBaja()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-    (click)="cerrarModalBaja()"
-  >
-    <div
-      class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="flex items-center gap-3 mb-3 text-rose-600">
-        <svg class="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <h3 class="text-base font-bold text-gray-900">¿Dar de baja producto?</h3>
-      </div>
-      <p class="text-sm text-gray-600 mb-5 leading-relaxed">
-        El producto <strong>"{{ productoParaBaja()!.nombre }}"</strong> pasará a estado inactivo. Ya no se mostrará en el catálogo público ni en el punto de venta.
-      </p>
-      <div class="flex justify-end gap-2">
-        <button
-          type="button"
-          (click)="cerrarModalBaja()"
-          class="px-3.5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 cursor-pointer"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          (click)="confirmarBaja()"
-          [disabled]="dandoDeBaja()"
-          class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-xl cursor-pointer transition-colors shadow-sm disabled:opacity-50"
-        >
-          {{ dandoDeBaja() ? 'Procesando...' : 'Sí, dar de baja' }}
-        </button>
-      </div>
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+  (click)="cerrarModalBaja()">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-3 text-peligro">
+      <svg class="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h3 class="text-base font-bold text-gray-900">¿Dar de baja producto?</h3>
+    </div>
+    <p class="text-sm text-gray-600 mb-5 leading-relaxed">
+      El producto <strong>"{{ productoParaBaja()!.nombre }}"</strong> pasará a estado inactivo. Ya no se mostrará en el
+      catálogo público ni en el punto de venta.
+    </p>
+    <div class="flex justify-end gap-2">
+      <button type="button" (click)="cerrarModalBaja()"
+        class="px-3.5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 cursor-pointer">
+        Cancelar
+      </button>
+      <button type="button" (click)="confirmarBaja()" [disabled]="dandoDeBaja()"
+        class="px-4 py-2 bg-peligro hover:opacity-90 text-white text-sm font-medium rounded-xl cursor-pointer transition-colors shadow-sm disabled:opacity-50">
+        {{ dandoDeBaja() ? 'Procesando...' : 'Sí, dar de baja' }}
+      </button>
     </div>
   </div>
+</div>
 }

@@ -33,4 +33,33 @@ export class AuthService {
     estaAutenticada(): boolean {
         return this.sesion() !== null;
     }
+
+    cambiarUsuario(
+        nuevoUsuario: string,
+        contrasenaActual: string,
+    ): Observable<{ usuario: string; mensaje: string }> {
+        return this.http
+            .patch<{ usuario: string; mensaje: string }>(`${this.base}/auth/perfil/usuario`, {
+                nuevoUsuario,
+                contrasenaActual,
+            })
+            .pipe(
+                tap((res) => {
+                    const actual = this.sesion();
+                    if (actual) {
+                        this.sesion.set({ ...actual, usuario: res.usuario });
+                    }
+                }),
+            );
+    }
+
+    cambiarContrasena(
+        contrasenaActual: string,
+        nuevaContrasena: string,
+    ): Observable<{ mensaje: string }> {
+        return this.http.patch<{ mensaje: string }>(`${this.base}/auth/perfil/contrasena`, {
+            contrasenaActual,
+            nuevaContrasena,
+        });
+    }
 }

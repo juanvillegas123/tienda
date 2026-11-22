@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener, DestroyRef } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
     FormBuilder,
@@ -18,6 +18,7 @@ import {
     TipoMovimientoInventario,
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
 
 function parsearBsACentavos(valor: unknown): number | null {
     if (valor === null || valor === undefined || String(valor).trim() === '') return null;
@@ -37,7 +38,7 @@ function validadorCosto(control: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-inventario-admin',
     standalone: true,
-    imports: [ReactiveFormsModule, DatePipe, BsPipe],
+    imports: [ReactiveFormsModule, DatePipe, BsPipe, AppSelectComponent],
     templateUrl: './inventario.html',
 })
 export class InventarioAdminComponent implements OnInit {
@@ -45,6 +46,7 @@ export class InventarioAdminComponent implements OnInit {
     private readonly productosService = inject(ProductosService);
     private readonly proveedoresService = inject(ProveedoresService);
     private readonly fb = inject(FormBuilder);
+    private readonly destroyRef = inject(DestroyRef);
 
     readonly movimientos = signal<MovimientoInventario[]>([]);
     readonly productos = signal<ProductoAdmin[]>([]);
@@ -54,8 +56,47 @@ export class InventarioAdminComponent implements OnInit {
     readonly guardando = signal(false);
 
     // Filtros del historial
+    readonly filtroTexto = signal('');
     readonly filtroProductoId = signal<number | null>(null);
     readonly filtroTipo = signal<'TODOS' | TipoMovimientoInventario>('TODOS');
+    readonly filtroOrden = signal<'fecha-desc' | 'fecha-asc'>('fecha-desc');
+    private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Opciones para desplegables personalizados
+    readonly opcionesProductosFiltro = computed<OpcionSelect[]>(() => [
+        { valor: null, etiqueta: 'Todos los productos' },
+        ...this.productos().map((p) => ({
+            valor: p.id,
+            etiqueta: p.nombre,
+            subtitulo: `Stock: ${p.stock}`,
+        })),
+    ]);
+
+    readonly opcionesProductosModal = computed<OpcionSelect[]>(() =>
+        this.productos().map((p) => ({
+            valor: p.id,
+            etiqueta: p.nombre,
+            subtitulo: `Stock: ${p.stock}`,
+        })),
+    );
+
+    readonly opcionesProveedoresModal = computed<OpcionSelect[]>(() => [
+        { valor: null, etiqueta: 'Sin proveedor' },
+        ...this.proveedores().map((p) => ({ valor: p.id, etiqueta: p.nombre })),
+    ]);
+
+    readonly opcionesTipo: OpcionSelect[] = [
+        { valor: 'TODOS', etiqueta: 'Todos los tipos' },
+        { valor: 'ENTRADA', etiqueta: 'Entradas' },
+        { valor: 'SALIDA', etiqueta: 'Salidas (ventas)' },
+        { valor: 'AJUSTE', etiqueta: 'Ajustes manuales' },
+        { valor: 'DEVOLUCION', etiqueta: 'Devoluciones' },
+    ];
+
+    readonly opcionesOrden: OpcionSelect[] = [
+        { valor: 'fecha-desc', etiqueta: 'Más recientes primero' },
+        { valor: 'fecha-asc', etiqueta: 'Más antiguos primero' },
+    ];
 
     // Modales
     readonly modalEntradaAbierto = signal(false);
@@ -98,6 +139,9 @@ export class InventarioAdminComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.destroyRef.onDestroy(() => {
+            if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        });
         this.cargarCatalogos();
         this.cargarMovimientos();
     }
@@ -118,29 +162,53 @@ export class InventarioAdminComponent implements OnInit {
         const tipoSel = this.filtroTipo();
         const tipo: TipoMovimientoInventario | undefined = tipoSel === 'TODOS' ? undefined : tipoSel;
         const productoId = this.filtroProductoId() ?? undefined;
+        const q = this.filtroTexto().trim();
 
-        this.inventarioService.listarMovimientos({ productoId, tipo, limite: 150 }).subscribe({
-            next: (lista) => {
-                this.movimientos.set(lista);
-                this.cargando.set(false);
-            },
-            error: () => {
-                this.cargando.set(false);
-                this.mensajeError.set('No se pudo cargar el historial de movimientos.');
-            },
-        });
+        this.inventarioService
+            .listarMovimientos({
+                productoId,
+                tipo,
+                q: q.length > 0 ? q : undefined,
+                orden: this.filtroOrden(),
+                limite: 150,
+            })
+            .subscribe({
+                next: (lista) => {
+                    this.movimientos.set(lista);
+                    this.cargando.set(false);
+                },
+                error: () => {
+                    this.cargando.set(false);
+                    this.mensajeError.set('No se pudo cargar el historial de movimientos.');
+                },
+            });
     }
 
-    actualizarFiltroProducto(event: Event): void {
-        const valor = (event.target as HTMLSelectElement).value;
-        this.filtroProductoId.set(valor ? Number(valor) : null);
+    actualizarBusquedaTexto(event: Event): void {
+        const valor = (event.target as HTMLInputElement).value;
+        this.filtroTexto.set(valor);
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => this.cargarMovimientos(), 250);
+    }
+
+    limpiarBusquedaTexto(): void {
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.filtroTexto.set('');
         this.cargarMovimientos();
     }
 
-    actualizarFiltroTipo(event: Event): void {
-        this.filtroTipo.set(
-            (event.target as HTMLSelectElement).value as 'TODOS' | TipoMovimientoInventario,
-        );
+    actualizarFiltroProducto(valor: string | number | null): void {
+        this.filtroProductoId.set(valor !== null && valor !== '' ? Number(valor) : null);
+        this.cargarMovimientos();
+    }
+
+    actualizarFiltroTipo(valor: string | number | null): void {
+        this.filtroTipo.set((valor as 'TODOS' | TipoMovimientoInventario) || 'TODOS');
+        this.cargarMovimientos();
+    }
+
+    actualizarFiltroOrden(valor: string | number | null): void {
+        this.filtroOrden.set((valor as 'fecha-desc' | 'fecha-asc') || 'fecha-desc');
         this.cargarMovimientos();
     }
 
@@ -165,9 +233,9 @@ export class InventarioAdminComponent implements OnInit {
         this.mensajeError.set(null);
     }
 
-    onCambioProductoEntrada(event: Event): void {
-        const id = Number((event.target as HTMLSelectElement).value);
-        const prod = this.productos().find((p) => p.id === id) ?? null;
+    onCambioProductoEntrada(valor: string | number | null): void {
+        const id = valor !== null && valor !== '' ? Number(valor) : null;
+        const prod = id !== null ? (this.productos().find((p) => p.id === id) ?? null) : null;
         this.productoSeleccionadoEntrada.set(prod);
         if (prod) {
             this.formEntrada.patchValue({
@@ -236,9 +304,9 @@ export class InventarioAdminComponent implements OnInit {
         this.mensajeError.set(null);
     }
 
-    onCambioProductoAjuste(event: Event): void {
-        const id = Number((event.target as HTMLSelectElement).value);
-        const prod = this.productos().find((p) => p.id === id) ?? null;
+    onCambioProductoAjuste(valor: string | number | null): void {
+        const id = valor !== null && valor !== '' ? Number(valor) : null;
+        const prod = id !== null ? (this.productos().find((p) => p.id === id) ?? null) : null;
         this.productoSeleccionadoAjuste.set(prod);
         const stockActual = prod?.stock ?? 0;
         this.nuevoStockPreview.set(stockActual);
@@ -308,13 +376,26 @@ export class InventarioAdminComponent implements OnInit {
     claseTipo(tipo: TipoMovimientoInventario): string {
         switch (tipo) {
             case 'ENTRADA':
-                return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+                return 'bg-exito-suave text-exito border border-exito-borde/70';
             case 'SALIDA':
-                return 'bg-slate-100 text-slate-700 border border-slate-200';
+                return 'bg-slate-100 text-slate-700 border border-slate-200/80';
             case 'AJUSTE':
-                return 'bg-amber-50 text-amber-800 border border-amber-200';
+                return 'bg-alerta-suave text-alerta border border-alerta-borde/70';
             case 'DEVOLUCION':
-                return 'bg-rose-50 text-rose-700 border border-rose-200';
+                return 'bg-peligro-suave text-peligro border border-peligro-borde/70';
+        }
+    }
+
+    clasePuntoTipo(tipo: TipoMovimientoInventario): string {
+        switch (tipo) {
+            case 'ENTRADA':
+                return 'bg-exito';
+            case 'SALIDA':
+                return 'bg-slate-500';
+            case 'AJUSTE':
+                return 'bg-alerta';
+            case 'DEVOLUCION':
+                return 'bg-peligro';
         }
     }
 

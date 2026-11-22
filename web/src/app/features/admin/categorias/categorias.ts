@@ -4,11 +4,12 @@ import { CategoriasService } from '../../../core/categorias.service';
 import { Categoria } from '../../../core/modelos';
 import { HttpErrorResponse } from '@angular/common/http';
 import { generarSlug } from '../../../shared/slug';
+import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
 
 @Component({
     selector: 'app-categorias-admin',
     standalone: true,
-    imports: [ReactiveFormsModule],
+    imports: [ReactiveFormsModule, AppSelectComponent],
     templateUrl: './categorias.html',
 })
 export class CategoriasAdminComponent implements OnInit {
@@ -20,6 +21,11 @@ export class CategoriasAdminComponent implements OnInit {
     readonly guardando = signal(false);
     readonly terminoBusqueda = signal('');
     readonly filtroEstado = signal<'todos' | 'activas' | 'inactivas'>('todos');
+    readonly opcionesEstado: OpcionSelect[] = [
+        { valor: 'todos', etiqueta: 'Todos los estados' },
+        { valor: 'activas', etiqueta: 'Solo activas' },
+        { valor: 'inactivas', etiqueta: 'Solo inactivas' },
+    ];
 
     readonly modalAbierto = signal(false);
     readonly autoGenerarSlug = signal(true);

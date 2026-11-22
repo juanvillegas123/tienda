@@ -1,9 +1,11 @@
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
   <!-- Cabecera -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Inventario</h1>
-      <p class="text-sm text-gray-500 mt-0.5">
+      <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">
+        Inventario
+      </h1>
+      <p class="text-sm text-negro/60 mt-1">
         Ingresos de mercadería, ajustes manuales con motivo y kardex de movimientos
       </p>
     </div>
@@ -12,7 +14,7 @@
       <button
         type="button"
         (click)="abrirModalEntrada()"
-        class="inline-flex items-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-sm cursor-pointer transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-xs cursor-pointer transition-colors"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -23,7 +25,7 @@
       <button
         type="button"
         (click)="abrirModalAjuste()"
-        class="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-sm font-semibold rounded-xl cursor-pointer transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2.5 border border-black/15 bg-tarjeta hover:bg-fondo text-negro text-sm font-semibold rounded-xl cursor-pointer transition-colors"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -33,63 +35,95 @@
     </div>
   </div>
 
-  <!-- Filtros del historial -->
-  <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs flex flex-col md:flex-row gap-3">
-    <div class="flex-1">
-      <select
-        [value]="filtroProductoId() ?? ''"
-        (change)="actualizarFiltroProducto($event)"
-        class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-      >
-        <option value="">Todos los productos</option>
-        @for (prod of productos(); track prod.id) {
-          <option [value]="prod.id">{{ prod.nombre }} (Stock: {{ prod.stock }})</option>
-        }
-      </select>
+  <!-- Filtros del historial (búsqueda por nombre, producto, tipo y orden por fecha) -->
+  <div class="bg-tarjeta rounded-2xl border border-black/10 p-4 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+    <!-- Búsqueda por nombre de producto -->
+    <div class="relative lg:col-span-4">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/40">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
+        </svg>
+      </div>
+      <input
+        type="text"
+        [value]="filtroTexto()"
+        (input)="actualizarBusquedaTexto($event)"
+        placeholder="Buscar por nombre de producto..."
+        class="w-full pl-9 pr-8 py-2 border border-black/15 rounded-xl text-sm text-negro bg-white focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+      />
+      @if (filtroTexto().trim().length > 0) {
+        <button
+          type="button"
+          (click)="limpiarBusquedaTexto()"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-negro/45 hover:text-negro cursor-pointer"
+          aria-label="Limpiar búsqueda"
+        >
+          ✕
+        </button>
+      }
     </div>
 
-    <div class="md:w-52">
-      <select
-        [value]="filtroTipo()"
-        (change)="actualizarFiltroTipo($event)"
-        class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-      >
-        <option value="TODOS">Todos los tipos</option>
-        <option value="ENTRADA">Entradas</option>
-        <option value="SALIDA">Salidas (ventas)</option>
-        <option value="AJUSTE">Ajustes manuales</option>
-        <option value="DEVOLUCION">Devoluciones</option>
-      </select>
+    <!-- Selector buscable de producto -->
+    <div class="lg:col-span-3">
+      <app-select
+        [opciones]="opcionesProductosFiltro()"
+        [valor]="filtroProductoId()"
+        (valorChange)="actualizarFiltroProducto($event)"
+        [buscable]="true"
+        placeholder="Todos los productos"
+        ariaLabel="Filtrar por producto"
+      />
+    </div>
+
+    <!-- Filtro por tipo -->
+    <div class="lg:col-span-2">
+      <app-select
+        [opciones]="opcionesTipo"
+        [valor]="filtroTipo()"
+        (valorChange)="actualizarFiltroTipo($event)"
+        ariaLabel="Filtrar por tipo de movimiento"
+      />
+    </div>
+
+    <!-- Orden por fecha -->
+    <div class="lg:col-span-3">
+      <app-select
+        [opciones]="opcionesOrden"
+        [valor]="filtroOrden()"
+        (valorChange)="actualizarFiltroOrden($event)"
+        ariaLabel="Ordenar por fecha"
+      />
     </div>
   </div>
 
   <!-- Alertas -->
   @if (mensajeExito()) {
-    <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm flex items-center justify-between">
+    <div class="p-3.5 bg-exito-suave border border-exito-borde text-exito rounded-xl text-sm flex items-center justify-between">
       <span>{{ mensajeExito() }}</span>
-      <button type="button" (click)="mensajeExito.set(null)" class="text-emerald-600 p-1 cursor-pointer">✕</button>
+      <button type="button" (click)="mensajeExito.set(null)" class="text-exito p-1 cursor-pointer">✕</button>
     </div>
   }
   @if (mensajeError() && !modalEntradaAbierto() && !modalAjusteAbierto()) {
-    <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm flex items-center justify-between">
+    <div class="p-3.5 bg-peligro-suave border border-peligro-borde text-peligro rounded-xl text-sm flex items-center justify-between">
       <span>{{ mensajeError() }}</span>
-      <button type="button" (click)="mensajeError.set(null)" class="text-rose-600 p-1 cursor-pointer">✕</button>
+      <button type="button" (click)="mensajeError.set(null)" class="text-peligro p-1 cursor-pointer">✕</button>
     </div>
   }
 
   <!-- Historial de movimientos -->
-  <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-xs">
+  <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
     @if (cargando()) {
-      <div class="py-14 text-center text-sm text-gray-400">Cargando movimientos de inventario...</div>
+      <div class="py-14 text-center text-sm text-negro/45">Cargando movimientos de inventario...</div>
     } @else if (movimientos().length === 0) {
-      <div class="py-14 text-center text-sm text-gray-500">
+      <div class="py-14 text-center text-sm text-negro/55">
         No hay movimientos registrados con los filtros seleccionados.
       </div>
     } @else {
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse min-w-[680px]">
           <thead>
-            <tr class="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <tr class="bg-fondo border-b border-black/8 text-xs font-semibold text-negro/60 uppercase tracking-wider">
               <th class="py-3.5 px-4">Fecha</th>
               <th class="py-3.5 px-4">Producto</th>
               <th class="py-3.5 px-4 text-center">Tipo</th>
@@ -98,36 +132,37 @@
               <th class="py-3.5 px-4">Detalle / Nota</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+          <tbody class="divide-y divide-black/6 text-sm text-negro/80">
             @for (mov of movimientos(); track mov.id) {
-              <tr class="hover:bg-gray-50/70 transition-colors">
-                <td class="py-3 px-4 text-xs text-gray-500 whitespace-nowrap">
+              <tr class="hover:bg-fondo/60 transition-colors">
+                <td class="py-3 px-4 text-xs text-negro/55 whitespace-nowrap tabular-nums">
                   {{ mov.fecha | date: 'dd/MM/yyyy HH:mm' }}
                 </td>
-                <td class="py-3 px-4 font-semibold text-gray-900">
+                <td class="py-3 px-4 font-semibold text-negro">
                   {{ mov.productoNombre }}
                 </td>
                 <td class="py-3 px-4 text-center">
                   <span
-                    class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
                     [class]="claseTipo(mov.tipo)"
                   >
+                    <span class="w-1.5 h-1.5 rounded-full" [class]="clasePuntoTipo(mov.tipo)"></span>
                     {{ etiquetaTipo(mov.tipo) }}
                   </span>
                 </td>
                 <td class="py-3 px-4 text-center font-bold tabular-nums">
                   @if (mov.tipo === 'ENTRADA' || mov.tipo === 'DEVOLUCION') {
-                    <span class="text-emerald-700">+{{ mov.cantidad }}</span>
+                    <span class="text-exito">+{{ mov.cantidad }}</span>
                   } @else if (mov.tipo === 'SALIDA') {
                     <span class="text-slate-700">−{{ mov.cantidad }}</span>
                   } @else {
-                    <span class="text-amber-700">{{ mov.cantidad }}</span>
+                    <span class="text-alerta">{{ mov.cantidad }}</span>
                   }
                 </td>
-                <td class="py-3 px-4 text-gray-600 text-xs">
+                <td class="py-3 px-4 text-negro/60 text-xs">
                   {{ mov.proveedorNombre || '—' }}
                 </td>
-                <td class="py-3 px-4 text-xs text-gray-600 max-w-md">
+                <td class="py-3 px-4 text-xs text-negro/65 max-w-md">
                   {{ mov.nota || mov.tipoReferencia || '—' }}
                 </td>
               </tr>
@@ -142,70 +177,62 @@
 <!-- Modal Ingreso de Mercadería -->
 @if (modalEntradaAbierto()) {
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-negro/55 backdrop-blur-xs"
     (click)="cerrarModalEntrada()"
   >
     <div
-      class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden"
+      class="bg-tarjeta rounded-2xl max-w-lg w-full shadow-2xl border border-black/10 overflow-visible max-h-[92dvh] flex flex-col"
       (click)="$event.stopPropagation()"
     >
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-bold text-gray-900">Ingresar mercadería</h2>
-        <button type="button" (click)="cerrarModalEntrada()" class="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">
+      <div class="px-6 py-4 border-b border-black/8 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-negro">Ingresar mercadería</h2>
+        <button type="button" (click)="cerrarModalEntrada()" class="p-1 text-negro/45 hover:text-negro cursor-pointer">
           ✕
         </button>
       </div>
 
       @if (mensajeError()) {
-        <div class="mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+        <div class="mx-6 mt-4 p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs">
           {{ mensajeError() }}
         </div>
       }
 
-      <form [formGroup]="formEntrada" (ngSubmit)="guardarEntrada()">
+      <form [formGroup]="formEntrada" (ngSubmit)="guardarEntrada()" class="flex flex-col flex-1 overflow-y-auto">
         <div class="p-6 space-y-4">
           <div>
-            <label for="entProd" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Producto *
             </label>
-            <select
-              id="entProd"
+            <app-select
               formControlName="productoId"
-              (change)="onCambioProductoEntrada($event)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-              [class.border-red-400]="campoInvalido('entrada', 'productoId')"
-            >
-              <option [ngValue]="null">Selecciona un producto</option>
-              @for (prod of productos(); track prod.id) {
-                <option [value]="prod.id">{{ prod.nombre }} (Stock actual: {{ prod.stock }})</option>
-              }
-            </select>
+              [opciones]="opcionesProductosModal()"
+              [buscable]="true"
+              [invalido]="campoInvalido('entrada', 'productoId')"
+              placeholder="Selecciona un producto"
+              (valorChange)="onCambioProductoEntrada($event)"
+            />
             @if (productoSeleccionadoEntrada(); as p) {
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-negro/60 mt-1">
                 Stock actual: <strong>{{ p.stock }}</strong> • Costo vigente actual: <strong>{{ p.costoCentavos | bs }}</strong> (al guardar se actualizará si cambió).
               </p>
             }
           </div>
 
           <div>
-            <label for="entProv" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Proveedor (opcional)
             </label>
-            <select
-              id="entProv"
+            <app-select
               formControlName="proveedorId"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-            >
-              <option [ngValue]="null">Sin proveedor</option>
-              @for (prov of proveedores(); track prov.id) {
-                <option [value]="prov.id">{{ prov.nombre }}</option>
-              }
-            </select>
+              [opciones]="opcionesProveedoresModal()"
+              [buscable]="true"
+              placeholder="Sin proveedor"
+            />
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label for="entCant" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+              <label for="entCant" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
                 Cantidad que ingresa *
               </label>
               <input
@@ -214,13 +241,13 @@
                 min="1"
                 step="1"
                 formControlName="cantidad"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                [class.border-red-400]="campoInvalido('entrada', 'cantidad')"
+                class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+                [class.border-peligro]="campoInvalido('entrada', 'cantidad')"
               />
             </div>
 
             <div>
-              <label for="entCosto" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+              <label for="entCosto" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
                 Costo unitario (Bs.) *
               </label>
               <input
@@ -229,17 +256,17 @@
                 inputmode="decimal"
                 formControlName="costoBs"
                 placeholder="Ej: 110,00"
-                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-                [class.border-red-400]="campoInvalido('entrada', 'costoBs')"
+                class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+                [class.border-peligro]="campoInvalido('entrada', 'costoBs')"
               />
               @if (campoInvalido('entrada', 'costoBs')) {
-                <p class="text-xs text-red-600 mt-1">Ingresa un costo válido (≥ 0).</p>
+                <p class="text-xs text-peligro mt-1">Ingresa un costo válido (≥ 0).</p>
               }
             </div>
           </div>
 
           <div>
-            <label for="entNota" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label for="entNota" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Nota u observación (opcional)
             </label>
             <textarea
@@ -247,16 +274,16 @@
               rows="2"
               formControlName="nota"
               placeholder="Ej: Factura #104, reposición mensual..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
             ></textarea>
           </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+        <div class="px-6 py-4 border-t border-black/8 bg-fondo/60 flex justify-end gap-2 rounded-b-2xl">
           <button
             type="button"
             (click)="cerrarModalEntrada()"
-            class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-white cursor-pointer"
+            class="px-4 py-2 border border-black/15 rounded-xl text-sm font-medium text-negro/75 hover:bg-white cursor-pointer"
           >
             Cancelar
           </button>
@@ -276,48 +303,44 @@
 <!-- Modal Ajuste Manual de Stock -->
 @if (modalAjusteAbierto()) {
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-negro/55 backdrop-blur-xs"
     (click)="cerrarModalAjuste()"
   >
     <div
-      class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden"
+      class="bg-tarjeta rounded-2xl max-w-lg w-full shadow-2xl border border-black/10 overflow-visible max-h-[92dvh] flex flex-col"
       (click)="$event.stopPropagation()"
     >
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="text-lg font-bold text-gray-900">Ajuste manual de stock</h2>
-        <button type="button" (click)="cerrarModalAjuste()" class="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">
+      <div class="px-6 py-4 border-b border-black/8 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-negro">Ajuste manual de stock</h2>
+        <button type="button" (click)="cerrarModalAjuste()" class="p-1 text-negro/45 hover:text-negro cursor-pointer">
           ✕
         </button>
       </div>
 
       @if (mensajeError()) {
-        <div class="mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+        <div class="mx-6 mt-4 p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs">
           {{ mensajeError() }}
         </div>
       }
 
-      <form [formGroup]="formAjuste" (ngSubmit)="guardarAjuste()">
+      <form [formGroup]="formAjuste" (ngSubmit)="guardarAjuste()" class="flex flex-col flex-1 overflow-y-auto">
         <div class="p-6 space-y-4">
           <div>
-            <label for="ajProd" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Producto *
             </label>
-            <select
-              id="ajProd"
+            <app-select
               formControlName="productoId"
-              (change)="onCambioProductoAjuste($event)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino cursor-pointer"
-              [class.border-red-400]="campoInvalido('ajuste', 'productoId')"
-            >
-              <option [ngValue]="null">Selecciona un producto</option>
-              @for (prod of productos(); track prod.id) {
-                <option [value]="prod.id">{{ prod.nombre }} (Stock actual: {{ prod.stock }})</option>
-              }
-            </select>
+              [opciones]="opcionesProductosModal()"
+              [buscable]="true"
+              [invalido]="campoInvalido('ajuste', 'productoId')"
+              placeholder="Selecciona un producto"
+              (valorChange)="onCambioProductoAjuste($event)"
+            />
           </div>
 
           <div>
-            <label for="ajStock" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label for="ajStock" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Nuevo stock físico real *
             </label>
             <input
@@ -327,25 +350,25 @@
               step="1"
               formControlName="nuevoStock"
               (input)="onInputNuevoStock($event)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-              [class.border-red-400]="campoInvalido('ajuste', 'nuevoStock')"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+              [class.border-peligro]="campoInvalido('ajuste', 'nuevoStock')"
             />
             @if (diferenciaAjuste() !== null && productoSeleccionadoAjuste(); as p) {
-              <p class="text-xs mt-1.5 text-gray-600">
+              <p class="text-xs mt-1.5 text-negro/65">
                 Stock actual: <strong>{{ p.stock }}</strong> → Nuevo: <strong>{{ nuevoStockPreview() }}</strong>
                 @if (diferenciaAjuste()! > 0) {
-                  <span class="ml-1 font-semibold text-emerald-700">(+{{ diferenciaAjuste() }} unid.)</span>
+                  <span class="ml-1 font-semibold text-exito">(+{{ diferenciaAjuste() }} unid.)</span>
                 } @else if (diferenciaAjuste()! < 0) {
-                  <span class="ml-1 font-semibold text-rose-600">({{ diferenciaAjuste() }} unid.)</span>
+                  <span class="ml-1 font-semibold text-peligro">({{ diferenciaAjuste() }} unid.)</span>
                 } @else {
-                  <span class="ml-1 text-gray-400">(sin cambio)</span>
+                  <span class="ml-1 text-negro/40">(sin cambio)</span>
                 }
               </p>
             }
           </div>
 
           <div>
-            <label for="ajNota" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+            <label for="ajNota" class="block text-xs font-semibold uppercase tracking-wide text-negro/70 mb-1">
               Motivo / nota obligatoria *
             </label>
             <textarea
@@ -353,27 +376,27 @@
               rows="2"
               formControlName="nota"
               placeholder="Ej: Conteo físico de vitrina, producto dañado en exhibición..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
-              [class.border-red-400]="campoInvalido('ajuste', 'nota')"
+              class="w-full px-3 py-2 border border-black/15 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-vino/25 focus:border-vino"
+              [class.border-peligro]="campoInvalido('ajuste', 'nota')"
             ></textarea>
             @if (campoInvalido('ajuste', 'nota')) {
-              <p class="text-xs text-red-600 mt-1">Debes escribir una nota de al menos 3 caracteres.</p>
+              <p class="text-xs text-peligro mt-1">Debes escribir una nota de al menos 3 caracteres.</p>
             }
           </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+        <div class="px-6 py-4 border-t border-black/8 bg-fondo/60 flex justify-end gap-2 rounded-b-2xl">
           <button
             type="button"
             (click)="cerrarModalAjuste()"
-            class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-white cursor-pointer"
+            class="px-4 py-2 border border-black/15 rounded-xl text-sm font-medium text-negro/75 hover:bg-white cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="submit"
             [disabled]="guardando()"
-            class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl cursor-pointer disabled:opacity-50"
+            class="px-5 py-2 bg-alerta hover:opacity-90 text-white text-sm font-semibold rounded-xl cursor-pointer disabled:opacity-50"
           >
             {{ guardando() ? 'Guardando...' : 'Guardar ajuste' }}
           </button>

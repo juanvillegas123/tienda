@@ -9,6 +9,7 @@ import { CategoriasService } from '../../../core/categorias.service';
 import { ProveedoresService } from '../../../core/proveedores.service';
 import { ProductoAdmin, Categoria, Proveedor, PaginatedResult } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
+import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
 import { HttpErrorResponse } from '@angular/common/http';
 
 function convertirBsACentavos(valor: unknown): number {
@@ -38,7 +39,7 @@ function validadorDinero(control: AbstractControl): ValidationErrors | null {
 @Component({
     selector: 'app-productos-admin',
     standalone: true,
-    imports: [ReactiveFormsModule, RouterLink, BsPipe],
+    imports: [ReactiveFormsModule, RouterLink, BsPipe, AppSelectComponent],
     templateUrl: './productos.html',
 })
 export class ProductosAdminComponent implements OnInit {
@@ -128,6 +129,34 @@ export class ProductosAdminComponent implements OnInit {
         return this.categorias().filter((c) => c.activa);
     });
 
+    readonly opcionesCategoriasFiltro = computed<OpcionSelect[]>(() => [
+        { valor: null, etiqueta: 'Todas las categorías' },
+        ...this.categorias().map((c) => ({ valor: c.id, etiqueta: c.nombre })),
+    ]);
+
+    readonly opcionesCategoriasModal = computed<OpcionSelect[]>(() =>
+        this.categoriasActivas().map((c) => ({ valor: c.id, etiqueta: c.nombre })),
+    );
+
+    readonly opcionesProveedoresModal = computed<OpcionSelect[]>(() => [
+        { valor: null, etiqueta: 'Sin proveedor asignado' },
+        ...this.proveedores().map((p) => ({ valor: p.id, etiqueta: p.nombre })),
+    ]);
+
+    readonly opcionesEstado: OpcionSelect[] = [
+        { valor: 'true', etiqueta: 'Solo activos' },
+        { valor: 'agotados', etiqueta: 'Solo agotados (stock 0)' },
+        { valor: 'false', etiqueta: 'Solo dados de baja' },
+        { valor: 'todos', etiqueta: 'Todos los estados' },
+    ];
+
+    readonly opcionesOrden: OpcionSelect[] = [
+        { valor: 'fecha-desc', etiqueta: 'Más recientes' },
+        { valor: 'fecha-asc', etiqueta: 'Más antiguos' },
+        { valor: 'nombre-asc', etiqueta: 'Nombre (A - Z)' },
+        { valor: 'nombre-desc', etiqueta: 'Nombre (Z - A)' },
+    ];
+
     @HostListener('document:keydown.escape')
     onEscape(): void {
         if (this.modalAbierto()) {
@@ -213,27 +242,22 @@ export class ProductosAdminComponent implements OnInit {
         this.busquedaTexto$.next();
     }
 
-    actualizarCategoria(event: Event): void {
-        const valor = (event.target as HTMLSelectElement).value;
-        this.filtroCategoriaId.set(valor ? Number(valor) : null);
+    actualizarCategoriaValor(valor: string | number | null): void {
+        this.filtroCategoriaId.set(valor !== null && valor !== '' ? Number(valor) : null);
         this.pagina.set(1);
         this.recargar$.next();
     }
 
-    actualizarEstado(event: Event): void {
-        const valor = (event.target as HTMLSelectElement).value as 'true' | 'agotados' | 'false' | 'todos';
-        this.filtroEstado.set(valor);
+    actualizarEstadoValor(valor: string | number | null): void {
+        this.filtroEstado.set((valor as 'true' | 'agotados' | 'false' | 'todos') || 'true');
         this.pagina.set(1);
         this.recargar$.next();
     }
 
-    actualizarOrden(event: Event): void {
-        const valor = (event.target as HTMLSelectElement).value as
-            | 'fecha-desc'
-            | 'fecha-asc'
-            | 'nombre-asc'
-            | 'nombre-desc';
-        this.filtroOrden.set(valor);
+    actualizarOrdenValor(valor: string | number | null): void {
+        this.filtroOrden.set(
+            (valor as 'fecha-desc' | 'fecha-asc' | 'nombre-asc' | 'nombre-desc') || 'fecha-desc',
+        );
         this.pagina.set(1);
         this.recargar$.next();
     }
