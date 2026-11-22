@@ -1,3 +1,6 @@
+<!-- Barra fina de progreso de scroll bajo el encabezado -->
+<div #barraProgreso class="barra-progreso-scroll" aria-hidden="true"></div>
+
 <!-- Aviso flotante de carrito -->
 @if (aviso()) {
   <div
@@ -18,7 +21,7 @@
 }
 
 <!-- 0. HERO (estructura a 2 zonas preparada para agregar una 3.ª zona central a futuro) -->
-<section class="bg-hero-vitrina text-perla border-b-2 border-carmesi overflow-hidden">
+<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-puntos bg-hero-vitrina text-perla border-b-2 border-carmesi overflow-hidden">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
     <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] items-center gap-8">
       <!-- Zona 1: Kicker, H1 único, descripción y acciones -->
@@ -90,7 +93,7 @@
   subtitulo="Piezas seleccionadas para tu colección, organizadas por categoría."
 />
 
-<section class="py-8 sm:py-10" aria-label="Catálogo por categorías">
+<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-puntos py-8 sm:py-10" aria-label="Catálogo por categorías">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-10">
     @if (cargandoCatalogo()) {
       <div class="space-y-4">
@@ -149,7 +152,7 @@
 
           <div class="tira-horizontal flex gap-3.5 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
             @for (prod of recienLlegados(); track prod.id) {
-              <article class="snap-start shrink-0 w-44 sm:w-52 card-vitrina overflow-hidden flex flex-col group">
+              <article class="tarjeta-producto-suave snap-start shrink-0 w-44 sm:w-52 card-vitrina overflow-hidden flex flex-col group">
                 <a
                   [routerLink]="['/producto', rutaProducto(prod.id, prod.nombre)]"
                   class="relative aspect-[4/5] bg-tarjeta overflow-hidden block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
@@ -243,7 +246,7 @@
 
           <div class="tira-horizontal flex gap-3.5 sm:gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
             @for (prod of tira.productos; track prod.id) {
-              <article class="snap-start shrink-0 w-44 sm:w-52 card-vitrina overflow-hidden flex flex-col group">
+              <article class="tarjeta-producto-suave snap-start shrink-0 w-44 sm:w-52 card-vitrina overflow-hidden flex flex-col group">
                 <a
                   [routerLink]="['/producto', rutaProducto(prod.id, prod.nombre)]"
                   class="relative aspect-[4/5] bg-tarjeta overflow-hidden block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
@@ -322,11 +325,11 @@
   [invertida]="true"
 />
 
-<section class="py-8 sm:py-10" aria-label="Cómo comprar y ubicación de la tienda">
+<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-lineas py-8 sm:py-10" aria-label="Cómo comprar y ubicación de la tienda">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-8">
     <!-- 3 viñetas de pasos -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="card-kpi p-5">
+      <div [appVineta]="0" class="card-kpi p-5">
         <span class="font-display text-3xl text-carmesi leading-none">01</span>
         <h3 class="text-base font-bold text-negro mt-2">Arma tu vitrina</h3>
         <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
@@ -334,7 +337,7 @@
         </p>
       </div>
 
-      <div class="card-kpi p-5">
+      <div [appVineta]="1" class="card-kpi p-5">
         <span class="font-display text-3xl text-carmesi leading-none">02</span>
         <h3 class="text-base font-bold text-negro mt-2">Envía por WhatsApp</h3>
         <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
@@ -342,7 +345,7 @@
         </p>
       </div>
 
-      <div class="card-kpi card-kpi-exito p-5">
+      <div [appVineta]="2" class="card-kpi card-kpi-exito p-5">
         <span class="font-display text-3xl text-exito leading-none">03</span>
         <h3 class="text-base font-bold text-negro mt-2">Paga y recibe</h3>
         <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
@@ -353,7 +356,7 @@
 
     <!-- Viñeta única de ubicación y horario (hora de Bolivia) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-      <div class="lg:col-span-5 card-vitrina p-6 flex flex-col justify-between gap-6">
+      <div [appVineta]="0" class="lg:col-span-5 card-vitrina p-6 flex flex-col justify-between gap-6">
         <div class="space-y-5">
           <div class="flex items-center justify-between gap-2">
             <span class="text-[11px] font-extrabold uppercase tracking-[0.1em] text-negro/55 border-l-[3px] border-vino pl-2.5">
@@ -429,7 +432,7 @@
       </div>
 
       <!-- Mapa interactivo o tarjeta de ubicación -->
-      <div class="lg:col-span-7 card-vitrina overflow-hidden min-h-[280px] flex flex-col">
+      <div [appVineta]="1" class="lg:col-span-7 card-vitrina overflow-hidden min-h-[280px] flex flex-col">
         @if (mapaEmbedValido()) {
           <iframe
             #mapaIframe
@@ -476,12 +479,13 @@
   subtitulo="Sigue los nuevos ingresos en redes y resuelve las dudas más comunes."
 />
 
-<section class="py-8 sm:py-10" aria-label="Redes sociales y preguntas frecuentes">
+<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-anillos py-8 sm:py-10" aria-label="Redes sociales y preguntas frecuentes">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-10">
     <!-- Viñetas de redes -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       @if (info().instagramUrl) {
         <a
+          [appVineta]="0"
           [href]="info().instagramUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -507,6 +511,7 @@
 
       @if (info().tiktokUrl) {
         <a
+          [appVineta]="1"
           [href]="info().tiktokUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -532,6 +537,7 @@
 
       @if (info().facebookUrl) {
         <a
+          [appVineta]="2"
           [href]="info().facebookUrl"
           target="_blank"
           rel="noopener noreferrer"
@@ -557,6 +563,7 @@
 
       @if (enlaceWhatsapp(); as wa) {
         <a
+          [appVineta]="3"
           [href]="wa"
           target="_blank"
           rel="noopener noreferrer"
@@ -585,7 +592,7 @@
         Preguntas frecuentes
       </h3>
 
-      <div class="card-vitrina divide-y divide-black/8 overflow-hidden">
+      <div [appVineta]="0" class="card-vitrina divide-y divide-black/8 overflow-hidden">
         @for (faq of negocio.preguntasFrecuentes; track faq.pregunta; let i = $index) {
           <div>
             <button

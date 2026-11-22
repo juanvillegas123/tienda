@@ -10,9 +10,10 @@ import {
     signal,
     viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogoService } from '../../../core/catalogo.service';
 import { CarritoService } from '../../../core/carrito.service';
 import { ConfiguracionService } from '../../../core/configuracion.service';
@@ -20,6 +21,9 @@ import { SeoService } from '../../../core/seo.service';
 import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { FranjaCapituloComponent } from '../../../shared/ui/franja-capitulo/franja-capitulo';
+import { ProgresoScrollDirective } from '../../../shared/directivas/progreso-scroll.directive';
+import { VinetaDirective } from '../../../shared/directivas/vineta.directive';
+import { ScrollEfectosService } from '../../../shared/directivas/scroll-efectos.service';
 import { NEGOCIO_CONFIG } from '../../../shared/negocio.config';
 import { generarSlug } from '../../../shared/slug';
 import {
@@ -79,13 +83,21 @@ function calcularAbiertoEnBolivia(ahora: Date = new Date()): boolean {
 @Component({
     selector: 'app-inicio-publico',
     standalone: true,
-    imports: [RouterLink, BsPipe, FranjaCapituloComponent],
+    imports: [
+        RouterLink,
+        BsPipe,
+        FranjaCapituloComponent,
+        ProgresoScrollDirective,
+        VinetaDirective,
+    ],
     templateUrl: './inicio.html',
 })
 export class InicioComponent implements OnInit {
+    private readonly route = inject(ActivatedRoute);
     private readonly catalogoService = inject(CatalogoService);
     private readonly configService = inject(ConfiguracionService);
     private readonly seo = inject(SeoService);
+    private readonly scrollEfectos = inject(ScrollEfectosService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly doc = inject(DOCUMENT);
     readonly carrito = inject(CarritoService);
@@ -110,6 +122,8 @@ export class InicioComponent implements OnInit {
     readonly aviso = signal<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
     private avisoTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly mapaIframe = viewChild<ElementRef<HTMLIFrameElement>>('mapaIframe');
+    private readonly barraProgreso = viewChild<ElementRef<HTMLElement>>('barraProgreso');
+    private fragmentoPendiente: string | null = null;
 
     readonly recienLlegados = computed(() => this.productos().slice(0, 8));
 
@@ -162,6 +176,11 @@ export class InicioComponent implements OnInit {
                 iframe.src = url;
             }
         });
+
+        effect(() => {
+            const barra = this.barraProgreso()?.nativeElement ?? null;
+            this.scrollEfectos.registrarBarraProgreso(barra);
+        });
     }
 
     ngOnInit(): void {
@@ -174,6 +193,19 @@ export class InicioComponent implements OnInit {
         });
         this.seo.establecerJsonLdTienda(this.info());
         this.seo.establecerJsonLdFaq(this.negocio.preguntasFrecuentes);
+
+        this.route.fragment
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe((frag) => {
+                if (frag) {
+                    this.fragmentoPendiente = frag;
+                    this.desplazarAFragmento(frag);
+                }
+            });
+
+        this.destroyRef.onDestroy(() => {
+            this.scrollEfectos.registrarBarraProgreso(null);
+        });
 
         this.configService.cargarInfoTienda().subscribe();
         this.cargarDatosCatalogo();
@@ -198,6 +230,29 @@ export class InicioComponent implements OnInit {
             this.categorias.set(categorias);
             this.productos.set(productos);
             this.cargandoCatalogo.set(false);
+
+            // Re-alinear al ancla (ej. /#cap-2 desde /catalogo) una vez que CAP. 01 tiene su altura real
+            if (this.fragmentoPendiente) {
+                const destino = this.fragmentoPendiente;
+                this.fragmentoPendiente = null;
+                this.desplazarAFragmento(destino);
+            }
+        });
+    }
+
+    private desplazarAFragmento(fragmento: string): void {
+        if (typeof window === 'undefined') return;
+        const reducido = this.scrollEfectos.movimientoReducido();
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const el = this.doc.getElementById(fragmento);
+                if (el) {
+                    el.scrollIntoView({
+                        behavior: reducido ? 'auto' : 'smooth',
+                        block: 'start',
+                    });
+                }
+            });
         });
     }
 

@@ -51,15 +51,145 @@ html {
   clip-path: polygon(0 var(--a), 100% 0, 100% calc(100% - var(--a)), 0 100%);
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+  will-change: clip-path;
 }
 
 .franja-capitulo-invertida {
   clip-path: polygon(0 0, 100% var(--a), 100% 100%, 0 calc(100% - var(--a)));
 }
 
+/* Pincelada vino bajo títulos de capítulo */
+.pincelada-svg path {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - var(--d, 1));
+}
+
+/* Barra de progreso fina bajo el encabezado */
+.barra-progreso-scroll {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-carmesi);
+  transform-origin: left center;
+  transform: scaleX(0);
+  pointer-events: none;
+  z-index: 45;
+  will-change: transform;
+}
+
+/* Tramas "papel y tinta" por capítulo (capa ::before no interactiva) */
+.capitulo-trama {
+  position: relative;
+  isolation: isolate;
+  --p: 0.5;
+}
+
+.capitulo-trama::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.17;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+
+/* Hero y CAP. 01: trama de puntos */
+.capitulo-trama-puntos::before {
+  background-image: radial-gradient(
+    circle,
+    var(--color-negro) calc(var(--p) * 2.8px + 0.4px),
+    transparent calc(var(--p) * 2.8px + 0.9px)
+  );
+  background-size: 12px 12px;
+}
+
+/* CAP. 02: trama de líneas diagonales */
+.capitulo-trama-lineas::before {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-negro) 0 calc(var(--p) * 2.6px + 0.4px),
+    transparent calc(var(--p) * 2.6px + 0.4px) 10px
+  );
+}
+
+/* CAP. 03: trama de anillos */
+.capitulo-trama-anillos::before {
+  background-image: repeating-radial-gradient(
+    circle at 88% 18%,
+    var(--color-negro) 0 calc(var(--p) * 2.2px + 0.3px),
+    transparent calc(var(--p) * 2.2px + 0.3px) 15px
+  );
+}
+
+/* Viñetas que entran con corte diagonal (solo paneles, nunca tarjetas de producto) */
+.vineta-corte {
+  clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%);
+  transition: clip-path 0.7s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i, 0) * 90ms);
+  will-change: clip-path;
+}
+
+.vineta-corte.in {
+  clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%);
+}
+
+/* Aparecer suave para tarjetas de producto (opacidad + 12px) */
+@keyframes aparecerTarjetaSuave {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tarjeta-producto-suave {
+  animation: aparecerTarjetaSuave 0.42s ease-out both;
+}
+
 @media (max-width: 639px) {
   .franja-capitulo {
     --a: 10px;
+  }
+
+  .vineta-corte {
+    transition-duration: 0.45s;
+    transition-delay: calc(var(--i, 0) * 35ms);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capitulo-trama {
+    --p: 0.5 !important;
+  }
+
+  .franja-capitulo {
+    --a: 16px !important;
+  }
+
+  .pincelada-svg path {
+    stroke-dashoffset: 0 !important;
+  }
+
+  .barra-progreso-scroll {
+    display: none !important;
+  }
+
+  .vineta-corte,
+  .vineta-corte.in {
+    clip-path: none !important;
+    transition: none !important;
+  }
+
+  .tarjeta-producto-suave {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
