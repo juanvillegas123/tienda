@@ -18,6 +18,7 @@ import { POCAS_UNIDADES } from '../../../shared/catalogo-ui.utils';
 import {
     descargarCsv,
     formatearFechaIsoADmy,
+    formatearFechaHoraCsv,
     centavosADecimalCsv,
 } from '../../../shared/csv.utils';
 import { PdfService } from '../../../shared/pdf.service';
@@ -274,8 +275,8 @@ export class ReportesAdminComponent implements OnInit {
             ['Caja #', 'Apertura', 'Cierre', 'Inicial (Bs)', 'Esperado (Bs)', 'Contado (Bs)', 'Diferencia (Bs)'],
             rep.cierres.map((c) => [
                 c.id,
-                new Date(c.fechaApertura).toLocaleString('es-BO'),
-                c.fechaCierre ? new Date(c.fechaCierre).toLocaleString('es-BO') : '',
+                formatearFechaHoraCsv(c.fechaApertura),
+                formatearFechaHoraCsv(c.fechaCierre),
                 centavosADecimalCsv(c.montoInicialCentavos),
                 centavosADecimalCsv(c.efectivoEsperadoCentavos),
                 centavosADecimalCsv(c.efectivoContadoCentavos),

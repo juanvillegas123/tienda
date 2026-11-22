@@ -1,24 +1,27 @@
 /**
- * Descarga un archivo CSV con BOM UTF-8 (\uFEFF) para que Excel en español
- * abra correctamente tildes, ñ y montos sin corromper caracteres.
+ * Descarga un archivo CSV optimizado para Excel en español (Bolivia / LatAm):
+ * - BOM UTF-8 (\uFEFF) para preservar tildes y ñ.
+ * - Separador de columnas punto y coma (;) para que Excel divida cada columna automáticamente.
+ * - Decimales con coma (,) para que los montos sean reconocidos como números sumables.
  */
 export function descargarCsv(
     nombreArchivo: string,
     encabezados: string[],
     filas: (string | number | null | undefined)[][],
 ): void {
+    const separador = ';';
     const escapar = (valor: string | number | null | undefined): string => {
         if (valor === null || valor === undefined) return '';
         const str = String(valor);
-        if (/[",\n\r;]/.test(str)) {
+        if (/[";\n\r]/.test(str)) {
             return `"${str.replace(/"/g, '""')}"`;
         }
         return str;
     };
 
     const lineas = [
-        encabezados.map(escapar).join(','),
-        ...filas.map((fila) => fila.map(escapar).join(',')),
+        encabezados.map(escapar).join(separador),
+        ...filas.map((fila) => fila.map(escapar).join(separador)),
     ];
 
     const contenido = `\uFEFF${lineas.join('\r\n')}`;
@@ -46,8 +49,24 @@ export function formatearFechaIsoADmy(iso: string | null | undefined): string {
 }
 
 /**
- * Convierte centavos a número decimal con 2 decimales para celdas CSV (ej. "45.50").
+ * Convierte una fecha/hora a "dd/MM/yyyy HH:mm" limpia para celdas CSV.
+ */
+export function formatearFechaHoraCsv(valor: string | number | Date | null | undefined): string {
+    if (!valor) return '';
+    const d = valor instanceof Date ? valor : new Date(valor);
+    if (Number.isNaN(d.getTime())) return String(valor);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+}
+
+/**
+ * Convierte centavos a número decimal en formato español con coma (ej. "45,50")
+ * para que Excel en español lo reconozca como monto numérico sumable.
  */
 export function centavosADecimalCsv(centavos: number): string {
-    return (centavos / 100).toFixed(2);
+    return (centavos / 100).toFixed(2).replace('.', ',');
 }

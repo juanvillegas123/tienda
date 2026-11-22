@@ -727,7 +727,7 @@ export class PdfService {
             head: [['Indicador de inventario', 'Valor']],
             body: [
                 [
-                    'Productos para reponer pronto (≤ 14 días)',
+                    'Productos para reponer pronto (14 días o menos)',
                     String(inteligencia.resumen.productosParaReponer),
                 ],
                 [
