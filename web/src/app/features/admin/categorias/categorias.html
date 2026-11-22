@@ -17,7 +17,7 @@
   </div>
 
   <!-- Buscador y filtros -->
-  <div class="bg-tarjeta rounded-2xl border border-black/10 p-4 mb-6 shadow-xs flex flex-col sm:flex-row gap-3">
+  <div class="card-vitrina p-4 mb-6 flex flex-col sm:flex-row gap-3">
     <!-- Buscador -->
     <div class="relative flex-1">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/40">
@@ -82,7 +82,7 @@
   }
 
   <!-- Tabla de categorías -->
-  <div class="bg-white rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+  <div class="card-vitrina overflow-hidden">
     @if (cargando()) {
       <div class="py-16 text-center text-gray-400 text-sm">
         <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-vino" fill="none" viewBox="0 0 24 24">
@@ -127,11 +127,11 @@
                 </td>
                 <td class="py-3 px-4 text-center">
                   @if (cat.activa) {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-exito-suave text-exito border border-exito-borde">
+                    <span class="badge-sello badge-exito">
                       Activa
                     </span>
                   } @else {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    <span class="badge-sello badge-neutro">
                       Inactiva
                     </span>
                   }

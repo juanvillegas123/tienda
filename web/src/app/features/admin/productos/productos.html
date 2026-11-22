@@ -15,7 +15,7 @@
   </div>
 
   <!-- Filtros y ordenamiento -->
-  <div class="bg-tarjeta rounded-2xl border border-black/10 p-4 mb-6 shadow-xs flex flex-col lg:flex-row gap-3">
+  <div class="card-vitrina p-4 mb-6 flex flex-col lg:flex-row gap-3">
     <!-- Buscador de texto -->
     <div class="relative flex-1">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/40">
@@ -103,7 +103,7 @@
   }
 
   <!-- Lista de productos -->
-  <div class="bg-white rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+  <div class="card-vitrina overflow-hidden">
     @if (cargando()) {
     <div class="py-16 text-center text-gray-400 text-sm">
       <svg class="animate-spin h-7 w-7 mx-auto mb-3 text-vino" fill="none" viewBox="0 0 24 24">
@@ -212,12 +212,12 @@
             <td class="py-3 px-4 text-center">
               @if (prod.stock > 0) {
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde">
+                class="badge-sello badge-exito">
                 {{ prod.stock }} unid.
               </span>
               } @else {
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta border border-alerta-borde">
+                class="badge-sello badge-alerta">
                 0 unid. (Agotado)
               </span>
               }
@@ -227,17 +227,17 @@
             <td class="py-3 px-4 text-center">
               @if (!prod.activo) {
               <span
-                class="inline-flex items-center text-xs font-medium text-peligro bg-peligro-suave px-2.5 py-0.5 rounded-full border border-peligro-borde">
+                class="badge-sello badge-peligro">
                 Dado de baja
               </span>
               } @else if (prod.stock === 0) {
               <span
-                class="inline-flex items-center text-xs font-medium text-alerta bg-alerta-suave px-2.5 py-0.5 rounded-full border border-alerta-borde">
+                class="badge-sello badge-alerta">
                 Agotado (En vitrina)
               </span>
               } @else {
               <span
-                class="inline-flex items-center text-xs font-medium text-exito bg-exito-suave px-2.5 py-0.5 rounded-full border border-exito-borde">
+                class="badge-sello badge-exito">
                 Activo
               </span>
               }

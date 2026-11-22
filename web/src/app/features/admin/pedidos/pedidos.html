@@ -9,7 +9,7 @@
     </div>
 
     <!-- Configuración rápida de WhatsApp de la tienda -->
-    <div class="bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-xs flex flex-wrap items-center gap-3">
+    <div class="card-vitrina px-4 py-2.5 flex flex-wrap items-center gap-3">
       @if (!editandoWhatsapp()) {
         <div class="text-xs">
           <span class="text-gray-500 block">WhatsApp de pedidos (carrito)</span>
@@ -72,7 +72,7 @@
   }
 
   <!-- Buscador por código, cliente o teléfono -->
-  <div class="bg-white rounded-xl border border-gray-200 p-3.5 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3">
+  <div class="card-vitrina p-3.5 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
     <div class="relative flex-1 max-w-md">
       <label for="buscarPedido" class="sr-only">Buscar por código, nombre o teléfono del cliente</label>
       <input
@@ -131,7 +131,7 @@
   </div>
 
   <!-- Tabla de Pedidos -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+  <div class="card-vitrina overflow-hidden">
     @if (cargando()) {
       <div class="py-16 text-center text-gray-400 text-sm">
         Cargando pedidos...
@@ -182,22 +182,22 @@
                 <td class="py-3 px-4 text-center">
                   <div class="inline-flex flex-wrap items-center justify-center gap-1.5">
                     @if (ped.estado === 'PENDIENTE') {
-                      <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta">
+                      <span class="badge-sello badge-alerta">
                         Pendiente
                       </span>
                     } @else if (ped.estado === 'CONFIRMADO') {
-                      <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito">
+                      <span class="badge-sello badge-exito">
                         Confirmado
                       </span>
                     } @else {
-                      <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-600">
+                      <span class="badge-sello badge-neutro">
                         Cancelado
                       </span>
                     }
 
                     @if (ped.vencido) {
                       <span
-                        class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-peligro-suave text-peligro"
+                        class="badge-sello badge-peligro-solido"
                         title="Superó las 24 horas sin confirmación"
                       >
                         Vencido
@@ -241,14 +241,14 @@
           <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-xl font-bold text-gray-900 font-mono">{{ pedido.codigo }}</h2>
             @if (pedido.estado === 'PENDIENTE') {
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta">Pendiente</span>
+              <span class="badge-sello badge-alerta">Pendiente</span>
             } @else if (pedido.estado === 'CONFIRMADO') {
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito">Confirmado</span>
+              <span class="badge-sello badge-exito">Confirmado</span>
             } @else {
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-600">Cancelado</span>
+              <span class="badge-sello badge-neutro">Cancelado</span>
             }
             @if (pedido.vencido) {
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-peligro-suave text-peligro">Vencido (&gt;24h)</span>
+              <span class="badge-sello badge-peligro-solido">Vencido (&gt;24h)</span>
             }
           </div>
           <p class="text-sm text-gray-600 mt-1">

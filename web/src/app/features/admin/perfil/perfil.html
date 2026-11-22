@@ -21,14 +21,14 @@
 
   <!-- Tarjeta resumen de cuenta -->
   @if (sesion(); as admin) {
-    <div class="bg-tarjeta rounded-2xl border border-black/10 border-t-2 border-t-vino p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="card-kpi p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-full bg-vino text-perla font-display text-2xl flex items-center justify-center shrink-0">
+        <div class="w-12 h-12 rounded-xl bg-vino text-perla font-display text-2xl flex items-center justify-center shrink-0">
           {{ admin.usuario.charAt(0).toUpperCase() }}
         </div>
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-negro/50">Administradora</p>
-          <p class="text-lg font-bold text-negro">{{ admin.usuario }}</p>
+          <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-negro/50">Administradora</p>
+          <p class="text-lg font-extrabold text-negro">{{ admin.usuario }}</p>
           <p class="text-xs text-negro/55">
             Cuenta activa desde {{ admin.fechaCreacion | date: 'dd/MM/yyyy' }}
           </p>
@@ -36,12 +36,11 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde/70">
-          <span class="w-1.5 h-1.5 rounded-full bg-exito"></span>
-          Sesión protegida (Cookie HttpOnly)
+        <span class="badge-sello badge-exito">
+          Sesión protegida (HttpOnly)
         </span>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-fondo text-negro/70 border border-black/10">
-          Bloqueo activo tras 5 intentos fallidos
+        <span class="badge-sello badge-neutro">
+          Bloqueo activo tras 5 intentos
         </span>
       </div>
     </div>
@@ -49,10 +48,12 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Bloque 1: Cambiar usuario de login -->
-    <div class="bg-tarjeta rounded-2xl border border-black/10 shadow-xs overflow-hidden">
-      <div class="px-5 py-4 border-b border-black/8 bg-fondo/60">
-        <h2 class="text-base font-bold text-negro">Cambiar usuario de acceso</h2>
-        <p class="text-xs text-negro/55 mt-0.5">
+    <div class="card-vitrina overflow-hidden">
+      <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
+        <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
+          Cambiar usuario de acceso
+        </h2>
+        <p class="text-xs text-negro/55 mt-1">
           Usa un nombre de usuario distinto a "admin" para reforzar la seguridad del login.
         </p>
       </div>
@@ -112,10 +113,12 @@
     </div>
 
     <!-- Bloque 2: Cambiar contraseña -->
-    <div class="bg-tarjeta rounded-2xl border border-black/10 shadow-xs overflow-hidden">
-      <div class="px-5 py-4 border-b border-black/8 bg-fondo/60">
-        <h2 class="text-base font-bold text-negro">Cambiar contraseña</h2>
-        <p class="text-xs text-negro/55 mt-0.5">
+    <div class="card-vitrina overflow-hidden">
+      <div class="px-5 py-4 border-b border-black/10 bg-perla/35">
+        <h2 class="text-xs font-extrabold uppercase tracking-[0.08em] text-negro border-l-[3px] border-vino pl-2.5">
+          Cambiar contraseña
+        </h2>
+        <p class="text-xs text-negro/55 mt-1">
           Mínimo 8 caracteres incluyendo una mayúscula, una minúscula y un número.
         </p>
       </div>

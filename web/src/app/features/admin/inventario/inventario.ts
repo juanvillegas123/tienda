@@ -376,13 +376,13 @@ export class InventarioAdminComponent implements OnInit {
     claseTipo(tipo: TipoMovimientoInventario): string {
         switch (tipo) {
             case 'ENTRADA':
-                return 'bg-exito-suave text-exito border border-exito-borde/70';
+                return 'badge-sello badge-exito';
             case 'SALIDA':
-                return 'bg-slate-100 text-slate-700 border border-slate-200/80';
+                return 'badge-sello badge-neutro';
             case 'AJUSTE':
-                return 'bg-alerta-suave text-alerta border border-alerta-borde/70';
+                return 'badge-sello badge-alerta';
             case 'DEVOLUCION':
-                return 'bg-peligro-suave text-peligro border border-peligro-borde/70';
+                return 'badge-sello badge-peligro';
         }
     }
 

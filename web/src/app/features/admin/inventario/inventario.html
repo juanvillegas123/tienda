@@ -36,7 +36,7 @@
   </div>
 
   <!-- Filtros del historial (búsqueda por nombre, producto, tipo y orden por fecha) -->
-  <div class="bg-tarjeta rounded-2xl border border-black/10 p-4 shadow-xs grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+  <div class="card-vitrina p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
     <!-- Búsqueda por nombre de producto -->
     <div class="relative lg:col-span-4">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-negro/40">
@@ -112,7 +112,7 @@
   }
 
   <!-- Historial de movimientos -->
-  <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+  <div class="card-vitrina overflow-hidden">
     @if (cargando()) {
       <div class="py-14 text-center text-sm text-negro/45">Cargando movimientos de inventario...</div>
     } @else if (movimientos().length === 0) {
@@ -142,11 +142,7 @@
                   {{ mov.productoNombre }}
                 </td>
                 <td class="py-3 px-4 text-center">
-                  <span
-                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
-                    [class]="claseTipo(mov.tipo)"
-                  >
-                    <span class="w-1.5 h-1.5 rounded-full" [class]="clasePuntoTipo(mov.tipo)"></span>
+                  <span [class]="claseTipo(mov.tipo)">
                     {{ etiquetaTipo(mov.tipo) }}
                   </span>
                 </td>

@@ -23,7 +23,7 @@
 
   <!-- Selector de rango de fechas -->
   <div
-    class="bg-tarjeta rounded-2xl border border-black/10 p-4 shadow-xs flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+    class="card-vitrina p-4 flex flex-col lg:flex-row lg:items-end justify-between gap-4">
     <div class="flex flex-wrap items-end gap-3">
       <div>
         <label for="repDesde" class="block text-xs font-semibold uppercase tracking-wide text-negro/60 mb-1">
@@ -111,7 +111,7 @@
   @if (pestana() === 'canales' && ventasPorCanal(); as rep) {
   <div class="space-y-5">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ventas brutas</p>
         <p class="text-2xl font-bold text-negro mt-1 tabular-nums">
           {{ rep.totales.ventasBrutasCentavos | bs }}
@@ -119,7 +119,7 @@
         <p class="text-xs text-negro/55 mt-0.5">{{ rep.totales.cantidadVentas }} ventas registradas</p>
       </div>
 
-      <div class="bg-tarjeta rounded-2xl border border-peligro-borde p-5 shadow-xs">
+      <div class="card-kpi card-kpi-peligro p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-peligro">Devoluciones restadas</p>
         <p class="text-2xl font-bold text-peligro mt-1 tabular-nums">
           −{{ rep.totales.devolucionesCentavos | bs }}
@@ -127,13 +127,13 @@
         <p class="text-xs text-negro/55 mt-0.5">Descontadas del período</p>
       </div>
 
-      <div class="bg-negro text-perla rounded-2xl p-5 shadow-xs border border-vino">
+      <div class="card-kpi-oscura text-perla p-5">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-semibold uppercase tracking-wide text-perla/70">Ventas netas</p>
+          <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-perla/70">Ventas netas</p>
           @if (rep.periodoAnterior.variacionPorcentaje !== null) {
-          <span class="px-2 py-0.5 rounded-md text-[11px] font-bold tabular-nums" [class]="rep.periodoAnterior.variacionPorcentaje! >= 0
-                    ? 'bg-exito-suave0/20 text-emerald-300'
-                    : 'bg-peligro-suave0/25 text-red-300'">
+          <span class="badge-sello tabular-nums" [class]="rep.periodoAnterior.variacionPorcentaje! >= 0
+                    ? 'bg-exito/25 text-emerald-200 border-exito/40 border-l-emerald-300'
+                    : 'bg-peligro/30 text-red-200 border-peligro/40 border-l-red-300'">
             {{ rep.periodoAnterior.variacionPorcentaje! >= 0 ? '▲' : '▼' }}
             {{ rep.periodoAnterior.variacionPorcentaje! >= 0 ? '+' : '' }}{{ rep.periodoAnterior.variacionPorcentaje }}%
           </span>
@@ -306,7 +306,7 @@
   @if (pestana() === 'mas-vendidos' && masVendidos(); as rep) {
   <div class="space-y-5">
     @if (top5Productos().length > 0) {
-    <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs space-y-3">
+    <div class="card-kpi p-5 space-y-3">
       <h2 class="text-sm font-bold text-negro uppercase tracking-wide">Top 5 productos del período</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         @for (top of top5Productos(); track top.productoId; let idx = $index) {
@@ -329,7 +329,7 @@
     </div>
     }
 
-    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+    <div class="card-vitrina overflow-hidden">
       <div class="px-6 py-4 border-b border-black/8 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-base font-bold text-negro">Detalle de productos más vendidos</h2>
@@ -388,16 +388,16 @@
               <td class="py-3 px-4 text-center">
                 @if (item.stockActual === 0) {
                 <span
-                  class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-peligro-suave text-peligro border border-peligro-borde">
+                  class="badge-sello badge-peligro">
                   Agotado (0)
                 </span>
                 } @else if (item.stockActual <= umbralStockBajo) { <span
-                  class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta border border-alerta-borde tabular-nums">
+                  class="badge-sello badge-alerta tabular-nums">
                   Stock bajo: {{ item.stockActual }} {{ item.stockActual === 1 ? 'unidad' : 'unidades' }}
                   </span>
                   } @else {
                   <span
-                    class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde tabular-nums">
+                    class="badge-sello badge-exito tabular-nums">
                     {{ item.stockActual }} unid.
                   </span>
                   }
@@ -416,13 +416,13 @@
   @if (pestana() === 'margen' && margen(); as rep) {
   <div class="space-y-5">
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Ingresos netos</p>
         <p class="text-xl font-bold text-negro mt-1 tabular-nums">
           {{ rep.totales.ingresosNetosCentavos | bs }}
         </p>
       </div>
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Costo total neto</p>
         <p class="text-xl font-bold text-negro/75 mt-1 tabular-nums">
           {{ rep.totales.costoNetoCentavos | bs }}
@@ -434,7 +434,7 @@
           {{ rep.totales.margenTotalCentavos | bs }}
         </p>
       </div>
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Margen promedio</p>
         <p class="text-xl font-bold text-vino mt-1 tabular-nums">
           {{ rep.totales.margenPorcentajePromedio }}%
@@ -442,7 +442,7 @@
       </div>
     </div>
 
-    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+    <div class="card-vitrina overflow-hidden">
       <div class="px-6 py-4 border-b border-black/8 flex items-center justify-between gap-3">
         <h2 class="text-base font-bold text-negro">Rentabilidad por producto</h2>
         <button type="button" (click)="exportarMargenCsv()"
@@ -507,25 +507,25 @@
   @if (pestana() === 'cierres' && cierres(); as rep) {
   <div class="space-y-5">
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Cierres en período</p>
         <p class="text-xl font-bold text-negro mt-1 tabular-nums">
           {{ rep.totales.cantidadCierres }}
         </p>
       </div>
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Total esperado</p>
         <p class="text-xl font-bold text-negro mt-1 tabular-nums">
           {{ rep.totales.totalEsperadoCentavos | bs }}
         </p>
       </div>
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Total contado</p>
         <p class="text-xl font-bold text-negro mt-1 tabular-nums">
           {{ rep.totales.totalContadoCentavos | bs }}
         </p>
       </div>
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Diferencia acumulada</p>
         <p class="text-xl font-bold mt-1 tabular-nums" [class]="rep.totales.diferenciaAcumuladaCentavos === 0
                 ? 'text-exito'
@@ -542,7 +542,7 @@
       </div>
     </div>
 
-    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+    <div class="card-vitrina overflow-hidden">
       <div class="px-6 py-4 border-b border-black/8 flex items-center justify-between gap-3">
         <h2 class="text-base font-bold text-negro">Cierres registrados</h2>
         <button type="button" (click)="exportarCierresCsv()"
@@ -620,7 +620,7 @@
   @if (pestana() === 'salud-stock' && inteligenciaStock(); as stockRep) {
   <div class="space-y-5">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-tarjeta rounded-2xl border border-alerta-borde p-5 shadow-xs">
+      <div class="card-kpi card-kpi-alerta p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-alerta">Para reponer pronto (≤ 14 días)</p>
         <p class="text-2xl font-bold text-alerta mt-1 tabular-nums">
           {{ stockRep.resumen.productosParaReponer }}
@@ -628,7 +628,7 @@
         <p class="text-xs text-negro/55 mt-0.5">Productos con baja cobertura según ritmo de 30 días</p>
       </div>
 
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Sin ventas en 30 días</p>
         <p class="text-2xl font-bold text-negro mt-1 tabular-nums">
           {{ stockRep.resumen.totalSinRotacion }}
@@ -636,7 +636,7 @@
         <p class="text-xs text-negro/55 mt-0.5">Productos activos con stock sin rotación</p>
       </div>
 
-      <div class="bg-tarjeta rounded-2xl border border-black/10 p-5 shadow-xs">
+      <div class="card-kpi p-5">
         <p class="text-xs font-semibold uppercase tracking-wide text-negro/55">Capital inmovilizado (30d)</p>
         <p class="text-2xl font-bold text-carmesi mt-1 tabular-nums">
           {{ stockRep.resumen.valorInmovilizadoCentavos | bs }}
@@ -646,7 +646,7 @@
     </div>
 
     <!-- Tabla 1: Días de cobertura y sugerencia de reposición -->
-    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+    <div class="card-vitrina overflow-hidden">
       <div class="px-6 py-4 border-b border-black/8 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-base font-bold text-negro">Días de cobertura y sugerencia de reposición</h2>
@@ -692,16 +692,16 @@
               <td class="py-3 px-4 text-center tabular-nums">{{ c.unidadesNetas30d }}</td>
               <td class="py-3 px-4 text-center tabular-nums">
                 @if (c.diasCobertura <= 7) { <span
-                  class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-peligro-suave text-peligro border border-peligro-borde">
+                  class="badge-sello badge-peligro">
                   {{ c.diasCobertura }} días
                   </span>
                   } @else if (c.diasCobertura <= 14) { <span
-                    class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-alerta-suave text-alerta border border-alerta-borde">
+                    class="badge-sello badge-alerta">
                     {{ c.diasCobertura }} días
                     </span>
                     } @else {
                     <span
-                      class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-exito-suave text-exito border border-exito-borde">
+                      class="badge-sello badge-exito">
                       {{ c.diasCobertura }} días
                     </span>
                     }
@@ -724,7 +724,7 @@
     </div>
 
     <!-- Tabla 2: Productos sin ventas en 30 días -->
-    <div class="bg-tarjeta rounded-2xl border border-black/10 overflow-hidden shadow-xs">
+    <div class="card-vitrina overflow-hidden">
       <div class="px-6 py-4 border-b border-black/8">
         <h2 class="text-base font-bold text-negro">Productos sin ventas en los últimos 30 días</h2>
         <p class="text-xs text-negro/55">Ordenados por capital inmovilizado (stock × costo)</p>
