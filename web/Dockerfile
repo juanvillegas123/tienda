@@ -2,8 +2,8 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000
 
 COPY . .
 RUN npx ng build
