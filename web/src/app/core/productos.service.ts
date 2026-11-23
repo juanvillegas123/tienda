@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ProductoAdmin, CrearProductoPayload, EditarProductoPayload, PaginatedResult } from './modelos';
+import {
+    ProductoAdmin,
+    CrearProductoPayload,
+    EditarProductoPayload,
+    PaginatedResult,
+    DescuentoMasivoPayload,
+    ResultadoDescuentoMasivo,
+} from './modelos';
 
 export interface FiltroProductosAdmin {
     categoriaId?: number;
@@ -68,6 +75,13 @@ export class ProductosService {
 
     reactivar(id: number): Observable<ProductoAdmin> {
         return this.http.patch<ProductoAdmin>(`${this.base}/${id}`, { activo: true });
+    }
+
+    aplicarDescuentoMasivo(payload: DescuentoMasivoPayload): Observable<ResultadoDescuentoMasivo> {
+        return this.http.patch<ResultadoDescuentoMasivo>(
+            `${this.base}/descuento-masivo`,
+            payload,
+        );
     }
 
     subirImagen(archivo: File): Observable<{ url: string; nombreOriginal: string }> {

@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CarritoService } from '../../../core/carrito.service';
 import { ConfiguracionService } from '../../../core/configuracion.service';
+import { IconoRedComponent } from '../../../shared/ui/iconos-redes/icono-red';
 
 @Component({
     selector: 'app-public-layout',
     standalone: true,
-    imports: [RouterOutlet, RouterLink, RouterLinkActive],
+    imports: [RouterOutlet, RouterLink, RouterLinkActive, IconoRedComponent],
     templateUrl: './public-layout.html',
 })
 export class PublicLayoutComponent implements OnInit {

@@ -15,7 +15,7 @@ import {
     cajas,
     movimientosInventario,
 } from '../db/schema';
-import { sumarCentavos, multiplicarCentavos } from '../common/dinero';
+import { sumarCentavos, multiplicarCentavos, calcularPrecioConDescuento } from '../common/dinero';
 import {
     CrearPedidoDto,
     ListarPedidosQueryDto,
@@ -30,6 +30,8 @@ export interface ItemPedidoDetalleDto {
     imagenPrincipal: string | null;
     cantidad: number;
     precioCentavos: number;
+    precioOriginalCentavos: number;
+    descuentoPorcentaje: number;
     subtotalCentavos: number;
     notaCliente: string | null;
     stockActual: number;
@@ -85,6 +87,7 @@ export class PedidosService {
                     id: productos.id,
                     nombre: productos.nombre,
                     precioCentavos: productos.precioCentavos,
+                    descuentoPorcentaje: productos.descuentoPorcentaje,
                     stock: productos.stock,
                     activo: productos.activo,
                 })
@@ -98,6 +101,8 @@ export class PedidosService {
                 nombreProducto: string;
                 cantidad: number;
                 precioCentavos: number;
+                precioOriginalCentavos: number;
+                descuentoPorcentaje: number;
                 subtotalCentavos: number;
                 notaCliente: string | null;
             }[] = [];
@@ -115,14 +120,21 @@ export class PedidosService {
                     );
                 }
 
-                const subtotal = multiplicarCentavos(prod.precioCentavos, item.cantidad);
+                const pct = prod.descuentoPorcentaje ?? 0;
+                const { precioFinalCentavos } = calcularPrecioConDescuento(
+                    prod.precioCentavos,
+                    pct,
+                );
+                const subtotal = multiplicarCentavos(precioFinalCentavos, item.cantidad);
                 const notaLimpia = item.notaCliente?.trim() || null;
 
                 lineasPreparadas.push({
                     productoId: prod.id,
                     nombreProducto: prod.nombre,
                     cantidad: item.cantidad,
-                    precioCentavos: prod.precioCentavos,
+                    precioCentavos: precioFinalCentavos,
+                    precioOriginalCentavos: prod.precioCentavos,
+                    descuentoPorcentaje: pct,
                     subtotalCentavos: subtotal,
                     notaCliente: notaLimpia,
                 });
@@ -159,6 +171,8 @@ export class PedidosService {
                     productoId: linea.productoId,
                     cantidad: linea.cantidad,
                     precioCentavos: linea.precioCentavos,
+                    precioOriginalCentavos: linea.precioOriginalCentavos,
+                    descuentoPorcentaje: linea.descuentoPorcentaje,
                     notaCliente: linea.notaCliente,
                 });
             }
@@ -257,6 +271,8 @@ export class PedidosService {
                 imagenPrincipal: productos.imagenPrincipal,
                 cantidad: detallePedido.cantidad,
                 precioCentavos: detallePedido.precioCentavos,
+                precioOriginalCentavos: detallePedido.precioOriginalCentavos,
+                descuentoPorcentaje: detallePedido.descuentoPorcentaje,
                 notaCliente: detallePedido.notaCliente,
                 stockActual: productos.stock,
                 productoActivo: productos.activo,
@@ -268,6 +284,9 @@ export class PedidosService {
 
         const items: ItemPedidoDetalleDto[] = detalles.map((d) => ({
             ...d,
+            precioOriginalCentavos:
+                d.precioOriginalCentavos > 0 ? d.precioOriginalCentavos : d.precioCentavos,
+            descuentoPorcentaje: d.descuentoPorcentaje ?? 0,
             subtotalCentavos: multiplicarCentavos(d.precioCentavos, d.cantidad),
         }));
 
@@ -342,6 +361,8 @@ export class PedidosService {
                 productoId: number;
                 cantidad: number;
                 precioCentavos: number;
+                precioOriginalCentavos: number;
+                descuentoPorcentaje: number;
             }[] = [];
 
             for (const det of detallesActuales) {
@@ -366,6 +387,11 @@ export class PedidosService {
                     productoId: det.productoId,
                     cantidad: nuevaCantidad,
                     precioCentavos: det.precioCentavos,
+                    precioOriginalCentavos:
+                        det.precioOriginalCentavos > 0
+                            ? det.precioOriginalCentavos
+                            : det.precioCentavos,
+                    descuentoPorcentaje: det.descuentoPorcentaje ?? 0,
                 });
             }
 
@@ -450,6 +476,8 @@ export class PedidosService {
                     productoId: linea.productoId,
                     cantidad: linea.cantidad,
                     precioCentavos: linea.precioCentavos,
+                    precioOriginalCentavos: linea.precioOriginalCentavos,
+                    descuentoPorcentaje: linea.descuentoPorcentaje,
                     costoCentavos: prod.costoCentavos,
                 });
 

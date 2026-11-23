@@ -70,4 +70,12 @@ export class ReportesController {
     inteligenciaStock() {
         return this.reportesService.inteligenciaStock();
     }
+
+    @Get('descuentos')
+    descuentos(
+        @Query(new ZodValidationPipe(rangoFechasSchema))
+        query: RangoFechasDto,
+    ) {
+        return this.reportesService.reporteDescuentos(query);
+    }
 }

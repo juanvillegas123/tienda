@@ -98,6 +98,12 @@ export class ProductosAdminComponent implements OnInit {
 
     // Modales y estados
     readonly modalAbierto = signal(false);
+    readonly modalDescuentoAbierto = signal(false);
+    readonly aplicandoDescuentoMasivo = signal(false);
+    readonly alcanceDescuento = signal<'TIENDA' | 'CATEGORIA'>('TIENDA');
+    readonly categoriaDescuentoId = signal<number | null>(null);
+    readonly porcentajeDescuentoMasivo = signal<number>(10);
+    readonly alertaDescuentoBajoCosto = signal<string | null>(null);
     readonly productoEnEdicion = signal<ProductoAdmin | null>(null);
     readonly productoParaBaja = signal<ProductoAdmin | null>(null);
     readonly requiereTalla = signal(false);
@@ -112,6 +118,7 @@ export class ProductosAdminComponent implements OnInit {
         nombre: ['', [Validators.required, Validators.maxLength(200)]],
         descripcion: [''],
         precioBs: [null as number | string | null, [Validators.required, validadorDinero]],
+        descuentoPorcentaje: [0, [Validators.min(0), Validators.max(99)]],
         costoBs: [null as number | string | null, [validadorDinero]],
         stock: [0, [Validators.required, Validators.min(0)]],
         escala: [''],
@@ -159,11 +166,107 @@ export class ProductosAdminComponent implements OnInit {
 
     @HostListener('document:keydown.escape')
     onEscape(): void {
-        if (this.modalAbierto()) {
+        if (this.modalDescuentoAbierto()) {
+            this.cerrarModalDescuento();
+        } else if (this.modalAbierto()) {
             this.cerrarModal();
         } else if (this.productoParaBaja()) {
             this.cerrarModalBaja();
         }
+    }
+
+    precioFinalFormularioCentavos(): number {
+        const precioCentavos = convertirBsACentavos(this.form.get('precioBs')?.value);
+        const rawPct = Number(this.form.get('descuentoPorcentaje')?.value ?? 0);
+        const pct = isNaN(rawPct) ? 0 : Math.max(0, Math.min(99, Math.trunc(rawPct)));
+        if (pct === 0 || precioCentavos === 0) return precioCentavos;
+        return Math.max(0, precioCentavos - Math.round((precioCentavos * pct) / 100));
+    }
+
+    descuentoFormularioNoBeneficioso(): boolean {
+        const costoCentavos = convertirBsACentavos(this.form.get('costoBs')?.value);
+        const rawPct = Number(this.form.get('descuentoPorcentaje')?.value ?? 0);
+        if (costoCentavos <= 0 || isNaN(rawPct) || rawPct <= 0) return false;
+        return this.precioFinalFormularioCentavos() <= costoCentavos;
+    }
+
+    costoFormularioCentavos(): number {
+        return convertirBsACentavos(this.form.get('costoBs')?.value);
+    }
+
+    abrirModalDescuento(): void {
+        this.mensajeError.set(null);
+        this.alcanceDescuento.set('TIENDA');
+        this.categoriaDescuentoId.set(
+            this.categoriasActivas().length > 0 ? this.categoriasActivas()[0].id : null,
+        );
+        this.porcentajeDescuentoMasivo.set(10);
+        this.modalDescuentoAbierto.set(true);
+    }
+
+    cerrarModalDescuento(): void {
+        this.modalDescuentoAbierto.set(false);
+    }
+
+    actualizarPorcentajeMasivo(event: Event): void {
+        const num = Math.trunc(Number((event.target as HTMLInputElement).value));
+        this.porcentajeDescuentoMasivo.set(isNaN(num) ? 0 : Math.max(0, Math.min(99, num)));
+    }
+
+    actualizarCategoriaDescuento(valor: string | number | null): void {
+        this.categoriaDescuentoId.set(valor !== null && valor !== '' ? Number(valor) : null);
+    }
+
+    aplicarDescuentoMasivo(): void {
+        if (this.aplicandoDescuentoMasivo()) return;
+        const alcance = this.alcanceDescuento();
+        const catId = this.categoriaDescuentoId();
+        if (alcance === 'CATEGORIA' && !catId) {
+            this.mensajeError.set('Selecciona una categoría para aplicar el descuento.');
+            return;
+        }
+
+        const pct = Math.max(0, Math.min(99, Math.trunc(this.porcentajeDescuentoMasivo())));
+        this.aplicandoDescuentoMasivo.set(true);
+        this.mensajeError.set(null);
+        this.mensajeExito.set(null);
+        this.alertaDescuentoBajoCosto.set(null);
+
+        this.productosService
+            .aplicarDescuentoMasivo({
+                alcance,
+                categoriaId: alcance === 'CATEGORIA' ? catId ?? undefined : undefined,
+                descuentoPorcentaje: pct,
+            })
+            .subscribe({
+                next: (res) => {
+                    this.aplicandoDescuentoMasivo.set(false);
+                    this.cerrarModalDescuento();
+                    const destino =
+                        alcance === 'TIENDA'
+                            ? 'toda la tienda'
+                            : `la categoría "${this.categorias().find((c) => c.id === catId)?.nombre ?? ''}"`;
+                    if (pct === 0) {
+                        this.mensajeExito.set(
+                            `Se quitó el descuento en ${res.actualizados} producto(s) de ${destino}.`,
+                        );
+                    } else {
+                        this.mensajeExito.set(
+                            `Descuento del ${pct}% aplicado a ${res.actualizados} producto(s) de ${destino}.`,
+                        );
+                    }
+                    if (res.bajoCosto > 0) {
+                        this.alertaDescuentoBajoCosto.set(
+                            `Atención: ${res.bajoCosto} producto(s) quedaron con precio con descuento menor o igual a su costo de compra (margen no beneficioso).`,
+                        );
+                    }
+                    this.recargar$.next();
+                },
+                error: (err: unknown) => {
+                    this.aplicandoDescuentoMasivo.set(false);
+                    this.manejarError(err, 'No se pudo aplicar el descuento masivo.');
+                },
+            });
     }
 
     ngOnInit(): void {
@@ -451,6 +554,7 @@ export class ProductosAdminComponent implements OnInit {
             nombre: '',
             descripcion: '',
             precioBs: null,
+            descuentoPorcentaje: 0,
             costoBs: null,
             stock: 0,
             escala: '',
@@ -485,6 +589,7 @@ export class ProductosAdminComponent implements OnInit {
             nombre: prod.nombre,
             descripcion: prod.descripcion ?? '',
             precioBs: prod.precioCentavos / 100,
+            descuentoPorcentaje: prod.descuentoPorcentaje ?? 0,
             costoBs: prod.costoCentavos ? prod.costoCentavos / 100 : 0,
             stock: prod.stock,
             escala: prod.escala ?? '',
@@ -525,6 +630,10 @@ export class ProductosAdminComponent implements OnInit {
         const categoriaId = Number(v.categoriaId);
         const proveedorId = v.proveedorId ? Number(v.proveedorId) : null;
         const precioCentavos = convertirBsACentavos(v.precioBs);
+        const descuentoPorcentaje = Math.max(
+            0,
+            Math.min(99, Math.trunc(Number(v.descuentoPorcentaje) || 0)),
+        );
         const costoCentavos = convertirBsACentavos(v.costoBs);
         const stock = Math.trunc(Number(v.stock) || 0);
         const notaTallaFinal = this.requiereTalla() ? v.notaTalla?.trim() || null : null;
@@ -543,6 +652,7 @@ export class ProductosAdminComponent implements OnInit {
                     nombre: v.nombre?.trim(),
                     descripcion: v.descripcion?.trim() || null,
                     precioCentavos,
+                    descuentoPorcentaje,
                     costoCentavos,
                     escala: v.escala?.trim() || null,
                     notaTalla: notaTallaFinal,
@@ -570,6 +680,7 @@ export class ProductosAdminComponent implements OnInit {
                     nombre: v.nombre!.trim(),
                     descripcion: v.descripcion?.trim() || null,
                     precioCentavos,
+                    descuentoPorcentaje,
                     costoCentavos,
                     stockInicial: stock,
                     escala: v.escala?.trim() || null,

@@ -5,13 +5,19 @@
       <h1 class="font-display text-3xl uppercase tracking-wide text-negro leading-none">Productos</h1>
       <p class="text-sm text-negro/60 mt-1">Gestión de catálogo, stock, costos y precios de venta</p>
     </div>
-    <button (click)="abrirModalCrear()"
-      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-xs transition-colors cursor-pointer">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-      Nuevo producto
-    </button>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" (click)="abrirModalDescuento()"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-tarjeta hover:bg-perla text-vino border border-vino/30 text-sm font-semibold rounded-xl shadow-xs transition-colors cursor-pointer">
+        <span>% Descuentos masivos</span>
+      </button>
+      <button (click)="abrirModalCrear()"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl shadow-xs transition-colors cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Nuevo producto
+      </button>
+    </div>
   </div>
 
   <!-- Filtros y ordenamiento -->
@@ -82,7 +88,14 @@
     </button>
   </div>
   }
-  @if (mensajeError() && !modalAbierto()) {
+  @if (alertaDescuentoBajoCosto()) {
+  <div
+    class="mb-4 p-3.5 bg-alerta-suave border border-alerta-borde text-alerta rounded-xl text-sm flex items-center justify-between shadow-xs">
+    <span>⚠ {{ alertaDescuentoBajoCosto() }}</span>
+    <button type="button" (click)="alertaDescuentoBajoCosto.set(null)" class="text-alerta p-1 cursor-pointer">✕</button>
+  </div>
+  }
+  @if (mensajeError() && !modalAbierto() && !modalDescuentoAbierto()) {
   <div
     class="mb-4 p-3.5 bg-peligro-suave border border-peligro-borde text-peligro rounded-xl text-sm flex items-center justify-between shadow-xs">
     <div class="flex items-center gap-2">
@@ -199,8 +212,16 @@
             </td>
 
             <!-- Precio -->
-            <td class="py-3 px-4 text-right font-bold text-gray-900 font-mono">
-              {{ prod.precioCentavos | bs }}
+            <td class="py-3 px-4 text-right font-mono">
+              @if (prod.descuentoPorcentaje > 0) {
+                <div class="inline-flex flex-col items-end">
+                  <span class="badge-sello badge-vino mb-0.5">-{{ prod.descuentoPorcentaje }}%</span>
+                  <span class="text-[11px] text-gray-400 line-through leading-none">{{ prod.precioCentavos | bs }}</span>
+                  <span class="font-bold text-carmesi leading-tight">{{ prod.precioFinalCentavos | bs }}</span>
+                </div>
+              } @else {
+                <span class="font-bold text-gray-900">{{ prod.precioCentavos | bs }}</span>
+              }
             </td>
 
             <!-- Costo -->
@@ -210,14 +231,16 @@
 
             <!-- Stock -->
             <td class="py-3 px-4 text-center">
-              @if (prod.stock > 0) {
-              <span
-                class="badge-sello badge-exito">
+              @if (prod.stock > 3) {
+              <span class="badge-sello badge-exito">
                 {{ prod.stock }} unid.
               </span>
+              } @else if (prod.stock > 0) {
+              <span class="badge-sello badge-alerta">
+                {{ prod.stock }} unid. (Stock bajo)
+              </span>
               } @else {
-              <span
-                class="badge-sello badge-alerta">
+              <span class="badge-sello badge-peligro-solido">
                 0 unid. (Agotado)
               </span>
               }
@@ -226,18 +249,15 @@
             <!-- Estado -->
             <td class="py-3 px-4 text-center">
               @if (!prod.activo) {
-              <span
-                class="badge-sello badge-peligro">
+              <span class="badge-sello badge-peligro">
                 Dado de baja
               </span>
               } @else if (prod.stock === 0) {
-              <span
-                class="badge-sello badge-alerta">
+              <span class="badge-sello badge-peligro-solido">
                 Agotado (En vitrina)
               </span>
               } @else {
-              <span
-                class="badge-sello badge-exito">
+              <span class="badge-sello badge-exito">
                 Activo
               </span>
               }
@@ -313,6 +333,88 @@
     }
   </div>
 </div>
+
+<!-- Modal Descuentos Masivos (Toda la tienda o por categoría) -->
+@if (modalDescuentoAbierto()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+  (click)="cerrarModalDescuento()">
+  <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden"
+    (click)="$event.stopPropagation()">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">Descuentos masivos</h2>
+        <p class="text-xs text-gray-500">Aplica o quita un porcentaje a toda la tienda o a una categoría.</p>
+      </div>
+      <button type="button" (click)="cerrarModalDescuento()"
+        class="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg cursor-pointer">✕</button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      @if (mensajeError()) {
+      <div class="p-3 rounded-xl bg-peligro-suave border border-peligro-borde text-peligro text-xs">
+        {{ mensajeError() }}
+      </div>
+      }
+
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-2">Alcance</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" (click)="alcanceDescuento.set('TIENDA')"
+            [class]="alcanceDescuento() === 'TIENDA'
+              ? 'py-2 px-3 rounded-xl text-xs font-semibold bg-vino text-white cursor-pointer'
+              : 'py-2 px-3 rounded-xl text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'">
+            Toda la tienda
+          </button>
+          <button type="button" (click)="alcanceDescuento.set('CATEGORIA')"
+            [class]="alcanceDescuento() === 'CATEGORIA'
+              ? 'py-2 px-3 rounded-xl text-xs font-semibold bg-vino text-white cursor-pointer'
+              : 'py-2 px-3 rounded-xl text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'">
+            Por categoría
+          </button>
+        </div>
+      </div>
+
+      @if (alcanceDescuento() === 'CATEGORIA') {
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1.5">Categoría</p>
+        <app-select
+          [opciones]="opcionesCategoriasModal()"
+          [valor]="categoriaDescuentoId()"
+          (valorChange)="actualizarCategoriaDescuento($event)"
+          [buscable]="true"
+          placeholder="Selecciona una categoría"
+          ariaLabel="Categoría para descuento"
+        />
+      </div>
+      }
+
+      <div>
+        <label for="descMasivoPct" class="block text-xs font-semibold uppercase tracking-wide text-gray-700 mb-1">
+          Porcentaje de descuento (0% a 99%)
+        </label>
+        <input id="descMasivoPct" type="number" min="0" max="99" step="1"
+          [value]="porcentajeDescuentoMasivo()"
+          (input)="actualizarPorcentajeMasivo($event)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm font-bold text-carmesi focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino" />
+        <p class="text-[11px] text-gray-500 mt-1">
+          Usa <strong>0</strong> para quitar los descuentos activos. Al aplicar, te avisaremos si algún producto queda por debajo de su costo.
+        </p>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
+      <button type="button" (click)="cerrarModalDescuento()"
+        class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-white cursor-pointer">
+        Cancelar
+      </button>
+      <button type="button" (click)="aplicarDescuentoMasivo()" [disabled]="aplicandoDescuentoMasivo()"
+        class="px-5 py-2 bg-vino hover:bg-carmesi text-white text-sm font-semibold rounded-xl cursor-pointer disabled:opacity-50">
+        {{ aplicandoDescuentoMasivo() ? 'Aplicando...' : 'Aplicar descuento' }}
+      </button>
+    </div>
+  </div>
+</div>
+}
 
 <!-- Modal Formulario (Alta / Edición) -->
 @if (modalAbierto()) {
@@ -412,7 +514,7 @@
 
         <!-- Fila 4: Precios y Stock (Con explicación clara de costos y stock en solo lectura al editar) -->
         <div class="bg-gray-50/80 p-4 rounded-xl border border-black/10 space-y-3">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Precio Venta -->
             <div>
               <label for="prodPrecio" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
@@ -423,6 +525,21 @@
                 [class.border-red-400]="campoInvalido('precioBs')" />
               @if (campoInvalido('precioBs')) {
               <p class="text-xs text-peligro mt-1">Ingresa un precio válido (≥ 0).</p>
+              }
+            </div>
+
+            <!-- Descuento (%) -->
+            <div>
+              <label for="prodDescuento" class="block text-xs font-semibold text-gray-800 uppercase tracking-wide mb-1">
+                Descuento (%)
+              </label>
+              <input id="prodDescuento" type="number" step="1" min="0" max="99" formControlName="descuentoPorcentaje" placeholder="0"
+                class="w-full px-3 py-2 border border-gray-300 bg-white rounded-xl text-sm font-semibold text-carmesi focus:outline-none focus:ring-2 focus:ring-vino/30 focus:border-vino"
+                [class.border-red-400]="campoInvalido('descuentoPorcentaje')" />
+              @if ((form.get('descuentoPorcentaje')?.value ?? 0) > 0) {
+              <p class="text-[11px] text-carmesi font-semibold mt-1 tabular-nums">
+                Final: {{ precioFinalFormularioCentavos() | bs }}
+              </p>
               }
             </div>
 
@@ -463,6 +580,12 @@
               }
             </div>
           </div>
+
+          @if (descuentoFormularioNoBeneficioso()) {
+          <div class="p-3 rounded-xl bg-alerta-suave border border-alerta-borde text-alerta text-xs font-medium">
+            ⚠ <strong>Descuento no beneficioso:</strong> el precio con descuento ({{ precioFinalFormularioCentavos() | bs }}) es menor o igual al costo ({{ costoFormularioCentavos() | bs }}).
+          </div>
+          }
 
           <p class="text-[11px] text-gray-500 leading-relaxed">
             @if (productoEnEdicion()) {

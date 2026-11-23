@@ -41,6 +41,12 @@ export const crearProductoSchema = z
             .number()
             .int('El precio debe ser un número entero de centavos')
             .min(0, 'El precio no puede ser negativo'),
+        descuentoPorcentaje: z.coerce
+            .number()
+            .int('El descuento debe ser un porcentaje entero')
+            .min(0, 'El descuento mínimo es 0%')
+            .max(99, 'El descuento máximo es 99%')
+            .default(0),
         costoCentavos: z.coerce
             .number()
             .int('El costo debe ser un número entero de centavos')
@@ -76,6 +82,12 @@ export const editarProductoSchema = z
             .number()
             .int('El precio debe ser un número entero de centavos')
             .min(0, 'El precio no puede ser negativo')
+            .optional(),
+        descuentoPorcentaje: z.coerce
+            .number()
+            .int('El descuento debe ser un porcentaje entero')
+            .min(0, 'El descuento mínimo es 0%')
+            .max(99, 'El descuento máximo es 99%')
             .optional(),
         costoCentavos: z.coerce
             .number()
@@ -129,7 +141,24 @@ export const filtroProductosPublicoSchema = z
     })
     .strict();
 
+export const descuentoMasivoSchema = z
+    .object({
+        alcance: z.enum(['TIENDA', 'CATEGORIA']),
+        categoriaId: z.coerce.number().int().positive().optional(),
+        descuentoPorcentaje: z.coerce
+            .number()
+            .int('El descuento debe ser un porcentaje entero')
+            .min(0, 'El descuento mínimo es 0%')
+            .max(99, 'El descuento máximo es 99%'),
+    })
+    .strict()
+    .refine((d) => d.alcance === 'TIENDA' || d.categoriaId !== undefined, {
+        message: 'Debes seleccionar una categoría para aplicar el descuento por categoría.',
+        path: ['categoriaId'],
+    });
+
 export type CrearProductoDto = z.infer<typeof crearProductoSchema>;
 export type EditarProductoDto = z.infer<typeof editarProductoSchema>;
 export type FiltroProductosDto = z.infer<typeof filtroProductosSchema>;
 export type FiltroProductosPublicoDto = z.infer<typeof filtroProductosPublicoSchema>;
+export type DescuentoMasivoDto = z.infer<typeof descuentoMasivoSchema>;

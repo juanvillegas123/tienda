@@ -34,6 +34,8 @@ interface ItemTicketPos {
     productoId: number;
     nombre: string;
     precioCentavos: number;
+    precioOriginalCentavos: number;
+    descuentoPorcentaje: number;
     stockMaximo: number;
     cantidad: number;
 }
@@ -72,6 +74,8 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
     readonly ticket = signal<ItemTicketPos[]>([]);
     readonly metodoPago = signal<MetodoPago>('EFECTIVO');
     readonly cobrando = signal(false);
+    readonly efectivoRecibidoTexto = signal('');
+    readonly billetesRapidos = [20, 50, 100, 200];
 
     // Historial de ventas
     readonly ventas = signal<Venta[]>([]);
@@ -95,6 +99,35 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
 
     readonly totalUnidadesTicket = computed(() =>
         this.ticket().reduce((acc, item) => acc + item.cantidad, 0),
+    );
+
+    readonly efectivoRecibidoCentavos = computed<number | null>(() => {
+        const raw = this.efectivoRecibidoTexto().trim().replace(',', '.');
+        if (!raw) return null;
+        const num = Number(raw);
+        if (isNaN(num) || num < 0) return null;
+        return Math.round(num * 100);
+    });
+
+    readonly cambioCentavos = computed<number>(() => {
+        const recibido = this.efectivoRecibidoCentavos();
+        const total = this.totalTicketCentavos();
+        if (recibido === null || total <= 0) return 0;
+        return Math.max(0, recibido - total);
+    });
+
+    readonly faltaEfectivoCentavos = computed<number>(() => {
+        const recibido = this.efectivoRecibidoCentavos();
+        const total = this.totalTicketCentavos();
+        if (recibido === null || total <= 0) return 0;
+        return Math.max(0, total - recibido);
+    });
+
+    readonly efectivoInsuficiente = computed<boolean>(
+        () =>
+            this.metodoPago() === 'EFECTIVO' &&
+            this.efectivoRecibidoCentavos() !== null &&
+            this.faltaEfectivoCentavos() > 0,
     );
 
     readonly montoDevolucionCentavos = computed(() => {
@@ -282,12 +315,15 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
                 ),
             );
         } else {
+            const precioVigente = prod.precioFinalCentavos ?? prod.precioCentavos;
             this.ticket.set([
                 ...actual,
                 {
                     productoId: prod.id,
                     nombre: prod.nombre,
-                    precioCentavos: prod.precioCentavos,
+                    precioCentavos: precioVigente,
+                    precioOriginalCentavos: prod.precioCentavos,
+                    descuentoPorcentaje: prod.descuentoPorcentaje ?? 0,
                     stockMaximo: prod.stock,
                     cantidad: 1,
                 },
@@ -324,12 +360,40 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
 
     limpiarTicket(): void {
         this.ticket.set([]);
+        this.efectivoRecibidoTexto.set('');
         this.mensajeError.set(null);
         this.enfocarBuscador();
     }
 
+    seleccionarMetodoPago(metodo: MetodoPago): void {
+        this.metodoPago.set(metodo);
+        if (metodo === 'QR') {
+            this.efectivoRecibidoTexto.set('');
+        }
+    }
+
+    actualizarEfectivoRecibido(event: Event): void {
+        this.efectivoRecibidoTexto.set((event.target as HTMLInputElement).value);
+    }
+
+    aplicarBilleteRapido(bolivianos: number): void {
+        this.efectivoRecibidoTexto.set(String(bolivianos));
+    }
+
+    aplicarPagoExacto(): void {
+        const total = this.totalTicketCentavos();
+        if (total <= 0) return;
+        this.efectivoRecibidoTexto.set((total / 100).toFixed(2).replace('.', ','));
+    }
+
     cobrar(): void {
         if (!this.cajaActual() || this.ticket().length === 0 || this.cobrando()) return;
+        if (this.efectivoInsuficiente()) {
+            this.mensajeError.set('El efectivo recibido es menor al total a cobrar.');
+            return;
+        }
+
+        const cambioCalculado = this.metodoPago() === 'EFECTIVO' ? this.cambioCentavos() : 0;
 
         this.cobrando.set(true);
         this.mensajeError.set(null);
@@ -347,10 +411,15 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
                 next: (venta) => {
                     this.cobrando.set(false);
                     this.ticket.set([]);
+                    this.efectivoRecibidoTexto.set('');
                     this.textoBusqueda.set('');
                     this.ultimaVentaRegistrada.set(venta);
+                    const textoCambio =
+                        cambioCalculado > 0
+                            ? ` — Cambio a devolver: Bs. ${(cambioCalculado / 100).toFixed(2).replace('.', ',')}`
+                            : '';
                     this.mensajeExito.set(
-                        `Venta #${venta.id} cobrada (${venta.metodoPago}) por Bs. ${(venta.totalCentavos / 100).toFixed(2).replace('.', ',')}.`,
+                        `Venta #${venta.id} cobrada (${venta.metodoPago}) por Bs. ${(venta.totalCentavos / 100).toFixed(2).replace('.', ',')}${textoCambio}.`,
                     );
                     this.busqueda$.next('');
                     this.cargarCaja();

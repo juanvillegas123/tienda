@@ -12,6 +12,7 @@ import {
     DetalleCierreCaja,
     ReporteMargen,
     ReporteInteligenciaStock,
+    ReporteDescuentos,
 } from './modelos';
 
 export interface FiltroFechasReporte {
@@ -72,6 +73,12 @@ export class ReportesService {
 
     inteligenciaStock(): Observable<ReporteInteligenciaStock> {
         return this.http.get<ReporteInteligenciaStock>(`${this.base}/inteligencia-stock`);
+    }
+
+    descuentos(filtro?: FiltroFechasReporte): Observable<ReporteDescuentos> {
+        return this.http.get<ReporteDescuentos>(`${this.base}/descuentos`, {
+            params: this.crearParams(filtro),
+        });
     }
 
     private crearParams(filtro?: FiltroFechasReporte): HttpParams {

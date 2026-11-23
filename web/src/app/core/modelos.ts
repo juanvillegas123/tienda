@@ -35,6 +35,8 @@ export interface ProductoPublico {
     nombre: string;
     descripcion: string | null;
     precioCentavos: number;
+    descuentoPorcentaje: number;
+    precioFinalCentavos: number;
     stock: number;
     escala: string | null;
     notaTalla: string | null;
@@ -47,6 +49,8 @@ export interface ItemCarrito {
     productoId: number;
     nombre: string;
     precioCentavos: number;
+    precioOriginalCentavos?: number;
+    descuentoPorcentaje?: number;
     imagenPrincipal: string | null;
     stockMaximo: number;
     notaTallaInformativa: string | null;
@@ -63,6 +67,8 @@ export interface ProductoAdmin {
     nombre: string;
     descripcion: string | null;
     precioCentavos: number;
+    descuentoPorcentaje: number;
+    precioFinalCentavos: number;
     costoCentavos: number;
     stock: number;
     escala: string | null;
@@ -79,6 +85,7 @@ export interface CrearProductoPayload {
     nombre: string;
     descripcion?: string | null;
     precioCentavos: number;
+    descuentoPorcentaje?: number;
     costoCentavos: number;
     stockInicial: number;
     escala?: string | null;
@@ -101,6 +108,7 @@ export interface EditarProductoPayload {
     nombre?: string;
     descripcion?: string | null;
     precioCentavos?: number;
+    descuentoPorcentaje?: number;
     costoCentavos?: number;
     stock?: number;
     escala?: string | null;
@@ -108,6 +116,18 @@ export interface EditarProductoPayload {
     imagenPrincipal?: string | null;
     imagenesAdicionales?: string[];
     activo?: boolean;
+}
+
+export interface DescuentoMasivoPayload {
+    alcance: 'TIENDA' | 'CATEGORIA';
+    categoriaId?: number;
+    descuentoPorcentaje: number;
+}
+
+export interface ResultadoDescuentoMasivo {
+    actualizados: number;
+    bajoCosto: number;
+    descuentoPorcentaje: number;
 }
 
 export type EstadoPedido = 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO';
@@ -208,6 +228,8 @@ export interface DetalleVenta {
     cantidadDevuelta: number;
     cantidadDevolvible: number;
     precioCentavos: number;
+    precioOriginalCentavos?: number;
+    descuentoPorcentaje?: number;
     costoCentavos: number;
 }
 
@@ -534,6 +556,31 @@ export interface ReporteInteligenciaStock {
         diasCobertura: number;
         sugerenciaReposicion: number;
     }[];
+}
+
+export interface VentaDescuentoItem {
+    ventaId: number;
+    fecha: string | number | Date;
+    canal: CanalVenta;
+    productoId: number;
+    nombreProducto: string;
+    categoriaNombre: string;
+    cantidad: number;
+    descuentoPorcentaje: number;
+    precioOriginalCentavos: number;
+    precioCobradoCentavos: number;
+    descuentoTotalCentavos: number;
+    subtotalCobradoCentavos: number;
+}
+
+export interface ReporteDescuentos {
+    desde: string;
+    hasta: string;
+    ventasConDescuento: number;
+    unidadesConDescuento: number;
+    totalDescontadoCentavos: number;
+    ingresosConDescuentoCentavos: number;
+    items: VentaDescuentoItem[];
 }
 
 export interface InfoTienda {

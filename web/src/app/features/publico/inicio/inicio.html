@@ -182,8 +182,12 @@
 
                   @if (prod.stock === 0) {
                     <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-agotado">Agotado</span>
-                  } @else if (prod.stock <= pocasUnidades) {
-                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Últimas unidades</span>
+                  } @else if (prod.stock === 1) {
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Última unidad</span>
+                  }
+
+                  @if (prod.descuentoPorcentaje > 0) {
+                    <span class="absolute top-2.5 right-2.5 etiqueta-descuento">-{{ prod.descuentoPorcentaje }}%</span>
                   }
                 </a>
 
@@ -206,9 +210,20 @@
                     </p>
                   }
                   <div class="mt-auto pt-2.5 flex items-center justify-between gap-2">
-                    <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
-                      {{ prod.precioCentavos | bs }}
-                    </p>
+                    <div class="leading-none">
+                      @if (prod.descuentoPorcentaje > 0) {
+                        <span class="block text-[11px] text-negro/45 line-through tabular-nums mb-0.5">
+                          {{ prod.precioCentavos | bs }}
+                        </span>
+                        <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                          {{ prod.precioFinalCentavos | bs }}
+                        </p>
+                      } @else {
+                        <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                          {{ prod.precioCentavos | bs }}
+                        </p>
+                      }
+                    </div>
                     @if (prod.stock > 0) {
                       <button
                         type="button"
@@ -276,8 +291,12 @@
 
                   @if (prod.stock === 0) {
                     <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-agotado">Agotado</span>
-                  } @else if (prod.stock <= pocasUnidades) {
-                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Últimas unidades</span>
+                  } @else if (prod.stock === 1) {
+                    <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">Última unidad</span>
+                  }
+
+                  @if (prod.descuentoPorcentaje > 0) {
+                    <span class="absolute top-2.5 right-2.5 etiqueta-descuento">-{{ prod.descuentoPorcentaje }}%</span>
                   }
                 </a>
 
@@ -294,9 +313,20 @@
                     </p>
                   }
                   <div class="mt-auto pt-2.5 flex items-center justify-between gap-2">
-                    <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
-                      {{ prod.precioCentavos | bs }}
-                    </p>
+                    <div class="leading-none">
+                      @if (prod.descuentoPorcentaje > 0) {
+                        <span class="block text-[11px] text-negro/45 line-through tabular-nums mb-0.5">
+                          {{ prod.precioCentavos | bs }}
+                        </span>
+                        <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                          {{ prod.precioFinalCentavos | bs }}
+                        </p>
+                      } @else {
+                        <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                          {{ prod.precioCentavos | bs }}
+                        </p>
+                      }
+                    </div>
                     @if (prod.stock > 0) {
                       <button
                         type="button"
@@ -498,118 +528,147 @@
   subtitulo="Sigue los nuevos ingresos en redes y resuelve las dudas más comunes."
 />
 
-<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-anillos py-8 sm:py-10" aria-label="Redes sociales y preguntas frecuentes">
-  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-10">
-    <!-- Viñetas de redes -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      @if (info().instagramUrl) {
-        <a
-          [appVineta]="0"
-          [href]="info().instagramUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="card-kpi p-5 flex flex-col justify-between gap-4 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-        >
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="badge-sello badge-vino">Instagram</span>
-              <svg class="w-5 h-5 text-vino group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </div>
-            <p class="text-base font-extrabold text-negro mt-3 truncate">
-              {{ info().instagramUsuario || 'Instagram' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-1">
-              Fotos reales de figuras, historias de nuevos ingresos y avisos de restock.
-            </p>
-          </div>
-          <span class="text-xs font-bold text-carmesi">Ver perfil de Instagram →</span>
-        </a>
-      }
+<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-anillos py-8 sm:py-12" aria-label="Redes sociales y preguntas frecuentes">
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-12">
+    <!-- Bloque 1: Comunidad en redes con logos vectoriales protagonistas -->
+    <div class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-carmesi">Comunidad</p>
+          <h3 class="font-display text-2xl sm:text-3xl uppercase tracking-wide text-negro leading-none mt-0.5">
+            Síguenos en redes
+          </h3>
+        </div>
+        <p class="text-xs sm:text-sm text-negro/65 max-w-md">
+          Unboxings, fotos reales de cada llegada y avisos de nuevos ingresos antes que nadie.
+        </p>
+      </div>
 
-      @if (info().tiktokUrl) {
-        <a
-          [appVineta]="1"
-          [href]="info().tiktokUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="card-kpi p-5 flex flex-col justify-between gap-4 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-        >
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="badge-sello badge-neutro">TikTok</span>
-              <svg class="w-5 h-5 text-negro group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        @if (info().instagramUrl) {
+          <a
+            [appVineta]="0"
+            [href]="info().instagramUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguir a Onii-Chan Store en Instagram"
+            class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
+                <app-icono-red red="instagram" class="w-6 h-6" />
+              </div>
+              <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </div>
-            <p class="text-base font-extrabold text-negro mt-3 truncate">
-              {{ info().tiktokUsuario || 'TikTok' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-1">
-              Unboxings en video, detalles de colección y recorrido por nuestra vitrina.
-            </p>
-          </div>
-          <span class="text-xs font-bold text-carmesi">Ver videos en TikTok →</span>
-        </a>
-      }
+            <div>
+              <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">Instagram</p>
+              <p class="text-xs font-bold text-vino mt-1 truncate">
+                {{ info().instagramUsuario || '@onii.chan_store.bo' }}
+              </p>
+              <p class="text-xs text-negro/60 mt-2 leading-relaxed">
+                Fotos reales de figuras, historias de nuevos ingresos y restocks.
+              </p>
+            </div>
+          </a>
+        }
 
-      @if (info().facebookUrl) {
-        <a
-          [appVineta]="2"
-          [href]="info().facebookUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="card-kpi p-5 flex flex-col justify-between gap-4 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-        >
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="badge-sello badge-vino">Facebook</span>
-              <svg class="w-5 h-5 text-vino group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        @if (info().tiktokUrl) {
+          <a
+            [appVineta]="1"
+            [href]="info().tiktokUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Seguir a Onii-Chan Store en TikTok"
+            class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
+                <app-icono-red red="tiktok" class="w-6 h-6" />
+              </div>
+              <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </div>
-            <p class="text-base font-extrabold text-negro mt-3 truncate">
-              {{ info().facebookUsuario || 'Onii-Chan Store' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-1">
-              Promociones, eventos anime en Sucre y novedades de temporada.
-            </p>
-          </div>
-          <span class="text-xs font-bold text-carmesi">Ir a la página de Facebook →</span>
-        </a>
-      }
+            <div>
+              <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">TikTok</p>
+              <p class="text-xs font-bold text-vino mt-1 truncate">
+                {{ info().tiktokUsuario || '@onii.chan.store' }}
+              </p>
+              <p class="text-xs text-negro/60 mt-2 leading-relaxed">
+                Unboxings en video, detalles de colección y recorrido por la vitrina.
+              </p>
+            </div>
+          </a>
+        }
 
-      @if (enlaceWhatsapp(); as wa) {
-        <a
-          [appVineta]="3"
-          [href]="wa"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="card-kpi card-kpi-exito p-5 flex flex-col justify-between gap-4 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
-        >
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="badge-sello badge-exito">WhatsApp</span>
-              <svg class="w-5 h-5 text-exito group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        @if (info().facebookUrl) {
+          <a
+            [appVineta]="2"
+            [href]="info().facebookUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visitar página de Facebook de Onii-Chan Store"
+            class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
+                <app-icono-red red="facebook" class="w-6 h-6" />
+              </div>
+              <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </div>
-            <p class="text-base font-extrabold text-negro mt-3">Atención directa</p>
-            <p class="text-xs text-negro/60 mt-1">
-              Consultas sobre tallas, stock o confirmación rápida de tu pedido.
-            </p>
-          </div>
-          <span class="text-xs font-bold text-exito">Escribir por WhatsApp →</span>
-        </a>
-      }
+            <div>
+              <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">Facebook</p>
+              <p class="text-xs font-bold text-vino mt-1 truncate">
+                {{ info().facebookUsuario || 'Onii-Chan Store' }}
+              </p>
+              <p class="text-xs text-negro/60 mt-2 leading-relaxed">
+                Promociones de temporada, eventos anime en Sucre y novedades.
+              </p>
+            </div>
+          </a>
+        }
+
+        @if (enlaceWhatsapp(); as wa) {
+          <a
+            [appVineta]="3"
+            [href]="wa"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Escribir a Onii-Chan Store por WhatsApp"
+            class="card-kpi card-kpi-exito p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-exito transition-colors flex items-center justify-center shadow-xs">
+                <app-icono-red red="whatsapp" class="w-6 h-6" />
+              </div>
+              <svg class="w-4 h-4 text-negro/40 group-hover:text-exito group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">WhatsApp</p>
+              <p class="text-xs font-bold text-exito mt-1">Atención directa</p>
+              <p class="text-xs text-negro/60 mt-2 leading-relaxed">
+                Consultas sobre tallas, disponibilidad o coordinación de tu pedido.
+              </p>
+            </div>
+          </a>
+        }
+      </div>
     </div>
 
-    <!-- Acordeón accesible de Preguntas Frecuentes -->
-    <div class="space-y-3">
-      <h3 class="font-display text-2xl sm:text-3xl uppercase tracking-wide text-negro leading-none">
-        Preguntas frecuentes
-      </h3>
+    <!-- Bloque 2: Acordeón editorial numerado de Preguntas Frecuentes -->
+    <div class="space-y-4">
+      <div>
+        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-carmesi">Ayuda rápida</p>
+        <h3 class="font-display text-2xl sm:text-3xl uppercase tracking-wide text-negro leading-none mt-0.5">
+          Preguntas frecuentes
+        </h3>
+      </div>
 
       <div [appVineta]="0" class="card-vitrina divide-y divide-black/8 overflow-hidden">
         @for (faq of negocio.preguntasFrecuentes; track faq.pregunta; let i = $index) {
@@ -620,9 +679,14 @@
               [attr.aria-controls]="'faq-panel-' + i"
               [attr.aria-expanded]="preguntaAbierta() === i"
               (click)="alternarPregunta(i)"
-              class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 hover:bg-fondo/60 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carmesi"
+              class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 hover:bg-fondo/70 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-carmesi"
             >
-              <span class="text-sm sm:text-base font-bold text-negro">{{ faq.pregunta }}</span>
+              <div class="flex items-center gap-3.5 min-w-0">
+                <span class="font-display text-xl text-carmesi leading-none shrink-0 w-6">
+                  0{{ i + 1 }}
+                </span>
+                <span class="text-sm sm:text-base font-bold text-negro">{{ faq.pregunta }}</span>
+              </div>
               <svg
                 class="w-4.5 h-4.5 text-vino shrink-0 transition-transform duration-150"
                 [class.rotate-180]="preguntaAbierta() === i"
@@ -640,7 +704,7 @@
                 [id]="'faq-panel-' + i"
                 role="region"
                 [attr.aria-labelledby]="'faq-btn-' + i"
-                class="px-5 pb-4 text-xs sm:text-sm text-negro/70 leading-relaxed bg-fondo/40"
+                class="pl-14 pr-5 pb-4 text-xs sm:text-sm text-negro/75 leading-relaxed bg-fondo/50"
               >
                 {{ faq.respuesta }}
               </div>

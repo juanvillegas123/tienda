@@ -1171,4 +1171,101 @@ export class ReportesService {
 
         return mapa;
     }
+
+    /**
+     * Reporte de ventas realizadas con descuento en el rango de fechas.
+     */
+    async reporteDescuentos(filtro?: RangoFechasDto): Promise<{
+        desde: string;
+        hasta: string;
+        ventasConDescuento: number;
+        unidadesConDescuento: number;
+        totalDescontadoCentavos: number;
+        ingresosConDescuentoCentavos: number;
+        items: {
+            ventaId: number;
+            fecha: Date;
+            canal: 'MOSTRADOR' | 'ONLINE';
+            productoId: number;
+            nombreProducto: string;
+            categoriaNombre: string;
+            cantidad: number;
+            descuentoPorcentaje: number;
+            precioOriginalCentavos: number;
+            precioCobradoCentavos: number;
+            descuentoTotalCentavos: number;
+            subtotalCobradoCentavos: number;
+        }[];
+    }> {
+        const rango = resolverRangoFechas(filtro?.desde, filtro?.hasta);
+
+        const rows = await db
+            .select({
+                ventaId: ventas.id,
+                fecha: ventas.fecha,
+                canal: ventas.canal,
+                productoId: detalleVenta.productoId,
+                nombreProducto: productos.nombre,
+                categoriaNombre: categorias.nombre,
+                cantidad: detalleVenta.cantidad,
+                descuentoPorcentaje: detalleVenta.descuentoPorcentaje,
+                precioOriginalCentavos: detalleVenta.precioOriginalCentavos,
+                precioCobradoCentavos: detalleVenta.precioCentavos,
+            })
+            .from(detalleVenta)
+            .innerJoin(ventas, eq(detalleVenta.ventaId, ventas.id))
+            .innerJoin(productos, eq(detalleVenta.productoId, productos.id))
+            .innerJoin(categorias, eq(productos.categoriaId, categorias.id))
+            .where(
+                and(
+                    gte(ventas.fecha, rango.inicio),
+                    lte(ventas.fecha, rango.fin),
+                    sql`${detalleVenta.descuentoPorcentaje} > 0`,
+                ),
+            )
+            .orderBy(desc(ventas.fecha), desc(ventas.id));
+
+        const ventasUnicas = new Set<number>();
+        let unidadesConDescuento = 0;
+        let totalDescontadoCentavos = 0;
+        let ingresosConDescuentoCentavos = 0;
+
+        const items = rows.map((r) => {
+            ventasUnicas.add(r.ventaId);
+            const orig =
+                r.precioOriginalCentavos > 0 ? r.precioOriginalCentavos : r.precioCobradoCentavos;
+            const ahorroUnit = Math.max(0, orig - r.precioCobradoCentavos);
+            const descuentoTotal = ahorroUnit * r.cantidad;
+            const subtotalCobrado = r.precioCobradoCentavos * r.cantidad;
+
+            unidadesConDescuento += r.cantidad;
+            totalDescontadoCentavos += descuentoTotal;
+            ingresosConDescuentoCentavos += subtotalCobrado;
+
+            return {
+                ventaId: r.ventaId,
+                fecha: r.fecha,
+                canal: r.canal,
+                productoId: r.productoId,
+                nombreProducto: r.nombreProducto,
+                categoriaNombre: r.categoriaNombre,
+                cantidad: r.cantidad,
+                descuentoPorcentaje: r.descuentoPorcentaje,
+                precioOriginalCentavos: orig,
+                precioCobradoCentavos: r.precioCobradoCentavos,
+                descuentoTotalCentavos: descuentoTotal,
+                subtotalCobradoCentavos: subtotalCobrado,
+            };
+        });
+
+        return {
+            desde: rango.desdeTexto,
+            hasta: rango.hastaTexto,
+            ventasConDescuento: ventasUnicas.size,
+            unidadesConDescuento,
+            totalDescontadoCentavos,
+            ingresosConDescuentoCentavos,
+            items,
+        };
+    }
 }

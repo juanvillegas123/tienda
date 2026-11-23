@@ -22,6 +22,7 @@ import { Categoria, ProductoPublico } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { FranjaCapituloComponent } from '../../../shared/ui/franja-capitulo/franja-capitulo';
 import { IconoShurikenComponent } from '../../../shared/ui/icono-shuriken/icono-shuriken';
+import { IconoRedComponent } from '../../../shared/ui/iconos-redes/icono-red';
 import { ProgresoScrollDirective } from '../../../shared/directivas/progreso-scroll.directive';
 import { VinetaDirective } from '../../../shared/directivas/vineta.directive';
 import { ScrollEfectosService } from '../../../shared/directivas/scroll-efectos.service';
@@ -93,6 +94,7 @@ function calcularAbiertoEnBolivia(ahora: Date = new Date()): boolean {
         BsPipe,
         FranjaCapituloComponent,
         IconoShurikenComponent,
+        IconoRedComponent,
         ProgresoScrollDirective,
         VinetaDirective,
     ],

@@ -208,6 +208,12 @@
                       <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums">
                         {{ (item.precioCentavos * item.cantidad) | bs }}
                       </p>
+                      @if (item.descuentoPorcentaje && item.descuentoPorcentaje > 0 && item.precioOriginalCentavos) {
+                        <p class="text-[11px] text-negro/50 tabular-nums">
+                          <span class="line-through">{{ (item.precioOriginalCentavos * item.cantidad) | bs }}</span>
+                          <span class="ml-1 font-bold text-carmesi">-{{ item.descuentoPorcentaje }}%</span>
+                        </p>
+                      }
                       @if (item.cantidad > 1) {
                         <p class="text-[11px] text-negro/55 tabular-nums">
                           {{ item.precioCentavos | bs }} c/u

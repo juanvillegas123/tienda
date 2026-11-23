@@ -68,9 +68,15 @@
               <span class="absolute top-3 left-0 etiqueta-vitrina etiqueta-agotado">
                 Agotado
               </span>
-            } @else if (producto()!.stock <= pocasUnidades) {
+            } @else if (producto()!.stock === 1) {
               <span class="absolute top-3 left-0 etiqueta-vitrina etiqueta-ultimas">
-                Últimas unidades
+                Última unidad
+              </span>
+            }
+
+            @if (producto()!.descuentoPorcentaje > 0) {
+              <span class="absolute top-3 right-3 etiqueta-descuento">
+                -{{ producto()!.descuentoPorcentaje }}% OFF
               </span>
             }
           </div>
@@ -116,19 +122,31 @@
             {{ producto()!.nombre }}
           </h1>
 
-          <!-- Precio en carmesí + disponibilidad sin stock exacto -->
+          <!-- Precio en carmesí + descuento + disponibilidad sin stock exacto -->
           <div class="mt-4 flex items-center gap-3 flex-wrap">
-            <span class="text-3xl sm:text-4xl font-bold text-carmesi tabular-nums">
-              {{ producto()!.precioCentavos | bs }}
-            </span>
+            @if (producto()!.descuentoPorcentaje > 0) {
+              <div class="flex items-baseline gap-2.5 flex-wrap">
+                <span class="text-3xl sm:text-4xl font-bold text-carmesi tabular-nums">
+                  {{ producto()!.precioFinalCentavos | bs }}
+                </span>
+                <span class="text-lg font-medium text-negro/40 line-through tabular-nums">
+                  {{ producto()!.precioCentavos | bs }}
+                </span>
+                <span class="etiqueta-descuento">-{{ producto()!.descuentoPorcentaje }}%</span>
+              </div>
+            } @else {
+              <span class="text-3xl sm:text-4xl font-bold text-carmesi tabular-nums">
+                {{ producto()!.precioCentavos | bs }}
+              </span>
+            }
 
             @if (producto()!.stock === 0) {
               <span class="etiqueta-vitrina etiqueta-agotado">
                 Agotado
               </span>
-            } @else if (producto()!.stock <= pocasUnidades) {
+            } @else if (producto()!.stock === 1) {
               <span class="etiqueta-vitrina etiqueta-ultimas">
-                Últimas unidades
+                Última unidad
               </span>
             } @else {
               <span class="badge-sello badge-exito">
@@ -291,7 +309,7 @@
             <span class="block text-[10px] uppercase tracking-wider text-negro/55">Precio</span>
           }
           <span class="text-lg font-bold text-carmesi tabular-nums leading-none">
-            {{ producto()!.precioCentavos | bs }}
+            {{ (producto()!.descuentoPorcentaje > 0 ? producto()!.precioFinalCentavos : producto()!.precioCentavos) | bs }}
           </span>
         </div>
 

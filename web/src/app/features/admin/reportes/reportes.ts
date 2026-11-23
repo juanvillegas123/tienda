@@ -12,6 +12,7 @@ import {
     ReporteCierresCaja,
     DetalleCierreCaja,
     ReporteInteligenciaStock,
+    ReporteDescuentos,
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { POCAS_UNIDADES } from '../../../shared/catalogo-ui.utils';
@@ -46,7 +47,7 @@ export class ReportesAdminComponent implements OnInit {
     readonly formatearFechaIsoADmy = formatearFechaIsoADmy;
 
     readonly pestana = signal<
-        'canales' | 'mas-vendidos' | 'margen' | 'cierres' | 'salud-stock'
+        'canales' | 'mas-vendidos' | 'margen' | 'descuentos' | 'cierres' | 'salud-stock'
     >('canales');
 
     readonly desde = signal('');
@@ -59,6 +60,7 @@ export class ReportesAdminComponent implements OnInit {
     readonly ventasPorCategoria = signal<ReporteVentasPorCategoria | null>(null);
     readonly masVendidos = signal<ReporteMasVendidos | null>(null);
     readonly margen = signal<ReporteMargen | null>(null);
+    readonly descuentos = signal<ReporteDescuentos | null>(null);
     readonly cierres = signal<ReporteCierresCaja | null>(null);
     readonly inteligenciaStock = signal<ReporteInteligenciaStock | null>(null);
 
@@ -142,6 +144,7 @@ export class ReportesAdminComponent implements OnInit {
             porCategoria: this.reportesService.ventasPorCategoria(filtro),
             masVendidos: this.reportesService.masVendidos({ ...filtro, limite: 25 }),
             margen: this.reportesService.margen(filtro),
+            descuentos: this.reportesService.descuentos(filtro),
             cierres: this.reportesService.cierresDeCaja(filtro),
             inteligencia: this.reportesService.inteligenciaStock(),
         }).subscribe({
@@ -151,6 +154,7 @@ export class ReportesAdminComponent implements OnInit {
                 this.ventasPorCategoria.set(res.porCategoria);
                 this.masVendidos.set(res.masVendidos);
                 this.margen.set(res.margen);
+                this.descuentos.set(res.descuentos);
                 this.cierres.set(res.cierres);
                 this.inteligenciaStock.set(res.inteligencia);
                 this.cargando.set(false);
@@ -213,6 +217,40 @@ export class ReportesAdminComponent implements OnInit {
     }
 
     // --- Exportaciones CSV (Bloque 4) ---
+
+    exportarDescuentosCsv(): void {
+        const rep = this.descuentos();
+        if (!rep) return;
+        descargarCsv(
+            `ventas-con-descuento-${rep.desde}-a-${rep.hasta}.csv`,
+            [
+                'Venta #',
+                'Fecha',
+                'Canal',
+                'Producto',
+                'Categoría',
+                'Cantidad',
+                'Descuento (%)',
+                'Precio original (Bs)',
+                'Precio cobrado (Bs)',
+                'Total descontado (Bs)',
+                'Subtotal cobrado (Bs)',
+            ],
+            rep.items.map((i) => [
+                i.ventaId,
+                formatearFechaHoraCsv(i.fecha),
+                i.canal,
+                i.nombreProducto,
+                i.categoriaNombre,
+                i.cantidad,
+                i.descuentoPorcentaje,
+                centavosADecimalCsv(i.precioOriginalCentavos),
+                centavosADecimalCsv(i.precioCobradoCentavos),
+                centavosADecimalCsv(i.descuentoTotalCentavos),
+                centavosADecimalCsv(i.subtotalCobradoCentavos),
+            ]),
+        );
+    }
 
     exportarVentasDiariasCsv(): void {
         const rep = this.ventasPorDia();

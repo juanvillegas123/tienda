@@ -148,15 +148,17 @@
         <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-perla/90 border-l-2 border-carmesi pl-2.5">
           Comunidad y enlaces
         </h3>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap items-center gap-2.5">
           @if (info().instagramUrl) {
             <a
               [href]="info().instagramUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+              aria-label="Visitar Instagram de Onii-Chan Store"
+              title="Instagram"
+              class="w-10 h-10 rounded-lg inline-flex items-center justify-center bg-white/8 hover:bg-carmesi border border-perla/20 hover:border-carmesi-claro text-perla transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
             >
-              Instagram
+              <app-icono-red red="instagram" class="w-5 h-5" />
             </a>
           }
           @if (info().tiktokUrl) {
@@ -164,9 +166,11 @@
               [href]="info().tiktokUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+              aria-label="Visitar TikTok de Onii-Chan Store"
+              title="TikTok"
+              class="w-10 h-10 rounded-lg inline-flex items-center justify-center bg-white/8 hover:bg-carmesi border border-perla/20 hover:border-carmesi-claro text-perla transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
             >
-              TikTok
+              <app-icono-red red="tiktok" class="w-5 h-5" />
             </a>
           }
           @if (info().facebookUrl) {
@@ -174,9 +178,11 @@
               [href]="info().facebookUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/8 hover:bg-vino border border-perla/15 text-perla transition-colors"
+              aria-label="Visitar Facebook de Onii-Chan Store"
+              title="Facebook"
+              class="w-10 h-10 rounded-lg inline-flex items-center justify-center bg-white/8 hover:bg-carmesi border border-perla/20 hover:border-carmesi-claro text-perla transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi"
             >
-              Facebook
+              <app-icono-red red="facebook" class="w-5 h-5" />
             </a>
           }
         </div>

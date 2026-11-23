@@ -198,23 +198,28 @@
               </div>
             }
 
-            <!-- Etiquetas en esquina superior izquierda -->
+            <!-- Etiquetas en esquina superior izquierda (Opción A: solo Agotado o Última unidad) -->
             @if (prod.stock === 0) {
               <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-agotado">
                 Agotado
               </span>
-            } @else if (prod.stock <= pocasUnidades) {
+            } @else if (prod.stock === 1) {
               <span class="absolute top-2.5 left-0 etiqueta-vitrina etiqueta-ultimas">
-                Últimas unidades
+                Última unidad
               </span>
             }
 
-            <!-- Cápsula de escala/tamaño arriba a la derecha -->
-            @if (etiquetaEscala(prod.escala); as esc) {
-              <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-fondo text-negro/80 border border-black/10">
-                {{ esc.valor }}
-              </span>
-            }
+            <!-- Descuento / Escala arriba a la derecha -->
+            <div class="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
+              @if (prod.descuentoPorcentaje > 0) {
+                <span class="etiqueta-descuento">-{{ prod.descuentoPorcentaje }}%</span>
+              }
+              @if (etiquetaEscala(prod.escala); as esc) {
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-fondo text-negro/80 border border-black/10">
+                  {{ esc.valor }}
+                </span>
+              }
+            </div>
 
             <!-- Shuriken sutil al pasar el mouse -->
             <app-icono-shuriken
@@ -242,9 +247,20 @@
             }
 
             <div class="mt-auto pt-2.5 flex items-center justify-between gap-2">
-              <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
-                {{ prod.precioCentavos | bs }}
-              </p>
+              <div class="leading-none">
+                @if (prod.descuentoPorcentaje > 0) {
+                  <span class="block text-[11px] text-negro/45 line-through tabular-nums mb-0.5">
+                    {{ prod.precioCentavos | bs }}
+                  </span>
+                  <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                    {{ prod.precioFinalCentavos | bs }}
+                  </p>
+                } @else {
+                  <p class="text-sm sm:text-base font-bold text-carmesi tabular-nums leading-none">
+                    {{ prod.precioCentavos | bs }}
+                  </p>
+                }
+              </div>
 
               @if (prod.stock > 0) {
                 <button

@@ -27,6 +27,7 @@ export const productos = sqliteTable('productos', {
     nombre: text('nombre').notNull(),
     descripcion: text('descripcion'),
     precioCentavos: integer('precio_centavos').notNull(),
+    descuentoPorcentaje: integer('descuento_porcentaje').notNull().default(0),
     costoCentavos: integer('costo_centavos').notNull().default(0),
     stock: integer('stock').notNull().default(0),
     escala: text('escala'),
@@ -83,6 +84,8 @@ export const detallePedido = sqliteTable('detalle_pedido', {
     productoId: integer('producto_id').notNull().references(() => productos.id),
     cantidad: integer('cantidad').notNull(),
     precioCentavos: integer('precio_centavos').notNull(),
+    precioOriginalCentavos: integer('precio_original_centavos').notNull().default(0),
+    descuentoPorcentaje: integer('descuento_porcentaje').notNull().default(0),
     notaCliente: text('nota_cliente'),
 });
 
@@ -103,6 +106,8 @@ export const detalleVenta = sqliteTable('detalle_venta', {
     productoId: integer('producto_id').notNull().references(() => productos.id),
     cantidad: integer('cantidad').notNull(),
     precioCentavos: integer('precio_centavos').notNull(),
+    precioOriginalCentavos: integer('precio_original_centavos').notNull().default(0),
+    descuentoPorcentaje: integer('descuento_porcentaje').notNull().default(0),
     costoCentavos: integer('costo_centavos').notNull().default(0),
 });
 

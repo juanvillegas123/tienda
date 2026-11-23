@@ -75,9 +75,9 @@ export const NEGOCIO_CONFIG = {
                 'Puedes recoger tu pedido directamente en nuestra tienda física en Sucre (Calle Loa #406) o coordinar entrega / envío al confirmar tu código de pedido por WhatsApp.',
         },
         {
-            pregunta: '¿Al enviar mi pedido por WhatsApp se reserva el stock?',
+            pregunta: '¿Cómo funciona mi pedido por WhatsApp?',
             respuesta:
-                'Tu pedido recibe un código único (ej. PED-0001) para agilizar la atención. El stock se descuenta y asegura en el momento en que confirmas tu compra con nosotros por WhatsApp.',
+                'Al enviar tu carrito se genera un código rápido para atenderte sin demoras. Por WhatsApp te confirmamos disponibilidad, resolvemos cualquier duda sobre el producto y coordinamos el pago y la entrega antes de concretar tu compra.',
         },
     ] satisfies PreguntaFrecuenteNegocio[],
 } as const;

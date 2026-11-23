@@ -15,7 +15,7 @@ import {
     movimientosInventario,
 } from '../db/schema';
 import { CrearVentaDto, ListarVentasQueryDto } from './ventas.schemas';
-import { sumarCentavos } from '../common/dinero';
+import { sumarCentavos, calcularPrecioConDescuento } from '../common/dinero';
 
 export interface DetalleVentaDto {
     id: number;
@@ -25,6 +25,8 @@ export interface DetalleVentaDto {
     cantidadDevuelta: number;
     cantidadDevolvible: number;
     precioCentavos: number;
+    precioOriginalCentavos: number;
+    descuentoPorcentaje: number;
     costoCentavos: number;
 }
 
@@ -85,6 +87,7 @@ export class VentasService {
                     id: productos.id,
                     nombre: productos.nombre,
                     precioCentavos: productos.precioCentavos,
+                    descuentoPorcentaje: productos.descuentoPorcentaje,
                     costoCentavos: productos.costoCentavos,
                     stock: productos.stock,
                     activo: productos.activo,
@@ -100,6 +103,8 @@ export class VentasService {
                 nombre: string;
                 cantidad: number;
                 precioCentavos: number;
+                precioOriginalCentavos: number;
+                descuentoPorcentaje: number;
                 costoCentavos: number;
             }[] = [];
 
@@ -115,12 +120,19 @@ export class VentasService {
                         `Stock insuficiente para "${prod.nombre}". Disponible: ${prod.stock}.`,
                     );
                 }
-                subtotales.push(prod.precioCentavos * cantidad);
+                const pct = prod.descuentoPorcentaje ?? 0;
+                const { precioFinalCentavos } = calcularPrecioConDescuento(
+                    prod.precioCentavos,
+                    pct,
+                );
+                subtotales.push(precioFinalCentavos * cantidad);
                 lineas.push({
                     productoId,
                     nombre: prod.nombre,
                     cantidad,
-                    precioCentavos: prod.precioCentavos,
+                    precioCentavos: precioFinalCentavos,
+                    precioOriginalCentavos: prod.precioCentavos,
+                    descuentoPorcentaje: pct,
                     costoCentavos: prod.costoCentavos,
                 });
             }
@@ -164,6 +176,8 @@ export class VentasService {
                     productoId: linea.productoId,
                     cantidad: linea.cantidad,
                     precioCentavos: linea.precioCentavos,
+                    precioOriginalCentavos: linea.precioOriginalCentavos,
+                    descuentoPorcentaje: linea.descuentoPorcentaje,
                     costoCentavos: linea.costoCentavos,
                 });
 
@@ -227,6 +241,8 @@ export class VentasService {
                 nombreProducto: productos.nombre,
                 cantidad: detalleVenta.cantidad,
                 precioCentavos: detalleVenta.precioCentavos,
+                precioOriginalCentavos: detalleVenta.precioOriginalCentavos,
+                descuentoPorcentaje: detalleVenta.descuentoPorcentaje,
                 costoCentavos: detalleVenta.costoCentavos,
             })
             .from(detalleVenta)
@@ -280,6 +296,11 @@ export class VentasService {
                 cantidadDevuelta: devuelta,
                 cantidadDevolvible: Math.max(0, det.cantidad - devuelta),
                 precioCentavos: det.precioCentavos,
+                precioOriginalCentavos:
+                    det.precioOriginalCentavos > 0
+                        ? det.precioOriginalCentavos
+                        : det.precioCentavos,
+                descuentoPorcentaje: det.descuentoPorcentaje ?? 0,
                 costoCentavos: det.costoCentavos,
             });
             mapaDetalles.set(det.ventaId, lista);

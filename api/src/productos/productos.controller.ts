@@ -19,12 +19,14 @@ import {
     editarProductoSchema,
     filtroProductosSchema,
     filtroProductosPublicoSchema,
+    descuentoMasivoSchema,
 } from './productos.schemas';
 import type {
     CrearProductoDto,
     EditarProductoDto,
     FiltroProductosDto,
     FiltroProductosPublicoDto,
+    DescuentoMasivoDto,
 } from './productos.schemas';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { Public } from '../auth/public.decorator';
@@ -101,6 +103,16 @@ export class ProductosController {
     @UsePipes(new ZodValidationPipe(crearProductoSchema))
     crear(@Body() dto: CrearProductoDto) {
         return this.productosService.crear(dto);
+    }
+
+    /**
+     * Aplicar o quitar descuento masivo en toda la tienda o en una categoría (administradora).
+     */
+    @Patch('descuento-masivo')
+    aplicarDescuentoMasivo(
+        @Body(new ZodValidationPipe(descuentoMasivoSchema)) dto: DescuentoMasivoDto,
+    ) {
+        return this.productosService.aplicarDescuentoMasivo(dto);
     }
 
     /**

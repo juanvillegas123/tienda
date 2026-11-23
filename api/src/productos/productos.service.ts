@@ -17,9 +17,10 @@ import {
     EditarProductoDto,
     FiltroProductosDto,
     FiltroProductosPublicoDto,
+    DescuentoMasivoDto,
 } from './productos.schemas';
 import { AlmacenamientoService } from '../almacenamiento/almacenamiento.service';
-import { centavosABs } from '../common/dinero';
+import { centavosABs, calcularPrecioConDescuento } from '../common/dinero';
 
 export interface ProductoPublicoDto {
     id: number;
@@ -28,6 +29,8 @@ export interface ProductoPublicoDto {
     nombre: string;
     descripcion: string | null;
     precioCentavos: number;
+    descuentoPorcentaje: number;
+    precioFinalCentavos: number;
     stock: number;
     escala: string | null;
     notaTalla: string | null;
@@ -77,6 +80,7 @@ export class ProductosService {
                 nombre: productos.nombre,
                 descripcion: productos.descripcion,
                 precioCentavos: productos.precioCentavos,
+                descuentoPorcentaje: productos.descuentoPorcentaje,
                 stock: productos.stock,
                 escala: productos.escala,
                 notaTalla: productos.notaTalla,
@@ -116,6 +120,8 @@ export class ProductosService {
 
         return rows.map((r) => ({
             ...r,
+            precioFinalCentavos: calcularPrecioConDescuento(r.precioCentavos, r.descuentoPorcentaje)
+                .precioFinalCentavos,
             imagenes: mapaImagenes.get(r.id) ?? [],
         }));
     }
@@ -132,6 +138,7 @@ export class ProductosService {
                 nombre: productos.nombre,
                 descripcion: productos.descripcion,
                 precioCentavos: productos.precioCentavos,
+                descuentoPorcentaje: productos.descuentoPorcentaje,
                 stock: productos.stock,
                 escala: productos.escala,
                 notaTalla: productos.notaTalla,
@@ -159,6 +166,10 @@ export class ProductosService {
 
         return {
             ...prod,
+            precioFinalCentavos: calcularPrecioConDescuento(
+                prod.precioCentavos,
+                prod.descuentoPorcentaje,
+            ).precioFinalCentavos,
             imagenes,
         };
     }
@@ -224,6 +235,7 @@ export class ProductosService {
                 nombre: productos.nombre,
                 descripcion: productos.descripcion,
                 precioCentavos: productos.precioCentavos,
+                descuentoPorcentaje: productos.descuentoPorcentaje,
                 costoCentavos: productos.costoCentavos,
                 stock: productos.stock,
                 escala: productos.escala,
@@ -270,6 +282,8 @@ export class ProductosService {
 
         const items = rows.map((r) => ({
             ...r,
+            precioFinalCentavos: calcularPrecioConDescuento(r.precioCentavos, r.descuentoPorcentaje)
+                .precioFinalCentavos,
             imagenes: mapaImagenes.get(r.id) ?? [],
         }));
 
@@ -290,6 +304,7 @@ export class ProductosService {
                 nombre: productos.nombre,
                 descripcion: productos.descripcion,
                 precioCentavos: productos.precioCentavos,
+                descuentoPorcentaje: productos.descuentoPorcentaje,
                 costoCentavos: productos.costoCentavos,
                 stock: productos.stock,
                 escala: productos.escala,
@@ -320,6 +335,10 @@ export class ProductosService {
 
         return {
             ...prod,
+            precioFinalCentavos: calcularPrecioConDescuento(
+                prod.precioCentavos,
+                prod.descuentoPorcentaje,
+            ).precioFinalCentavos,
             imagenes,
         };
     }
@@ -364,6 +383,7 @@ export class ProductosService {
                     nombre: dto.nombre,
                     descripcion: dto.descripcion ?? null,
                     precioCentavos: dto.precioCentavos,
+                    descuentoPorcentaje: dto.descuentoPorcentaje ?? 0,
                     costoCentavos: dto.costoCentavos ?? 0,
                     stock: stockInicial,
                     escala: dto.escala ?? null,
@@ -446,6 +466,9 @@ export class ProductosService {
             if (dto.nombre !== undefined) datosActualizar.nombre = dto.nombre;
             if (dto.descripcion !== undefined) datosActualizar.descripcion = dto.descripcion;
             if (dto.precioCentavos !== undefined) datosActualizar.precioCentavos = dto.precioCentavos;
+            if (dto.descuentoPorcentaje !== undefined) {
+                datosActualizar.descuentoPorcentaje = dto.descuentoPorcentaje;
+            }
             if (dto.costoCentavos !== undefined) datosActualizar.costoCentavos = dto.costoCentavos;
             if (dto.stock !== undefined) datosActualizar.stock = dto.stock;
             if (dto.escala !== undefined) datosActualizar.escala = dto.escala;
@@ -507,6 +530,71 @@ export class ProductosService {
         }
 
         return actualizado;
+    }
+
+    /**
+     * Aplica o quita un descuento porcentual a todos los productos activos o a los de una categoría.
+     * Devuelve cuántos productos se actualizaron y cuántos quedaron con precio final <= costo.
+     */
+    async aplicarDescuentoMasivo(
+        dto: DescuentoMasivoDto,
+    ): Promise<{ actualizados: number; bajoCosto: number; descuentoPorcentaje: number }> {
+        const condiciones = [eq(productos.activo, true)];
+
+        if (dto.alcance === 'CATEGORIA' && dto.categoriaId !== undefined) {
+            const [cat] = await db
+                .select({ id: categorias.id })
+                .from(categorias)
+                .where(eq(categorias.id, dto.categoriaId))
+                .limit(1);
+
+            if (!cat) {
+                throw new BadRequestException(`La categoría #${dto.categoriaId} no existe`);
+            }
+            condiciones.push(eq(productos.categoriaId, dto.categoriaId));
+        }
+
+        return db.transaction(async (tx) => {
+            const objetivos = await tx
+                .select({
+                    id: productos.id,
+                    precioCentavos: productos.precioCentavos,
+                    costoCentavos: productos.costoCentavos,
+                })
+                .from(productos)
+                .where(and(...condiciones));
+
+            if (objetivos.length === 0) {
+                return {
+                    actualizados: 0,
+                    bajoCosto: 0,
+                    descuentoPorcentaje: dto.descuentoPorcentaje,
+                };
+            }
+
+            await tx
+                .update(productos)
+                .set({ descuentoPorcentaje: dto.descuentoPorcentaje })
+                .where(and(...condiciones));
+
+            let bajoCosto = 0;
+            for (const p of objetivos) {
+                if (p.costoCentavos <= 0) continue;
+                const { precioFinalCentavos } = calcularPrecioConDescuento(
+                    p.precioCentavos,
+                    dto.descuentoPorcentaje,
+                );
+                if (precioFinalCentavos <= p.costoCentavos) {
+                    bajoCosto++;
+                }
+            }
+
+            return {
+                actualizados: objetivos.length,
+                bajoCosto,
+                descuentoPorcentaje: dto.descuentoPorcentaje,
+            };
+        });
     }
 
     /**

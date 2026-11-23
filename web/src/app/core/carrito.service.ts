@@ -37,6 +37,9 @@ export class CarritoService {
         const lista = this._items();
         const existente = lista.find((i) => i.productoId === producto.id);
 
+        const precioVigente = producto.precioFinalCentavos ?? producto.precioCentavos;
+        const pctDescuento = producto.descuentoPorcentaje ?? 0;
+
         if (existente) {
             const nuevaCantidad = existente.cantidad + cantValida;
             if (nuevaCantidad > producto.stock) {
@@ -51,7 +54,9 @@ export class CarritoService {
                     ? {
                           ...i,
                           nombre: producto.nombre,
-                          precioCentavos: producto.precioCentavos,
+                          precioCentavos: precioVigente,
+                          precioOriginalCentavos: producto.precioCentavos,
+                          descuentoPorcentaje: pctDescuento,
                           imagenPrincipal: producto.imagenPrincipal,
                           stockMaximo: producto.stock,
                           notaTallaInformativa: producto.notaTalla,
@@ -74,7 +79,9 @@ export class CarritoService {
         const nuevoItem: ItemCarrito = {
             productoId: producto.id,
             nombre: producto.nombre,
-            precioCentavos: producto.precioCentavos,
+            precioCentavos: precioVigente,
+            precioOriginalCentavos: producto.precioCentavos,
+            descuentoPorcentaje: pctDescuento,
             imagenPrincipal: producto.imagenPrincipal,
             stockMaximo: producto.stock,
             notaTallaInformativa: producto.notaTalla,
