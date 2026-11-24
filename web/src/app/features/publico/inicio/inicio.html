@@ -20,11 +20,11 @@
 
 <!-- 0. HERO SUMI-E (Mockup 2 exacto: arte completo sin zoom a la derecha + texto bicolor limpio a la izquierda) -->
 <section
-  class="relative bg-negro text-perla overflow-hidden min-h-[360px] sm:min-h-[400px] lg:min-h-[430px] flex items-center">
-  <!-- Ilustración panorámica sumi-e (1600x640): encaja de borde a borde sin franja negra ni recortes -->
+  class="relative bg-negro text-perla overflow-hidden min-h-[380px] md:aspect-[5/2] md:max-h-[580px] flex items-center">
+  <!-- Ilustración panorámica sumi-e (1600x640 = 5:2): se muestra completa sin zoom ni recortes -->
   <img src="img/hero/hero-sumie.webp" alt="" width="1600" height="640" fetchpriority="high" decoding="async"
     aria-hidden="true"
-    class="absolute inset-0 w-full h-full object-cover object-[72%_20%] md:object-[center_22%] select-none pointer-events-none" />
+    class="absolute inset-0 w-full h-full object-cover object-[72%_center] md:object-center select-none pointer-events-none" />
   <!-- Velo de contraste para legibilidad AAA en móvil y escritorio -->
   <div class="absolute inset-0 hero-sumie-velo pointer-events-none" aria-hidden="true"></div>
 
