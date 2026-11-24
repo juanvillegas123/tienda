@@ -122,7 +122,6 @@ export class InicioComponent implements OnInit {
     readonly cargandoCatalogo = signal(true);
     readonly errorCatalogo = signal(false);
 
-    readonly logoHeroFallido = signal(false);
     readonly direccionCopiada = signal(false);
     readonly preguntaAbierta = signal<number | null>(0);
     readonly abiertoAhora = signal<boolean>(calcularAbiertoEnBolivia());
@@ -324,9 +323,5 @@ export class InicioComponent implements OnInit {
 
     alcanzoLimiteStock(prod: ProductoPublico): boolean {
         return this.carrito.cantidadEnCarrito(prod.id) >= prod.stock;
-    }
-
-    onErrorLogoHero(): void {
-        this.logoHeroFallido.set(true);
     }
 }

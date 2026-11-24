@@ -22,68 +22,59 @@
   </div>
 }
 
-<!-- 0. HERO (estructura a 2 zonas preparada para agregar una 3.ª zona central a futuro) -->
-<section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-puntos bg-hero-vitrina text-perla border-b-2 border-carmesi overflow-hidden">
-  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
-    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] items-center gap-8">
-      <!-- Zona 1: Kicker, H1 único, descripción y acciones -->
-      <div class="max-w-2xl text-center md:text-left">
-        <p class="kicker-editorial">
-          <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
-          <span>Tienda física &amp; online · {{ info().ciudad }}</span>
-        </p>
+<!-- 0. HERO SUMI-E (Mockup 2: arte protagonista a la derecha + texto bicolor limpio a la izquierda) -->
+<section class="relative bg-negro text-perla border-b-2 border-carmesi overflow-hidden">
+  <!-- Ilustración sumi-e de fondo -->
+  <img
+    src="img/hero/hero-sumie.webp"
+    alt=""
+    width="1600"
+    height="900"
+    fetchpriority="high"
+    decoding="async"
+    aria-hidden="true"
+    class="absolute inset-0 w-full h-full object-cover object-[75%_18%] sm:object-[right_22%] select-none pointer-events-none"
+  />
+  <!-- Velo de contraste para legibilidad AAA en móvil y escritorio -->
+  <div class="absolute inset-0 hero-sumie-velo pointer-events-none" aria-hidden="true"></div>
 
-        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl uppercase tracking-wider text-perla leading-none mt-3">
-          {{ negocio.lema }}
-        </h1>
+  <div class="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
+    <div class="max-w-xl text-left">
+      <p class="kicker-editorial">
+        <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
+        <span>Tienda física &amp; online · {{ info().ciudad }}</span>
+      </p>
 
-        <p class="text-sm sm:text-base text-perla/80 mt-3 leading-relaxed">
-          {{ info().descripcion }}
-        </p>
+      <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl uppercase tracking-wider leading-none mt-4 drop-shadow-[0_2px_12px_rgba(12,16,20,0.85)]">
+        <span class="text-perla">Calidad en </span>
+        <span class="text-carmesi-claro">figuras</span>
+      </h1>
 
-        <div class="mt-6 flex flex-wrap items-center justify-center md:justify-start gap-3">
+      <p class="text-sm sm:text-base text-perla/85 mt-3.5 leading-relaxed max-w-lg">
+        {{ info().descripcion }}
+      </p>
+
+      <div class="mt-7 flex flex-wrap items-center gap-3">
+        <a
+          routerLink="/catalogo"
+          class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold shadow-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
+        >
+          <span>Explorar catálogo</span>
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </a>
+
+        @if (enlaceWhatsapp(); as wa) {
           <a
-            routerLink="/catalogo"
-            class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
+            [href]="wa"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-negro/65 hover:bg-white/15 text-perla border border-perla/30 text-sm font-semibold backdrop-blur-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
           >
-            <span>Explorar catálogo</span>
-            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
+            Consultar por WhatsApp
           </a>
-
-          @if (enlaceWhatsapp(); as wa) {
-            <a
-              [href]="wa"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-perla border border-perla/25 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro"
-            >
-              Consultar por WhatsApp
-            </a>
-          }
-        </div>
-      </div>
-
-      <!-- Zona 2: Logo circular oficial (sin loading="lazy") -->
-      <div class="flex justify-center md:justify-end shrink-0">
-        <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full overflow-hidden bg-white shadow-2xl ring-4 ring-carmesi/50 flex items-center justify-center">
-          @if (!logoHeroFallido()) {
-            <img
-              src="img/logo-192.png"
-              alt="Logo oficial de Onii-Chan Store"
-              width="192"
-              height="192"
-              decoding="async"
-              (error)="onErrorLogoHero()"
-              class="w-full h-full object-cover"
-            />
-          } @else {
-            <div class="w-full h-full bg-carmesi text-perla flex items-center justify-center font-display text-5xl tracking-wider">
-              OS
-            </div>
-          }
-        </div>
+        }
       </div>
     </div>
   </div>
