@@ -18,47 +18,49 @@
 </div>
 }
 
-<!-- 0. HERO SUMI-E (Mockup 2 exacto: arte completo sin zoom a la derecha + texto bicolor limpio a la izquierda) -->
-<section
-  class="relative bg-negro text-perla overflow-hidden min-h-[380px] md:aspect-[5/2] md:max-h-[580px] flex items-center">
-  <!-- Ilustración panorámica sumi-e (1600x640 = 5:2): se muestra completa sin zoom ni recortes -->
-  <img src="img/hero/hero-sumie.webp" alt="" width="1600" height="640" fetchpriority="high" decoding="async"
-    aria-hidden="true"
-    class="absolute inset-0 w-full h-full object-cover object-[72%_center] md:object-center select-none pointer-events-none" />
-  <!-- Velo de contraste para legibilidad AAA en móvil y escritorio -->
-  <div class="absolute inset-0 hero-sumie-velo pointer-events-none" aria-hidden="true"></div>
+<!-- 0. HERO SUMI-E (full-bleed oscuro + escenario centrado 5:2 sin zoom ni franjas blancas) -->
+<section class="relative w-full bg-negro text-perla overflow-hidden">
+  <div
+    class="relative mx-auto w-full max-w-[1600px] min-h-[380px] md:aspect-[5/2] flex items-center hero-sumie-escenario">
+    <!-- Ilustración panorámica sumi-e (1600x640 = 5:2): se muestra completa sin zoom ni recortes -->
+    <img src="img/hero/hero-sumie.webp" alt="" width="1600" height="640" fetchpriority="high" decoding="async"
+      aria-hidden="true"
+      class="absolute inset-0 w-full h-full object-cover object-[72%_center] md:object-center select-none pointer-events-none" />
+    <!-- Velo de contraste para legibilidad AAA en móvil y escritorio -->
+    <div class="absolute inset-0 hero-sumie-velo pointer-events-none" aria-hidden="true"></div>
 
-  <div class="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
-    <div class="max-w-xl text-left">
-      <p class="kicker-editorial">
-        <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
-        <span>Tienda física &amp; online · {{ info().ciudad }}</span>
-      </p>
+    <div class="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
+      <div class="max-w-xl text-left">
+        <p class="kicker-editorial">
+          <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
+          <span>Tienda física &amp; online · {{ info().ciudad }}</span>
+        </p>
 
-      <h1
-        class="font-display text-5xl sm:text-6xl lg:text-7xl uppercase tracking-wider leading-none mt-4 drop-shadow-[0_2px_12px_rgba(12,16,20,0.85)]">
-        <span class="text-perla">Calidad en </span>
-        <span class="text-carmesi-claro">figuras</span>
-      </h1>
+        <h1
+          class="font-display text-5xl sm:text-6xl lg:text-7xl uppercase tracking-wider leading-none mt-4 drop-shadow-[0_2px_12px_rgba(12,16,20,0.85)]">
+          <span class="text-perla">Calidad en </span>
+          <span class="text-carmesi-claro">figuras</span>
+        </h1>
 
-      <p class="text-sm sm:text-base text-perla/85 mt-3.5 leading-relaxed max-w-lg">
-        {{ info().descripcion }}
-      </p>
+        <p class="text-sm sm:text-base text-perla/85 mt-3.5 leading-relaxed max-w-lg">
+          {{ info().descripcion }}
+        </p>
 
-      <div class="mt-7 flex flex-wrap items-center gap-3.5">
-        <a routerLink="/catalogo"
-          class="group btn-hero-primario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
-          <app-icono-shuriken class="w-3.5 h-3.5 text-perla group-hover:rotate-45 transition-transform duration-200" />
-          <span>Explorar catálogo</span>
-        </a>
+        <div class="mt-7 flex flex-wrap items-center gap-3.5">
+          <a routerLink="/catalogo"
+            class="group btn-hero-primario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
+            <app-icono-shuriken class="w-3.5 h-3.5 text-perla group-hover:rotate-45 transition-transform duration-200" />
+            <span>Explorar catálogo</span>
+          </a>
 
-        @if (enlaceWhatsapp(); as wa) {
-        <a [href]="wa" target="_blank" rel="noopener noreferrer"
-          class="btn-hero-secundario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
-          <app-icono-red red="whatsapp" class="w-4 h-4 text-perla" />
-          <span>Consultar por WhatsApp</span>
-        </a>
-        }
+          @if (enlaceWhatsapp(); as wa) {
+          <a [href]="wa" target="_blank" rel="noopener noreferrer"
+            class="btn-hero-secundario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
+            <app-icono-red red="whatsapp" class="w-4 h-4 text-perla" />
+            <span>Consultar por WhatsApp</span>
+          </a>
+          }
+        </div>
       </div>
     </div>
   </div>

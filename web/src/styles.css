@@ -504,6 +504,24 @@ body {
   }
 }
 
+/* En pantallas > 1600px o zoom alejado, funde suavemente los bordes laterales del arte con el fondo oscuro */
+@media (min-width: 1601px) {
+  .hero-sumie-escenario::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background: linear-gradient(
+      90deg,
+      var(--color-negro) 0%,
+      rgba(12, 16, 20, 0) 5%,
+      rgba(12, 16, 20, 0) 95%,
+      var(--color-negro) 100%
+    );
+  }
+}
+
 .scrollbar-oculto {
   scrollbar-width: none;
   -ms-overflow-style: none;
