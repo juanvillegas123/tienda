@@ -45,20 +45,18 @@
         {{ info().descripcion }}
       </p>
 
-      <div class="mt-7 flex flex-wrap items-center gap-3">
+      <div class="mt-7 flex flex-wrap items-center gap-3.5">
         <a routerLink="/catalogo"
-          class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-carmesi hover:bg-carmesi-claro text-perla text-sm font-semibold shadow-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
+          class="group btn-hero-primario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
+          <app-icono-shuriken class="w-3.5 h-3.5 text-perla group-hover:rotate-45 transition-transform duration-200" />
           <span>Explorar catálogo</span>
-          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-            aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
         </a>
 
         @if (enlaceWhatsapp(); as wa) {
         <a [href]="wa" target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-negro/65 hover:bg-white/15 text-perla border border-perla/30 text-sm font-semibold backdrop-blur-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
-          Consultar por WhatsApp
+          class="btn-hero-secundario focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-perla focus-visible:ring-offset-2 focus-visible:ring-offset-negro">
+          <app-icono-red red="whatsapp" class="w-4 h-4 text-perla" />
+          <span>Consultar por WhatsApp</span>
         </a>
         }
       </div>
@@ -307,33 +305,53 @@
 <section appProgresoScroll="capitulo" class="capitulo-trama capitulo-trama-lineas py-8 sm:py-10"
   aria-label="Cómo comprar y ubicación de la tienda">
   <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 space-y-8">
-    <!-- 3 viñetas de pasos -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div [appVineta]="0" class="card-kpi p-5">
-        <span class="font-display text-3xl text-carmesi leading-none">01</span>
-        <h3 class="text-base font-bold text-negro mt-2">Arma tu vitrina</h3>
-        <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
-          Explora figuras, poleras, peluches y accesorios disponibles. Si el producto tiene tallas, indícala en la nota
-          del carrito.
-        </p>
+    <!-- 3 viñetas de pasos estilo panel de manga -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div [appVineta]="0" class="panel-paso flex flex-col">
+        <div class="bg-negro text-perla px-4 py-2 border-b-2 border-carmesi flex items-center justify-between">
+          <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">Paso 01</span>
+          <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro" />
+        </div>
+        <div class="relative p-5 flex-1">
+          <span class="font-display text-6xl text-negro/[0.06] leading-none absolute bottom-2 right-3 select-none pointer-events-none" aria-hidden="true">01</span>
+          <h3 class="font-display text-2xl uppercase tracking-wide text-negro leading-none">Arma tu vitrina</h3>
+          <p class="text-xs sm:text-sm text-negro/70 mt-2 leading-relaxed relative z-10">
+            Explora figuras, poleras, peluches y accesorios disponibles. Si el producto tiene tallas, indícala en la nota
+            del carrito.
+          </p>
+        </div>
       </div>
 
-      <div [appVineta]="1" class="card-kpi p-5">
-        <span class="font-display text-3xl text-carmesi leading-none">02</span>
-        <h3 class="text-base font-bold text-negro mt-2">Envía por WhatsApp</h3>
-        <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
-          Al confirmar tu carrito generamos un código único (<span
-            class="font-mono font-semibold text-vino">PED-XXXX</span>) y se abre el mensaje listo para enviar.
-        </p>
+      <div [appVineta]="1" class="panel-paso flex flex-col">
+        <div class="bg-negro text-perla px-4 py-2 border-b-2 border-carmesi flex items-center justify-between">
+          <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">Paso 02</span>
+          <app-icono-red red="whatsapp" class="w-4 h-4 text-carmesi-claro" />
+        </div>
+        <div class="relative p-5 flex-1">
+          <span class="font-display text-6xl text-negro/[0.06] leading-none absolute bottom-2 right-3 select-none pointer-events-none" aria-hidden="true">02</span>
+          <h3 class="font-display text-2xl uppercase tracking-wide text-negro leading-none">Envía por WhatsApp</h3>
+          <p class="text-xs sm:text-sm text-negro/70 mt-2 leading-relaxed relative z-10">
+            Al confirmar tu carrito generamos un código único (<span
+              class="font-mono font-bold text-carmesi">PED-XXXX</span>) y se abre el mensaje listo para enviar.
+          </p>
+        </div>
       </div>
 
-      <div [appVineta]="2" class="card-kpi card-kpi-exito p-5">
-        <span class="font-display text-3xl text-exito leading-none">03</span>
-        <h3 class="text-base font-bold text-negro mt-2">Paga y recibe</h3>
-        <p class="text-xs sm:text-sm text-negro/65 mt-1.5 leading-relaxed">
-          Coordinamos tu pago por <strong>QR o Efectivo</strong> y puedes recoger tu compra en nuestra tienda física o
-          coordinar entrega.
-        </p>
+      <div [appVineta]="2" class="panel-paso flex flex-col">
+        <div class="bg-negro text-perla px-4 py-2 border-b-2 border-carmesi flex items-center justify-between">
+          <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">Paso 03</span>
+          <svg class="w-4 h-4 text-carmesi-claro" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9.55 18 3.85 12.3l1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4Z" />
+          </svg>
+        </div>
+        <div class="relative p-5 flex-1">
+          <span class="font-display text-6xl text-negro/[0.06] leading-none absolute bottom-2 right-3 select-none pointer-events-none" aria-hidden="true">03</span>
+          <h3 class="font-display text-2xl uppercase tracking-wide text-negro leading-none">Paga y recibe</h3>
+          <p class="text-xs sm:text-sm text-negro/70 mt-2 leading-relaxed relative z-10">
+            Coordinamos tu pago por <strong>QR o Efectivo</strong> y puedes recoger tu compra en nuestra tienda física o
+            coordinar entrega.
+          </p>
+        </div>
       </div>
     </div>
 
