@@ -420,14 +420,14 @@ body {
     radial-gradient(circle at 75% 50%, #561530 0%, #3c152b 45%, #0c1014 100%);
 }
 
-/* Velo protector del Hero Sumi-e: garantiza contraste alto a la izquierda y en móvil */
+/* Velo protector del Hero Sumi-e: funde el borde izquierdo con #0c1014 sin opacar el arte derecho */
 .hero-sumie-velo {
   background: linear-gradient(
     90deg,
-    rgba(12, 16, 20, 0.96) 0%,
-    rgba(12, 16, 20, 0.88) 38%,
-    rgba(12, 16, 20, 0.45) 62%,
-    rgba(12, 16, 20, 0.12) 100%
+    #0c1014 0%,
+    #0c1014 42%,
+    rgba(12, 16, 20, 0.72) 52%,
+    rgba(12, 16, 20, 0) 64%
   );
 }
 
