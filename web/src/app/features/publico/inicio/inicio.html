@@ -508,29 +508,28 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         @if (info().instagramUrl) {
         <a [appVineta]="0" [href]="info().instagramUrl" target="_blank" rel="noopener noreferrer"
           aria-label="Seguir a Onii-Chan Store en Instagram"
-          class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
-          <div class="flex items-start justify-between gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
-              <app-icono-red red="instagram" class="w-6 h-6" />
+          class="panel-paso flex flex-col group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
+          <div class="bg-negro text-perla px-4 py-2.5 border-b-2 border-carmesi flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <app-icono-red red="instagram" class="w-4.5 h-4.5 text-perla group-hover:text-carmesi-claro transition-colors" />
+              <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">Instagram</span>
             </div>
-            <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro group-hover:rotate-45 transition-transform duration-200" />
           </div>
-          <div>
-            <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">Instagram</p>
-            <p class="text-xs font-bold text-vino mt-1 truncate">
-              {{ info().instagramUsuario || '@onii.chan_store.bo' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-2 leading-relaxed">
-              Fotos reales de figuras, historias de nuevos ingresos y restocks.
-            </p>
+          <div class="relative p-5 flex-1 flex flex-col justify-between gap-3">
+            <app-icono-red red="instagram" class="w-20 h-20 text-negro/[0.045] absolute -bottom-2 -right-2 pointer-events-none select-none" />
+            <div class="relative z-10">
+              <p class="text-sm font-extrabold text-carmesi truncate">
+                {{ info().instagramUsuario || '@onii.chan_store.bo' }}
+              </p>
+              <p class="text-xs text-negro/70 mt-1.5 leading-relaxed">
+                Fotos reales de figuras, historias de nuevos ingresos y restocks.
+              </p>
+            </div>
           </div>
         </a>
         }
@@ -538,25 +537,24 @@
         @if (info().tiktokUrl) {
         <a [appVineta]="1" [href]="info().tiktokUrl" target="_blank" rel="noopener noreferrer"
           aria-label="Seguir a Onii-Chan Store en TikTok"
-          class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
-          <div class="flex items-start justify-between gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
-              <app-icono-red red="tiktok" class="w-6 h-6" />
+          class="panel-paso flex flex-col group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
+          <div class="bg-negro text-perla px-4 py-2.5 border-b-2 border-carmesi flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <app-icono-red red="tiktok" class="w-4.5 h-4.5 text-perla group-hover:text-carmesi-claro transition-colors" />
+              <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">TikTok</span>
             </div>
-            <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro group-hover:rotate-45 transition-transform duration-200" />
           </div>
-          <div>
-            <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">TikTok</p>
-            <p class="text-xs font-bold text-vino mt-1 truncate">
-              {{ info().tiktokUsuario || '@onii.chan.store' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-2 leading-relaxed">
-              Unboxings en video, detalles de colección y recorrido por la vitrina.
-            </p>
+          <div class="relative p-5 flex-1 flex flex-col justify-between gap-3">
+            <app-icono-red red="tiktok" class="w-20 h-20 text-negro/[0.045] absolute -bottom-2 -right-2 pointer-events-none select-none" />
+            <div class="relative z-10">
+              <p class="text-sm font-extrabold text-carmesi truncate">
+                {{ info().tiktokUsuario || '@onii.chan.store' }}
+              </p>
+              <p class="text-xs text-negro/70 mt-1.5 leading-relaxed">
+                Unboxings en video, detalles de colección y recorrido por la vitrina.
+              </p>
+            </div>
           </div>
         </a>
         }
@@ -564,25 +562,24 @@
         @if (info().facebookUrl) {
         <a [appVineta]="2" [href]="info().facebookUrl" target="_blank" rel="noopener noreferrer"
           aria-label="Visitar página de Facebook de Onii-Chan Store"
-          class="card-kpi p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
-          <div class="flex items-start justify-between gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-carmesi transition-colors flex items-center justify-center shadow-xs">
-              <app-icono-red red="facebook" class="w-6 h-6" />
+          class="panel-paso flex flex-col group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
+          <div class="bg-negro text-perla px-4 py-2.5 border-b-2 border-carmesi flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <app-icono-red red="facebook" class="w-4.5 h-4.5 text-perla group-hover:text-carmesi-claro transition-colors" />
+              <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">Facebook</span>
             </div>
-            <svg class="w-4 h-4 text-negro/40 group-hover:text-carmesi group-hover:translate-x-0.5 transition-all"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro group-hover:rotate-45 transition-transform duration-200" />
           </div>
-          <div>
-            <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">Facebook</p>
-            <p class="text-xs font-bold text-vino mt-1 truncate">
-              {{ info().facebookUsuario || 'Onii-Chan Store' }}
-            </p>
-            <p class="text-xs text-negro/60 mt-2 leading-relaxed">
-              Promociones de temporada, eventos anime en Sucre y novedades.
-            </p>
+          <div class="relative p-5 flex-1 flex flex-col justify-between gap-3">
+            <app-icono-red red="facebook" class="w-20 h-20 text-negro/[0.045] absolute -bottom-2 -right-2 pointer-events-none select-none" />
+            <div class="relative z-10">
+              <p class="text-sm font-extrabold text-carmesi truncate">
+                {{ info().facebookUsuario || 'Onii-Chan Store' }}
+              </p>
+              <p class="text-xs text-negro/70 mt-1.5 leading-relaxed">
+                Promociones de temporada, eventos anime en Sucre y novedades.
+              </p>
+            </div>
           </div>
         </a>
         }
@@ -590,23 +587,22 @@
         @if (enlaceWhatsapp(); as wa) {
         <a [appVineta]="3" [href]="wa" target="_blank" rel="noopener noreferrer"
           aria-label="Escribir a Onii-Chan Store por WhatsApp"
-          class="card-kpi card-kpi-exito p-5 flex flex-col justify-between gap-5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
-          <div class="flex items-start justify-between gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-negro text-perla group-hover:bg-exito transition-colors flex items-center justify-center shadow-xs">
-              <app-icono-red red="whatsapp" class="w-6 h-6" />
+          class="panel-paso flex flex-col group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carmesi">
+          <div class="bg-negro text-perla px-4 py-2.5 border-b-2 border-carmesi flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <app-icono-red red="whatsapp" class="w-4.5 h-4.5 text-perla group-hover:text-carmesi-claro transition-colors" />
+              <span class="font-display text-lg uppercase tracking-[0.14em] leading-none">WhatsApp</span>
             </div>
-            <svg class="w-4 h-4 text-negro/40 group-hover:text-exito group-hover:translate-x-0.5 transition-all"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <app-icono-shuriken class="w-3.5 h-3.5 text-carmesi-claro group-hover:rotate-45 transition-transform duration-200" />
           </div>
-          <div>
-            <p class="font-display text-xl uppercase tracking-wider text-negro leading-none">WhatsApp</p>
-            <p class="text-xs font-bold text-exito mt-1">Atención directa</p>
-            <p class="text-xs text-negro/60 mt-2 leading-relaxed">
-              Consultas sobre tallas, disponibilidad o coordinación de tu pedido.
-            </p>
+          <div class="relative p-5 flex-1 flex flex-col justify-between gap-3">
+            <app-icono-red red="whatsapp" class="w-20 h-20 text-negro/[0.045] absolute -bottom-2 -right-2 pointer-events-none select-none" />
+            <div class="relative z-10">
+              <p class="text-sm font-extrabold text-exito">Atención directa</p>
+              <p class="text-xs text-negro/70 mt-1.5 leading-relaxed">
+                Consultas sobre tallas, disponibilidad o coordinación de tu pedido.
+              </p>
+            </div>
           </div>
         </a>
         }
