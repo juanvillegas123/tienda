@@ -1,10 +1,19 @@
 import { z } from 'zod';
 
+const sinEtiquetasHtml = (val: string) => !/[<>]/.test(val);
+const MSG_SIN_HTML = 'No se permiten los caracteres < o > en este campo';
+
 const itemCrearPedidoSchema = z
     .object({
         productoId: z.number().int().positive('El ID del producto debe ser positivo'),
         cantidad: z.number().int().min(1, 'La cantidad mínima es 1').max(999, 'Cantidad excesiva'),
-        notaCliente: z.string().trim().max(200, 'La nota no puede exceder 200 caracteres').optional().nullable(),
+        notaCliente: z
+            .string()
+            .trim()
+            .max(200, 'La nota no puede exceder 200 caracteres')
+            .refine(sinEtiquetasHtml, MSG_SIN_HTML)
+            .optional()
+            .nullable(),
     })
     .strict();
 
@@ -14,11 +23,13 @@ export const crearPedidoSchema = z
             .string()
             .trim()
             .min(2, 'Ingresa tu nombre (mínimo 2 caracteres)')
-            .max(120, 'El nombre no puede exceder 120 caracteres'),
+            .max(120, 'El nombre no puede exceder 120 caracteres')
+            .refine(sinEtiquetasHtml, MSG_SIN_HTML),
         telefonoCliente: z
             .string()
             .trim()
             .max(30, 'El teléfono no puede exceder 30 caracteres')
+            .refine(sinEtiquetasHtml, MSG_SIN_HTML)
             .optional()
             .nullable(),
         items: z

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 const MAX_URL_IMAGEN = 1000;
+const MAX_MONTO_CENTAVOS = 100_000_000;
+const MAX_STOCK = 99_999;
 
 export const urlImagenSeguraSchema = z
     .string()
@@ -40,7 +42,8 @@ export const crearProductoSchema = z
         precioCentavos: z.coerce
             .number()
             .int('El precio debe ser un número entero de centavos')
-            .min(0, 'El precio no puede ser negativo'),
+            .min(0, 'El precio no puede ser negativo')
+            .max(MAX_MONTO_CENTAVOS, 'El precio excede el límite permitido'),
         descuentoPorcentaje: z.coerce
             .number()
             .int('El descuento debe ser un porcentaje entero')
@@ -51,11 +54,13 @@ export const crearProductoSchema = z
             .number()
             .int('El costo debe ser un número entero de centavos')
             .min(0, 'El costo no puede ser negativo')
+            .max(MAX_MONTO_CENTAVOS, 'El costo excede el límite permitido')
             .default(0),
         stockInicial: z.coerce
             .number()
             .int('El stock debe ser un número entero')
             .min(0, 'El stock no puede ser negativo')
+            .max(MAX_STOCK, 'El stock excede el límite permitido')
             .default(0),
         escala: z.string().max(50).trim().nullable().optional(),
         notaTalla: z.string().max(100).trim().nullable().optional(),
@@ -82,6 +87,7 @@ export const editarProductoSchema = z
             .number()
             .int('El precio debe ser un número entero de centavos')
             .min(0, 'El precio no puede ser negativo')
+            .max(MAX_MONTO_CENTAVOS, 'El precio excede el límite permitido')
             .optional(),
         descuentoPorcentaje: z.coerce
             .number()
@@ -93,11 +99,13 @@ export const editarProductoSchema = z
             .number()
             .int('El costo debe ser un número entero de centavos')
             .min(0, 'El costo no puede ser negativo')
+            .max(MAX_MONTO_CENTAVOS, 'El costo excede el límite permitido')
             .optional(),
         stock: z.coerce
             .number()
             .int('El stock debe ser un número entero')
             .min(0, 'El stock no puede ser negativo')
+            .max(MAX_STOCK, 'El stock excede el límite permitido')
             .optional(),
         escala: z.string().max(50).trim().nullable().optional(),
         notaTalla: z.string().max(100).trim().nullable().optional(),

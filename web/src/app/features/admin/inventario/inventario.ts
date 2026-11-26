@@ -19,13 +19,10 @@ import {
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
+import { parsearBsACentavosEstricto } from '../../../shared/dinero.utils';
 
 function parsearBsACentavos(valor: unknown): number | null {
-    if (valor === null || valor === undefined || String(valor).trim() === '') return null;
-    const normalizado = String(valor).trim().replace(',', '.');
-    const num = Number(normalizado);
-    if (!Number.isFinite(num) || num < 0) return null;
-    return Math.round(num * 100);
+    return parsearBsACentavosEstricto(valor);
 }
 
 function validadorCosto(control: AbstractControl): ValidationErrors | null {

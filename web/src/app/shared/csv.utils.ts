@@ -12,7 +12,11 @@ export function descargarCsv(
     const separador = ';';
     const escapar = (valor: string | number | null | undefined): string => {
         if (valor === null || valor === undefined) return '';
-        const str = String(valor);
+        let str = String(valor);
+        // Mitiga CSV Formula Injection en Excel (=, +, @, tab, CR o '-' que no sea número negativo)
+        if (typeof valor === 'string' && (/^[=+@\t\r]/.test(str) || /^-[^\d]/.test(str))) {
+            str = `'${str}`;
+        }
         if (/[";\n\r]/.test(str)) {
             return `"${str.replace(/"/g, '""')}"`;
         }

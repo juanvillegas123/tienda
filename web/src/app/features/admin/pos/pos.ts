@@ -29,6 +29,7 @@ import {
 } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { PdfService } from '../../../shared/pdf.service';
+import { parsearBsACentavosEstricto } from '../../../shared/dinero.utils';
 
 interface ItemTicketPos {
     productoId: number;
@@ -101,13 +102,22 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
         this.ticket().reduce((acc, item) => acc + item.cantidad, 0),
     );
 
-    readonly efectivoRecibidoCentavos = computed<number | null>(() => {
-        const raw = this.efectivoRecibidoTexto().trim().replace(',', '.');
-        if (!raw) return null;
-        const num = Number(raw);
-        if (isNaN(num) || num < 0) return null;
-        return Math.round(num * 100);
-    });
+    readonly efectivoRecibidoCentavos = computed<number | null>(() =>
+        parsearBsACentavosEstricto(this.efectivoRecibidoTexto()),
+    );
+
+    readonly efectivoRecibidoInvalido = computed<boolean>(
+        () =>
+            this.metodoPago() === 'EFECTIVO' &&
+            this.efectivoRecibidoTexto().trim().length > 0 &&
+            this.efectivoRecibidoCentavos() === null,
+    );
+
+    readonly efectivoRecibidoVacio = computed<boolean>(
+        () =>
+            this.metodoPago() === 'EFECTIVO' &&
+            this.efectivoRecibidoTexto().trim().length === 0,
+    );
 
     readonly cambioCentavos = computed<number>(() => {
         const recibido = this.efectivoRecibidoCentavos();
@@ -129,6 +139,20 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
             this.efectivoRecibidoCentavos() !== null &&
             this.faltaEfectivoCentavos() > 0,
     );
+
+    readonly puedeCobrar = computed<boolean>(() => {
+        if (!this.cajaActual() || this.ticket().length === 0 || this.cobrando()) {
+            return false;
+        }
+        if (this.metodoPago() === 'EFECTIVO') {
+            return (
+                this.efectivoRecibidoCentavos() !== null &&
+                !this.efectivoRecibidoInvalido() &&
+                !this.efectivoInsuficiente()
+            );
+        }
+        return true;
+    });
 
     readonly montoDevolucionCentavos = computed(() => {
         const venta = this.ventaParaDevolver();
@@ -388,9 +412,21 @@ export class PosAdminComponent implements OnInit, AfterViewInit {
 
     cobrar(): void {
         if (!this.cajaActual() || this.ticket().length === 0 || this.cobrando()) return;
-        if (this.efectivoInsuficiente()) {
-            this.mensajeError.set('El efectivo recibido es menor al total a cobrar.');
-            return;
+        if (this.metodoPago() === 'EFECTIVO') {
+            if (this.efectivoRecibidoVacio()) {
+                this.mensajeError.set('Ingresa el monto de efectivo recibido para poder cobrar.');
+                return;
+            }
+            if (this.efectivoRecibidoInvalido() || this.efectivoRecibidoCentavos() === null) {
+                this.mensajeError.set(
+                    'Monto de efectivo inválido. Ingresa solo números en Bolivianos (ej. 100 o 45,50).',
+                );
+                return;
+            }
+            if (this.efectivoInsuficiente()) {
+                this.mensajeError.set('El efectivo recibido es menor al total a cobrar.');
+                return;
+            }
         }
 
         const cambioCalculado = this.metodoPago() === 'EFECTIVO' ? this.cambioCentavos() : 0;

@@ -2,8 +2,12 @@ import { z } from 'zod';
 
 export const itemVentaSchema = z
     .object({
-        productoId: z.coerce.number().int().positive('Producto inválido'),
-        cantidad: z.coerce.number().int('La cantidad debe ser entera').min(1, 'La cantidad mínima es 1'),
+        productoId: z.number().int().positive('Producto inválido'),
+        cantidad: z
+            .number()
+            .int('La cantidad debe ser entera')
+            .min(1, 'La cantidad mínima es 1')
+            .max(999, 'La cantidad máxima por producto es 999'),
     })
     .strict();
 

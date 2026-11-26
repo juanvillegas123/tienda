@@ -14,13 +14,10 @@ import { ReportesService } from '../../../core/reportes.service';
 import { CajaResumen } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { PdfService } from '../../../shared/pdf.service';
+import { parsearBsACentavosEstricto } from '../../../shared/dinero.utils';
 
 function parsearBsACentavos(valor: unknown): number | null {
-    if (valor === null || valor === undefined || String(valor).trim() === '') return null;
-    const normalizado = String(valor).trim().replace(',', '.');
-    const num = Number(normalizado);
-    if (!Number.isFinite(num) || num < 0) return null;
-    return Math.round(num * 100);
+    return parsearBsACentavosEstricto(valor);
 }
 
 function validadorMonto(control: AbstractControl): ValidationErrors | null {

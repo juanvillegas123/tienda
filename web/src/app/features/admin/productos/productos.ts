@@ -10,30 +10,17 @@ import { ProveedoresService } from '../../../core/proveedores.service';
 import { ProductoAdmin, Categoria, Proveedor, PaginatedResult } from '../../../core/modelos';
 import { BsPipe } from '../../../shared/bs.pipe';
 import { AppSelectComponent, OpcionSelect } from '../../../shared/ui/app-select/app-select';
+import { parsearBsACentavosEstricto } from '../../../shared/dinero.utils';
 import { HttpErrorResponse } from '@angular/common/http';
 
 function convertirBsACentavos(valor: unknown): number {
-    if (valor === null || valor === undefined || valor === '') return 0;
-    if (typeof valor === 'number') {
-        return isNaN(valor) ? 0 : Math.round(valor * 100);
-    }
-    if (typeof valor === 'string') {
-        const normalizado = valor.trim().replace(',', '.');
-        const num = parseFloat(normalizado);
-        return isNaN(num) ? 0 : Math.round(num * 100);
-    }
-    return 0;
+    return parsearBsACentavosEstricto(valor) ?? 0;
 }
 
 function validadorDinero(control: AbstractControl): ValidationErrors | null {
     const v = control.value;
-    if (v === null || v === undefined || v === '') return null;
-    const str = String(v).trim().replace(',', '.');
-    const num = parseFloat(str);
-    if (isNaN(num) || num < 0) {
-        return { dineroInvalido: true };
-    }
-    return null;
+    if (v === null || v === undefined || String(v).trim() === '') return null;
+    return parsearBsACentavosEstricto(v) === null ? { dineroInvalido: true } : null;
 }
 
 @Component({
